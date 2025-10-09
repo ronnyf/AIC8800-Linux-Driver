@@ -10,7 +10,7 @@ AIC8800 WiFi 驱动程序,适用于 Arch Linux 平台。
 
 - **平台**: Arch Linux
 - **内核版本**: Linux 6.17.1-arch1-1
-- **外联网卡**: 绿联AX300
+- **外联网卡**: 绿联AX300-CM762
 ## 致谢
 
 本项目参考了以下资源:
@@ -23,8 +23,12 @@ AIC8800 WiFi 驱动程序,适用于 Arch Linux 平台。
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/aic8800.git
-cd aic8800
+git clone https://github.com/BLUEMOON233/AIC8800-Linux-Driver.git
+
+#初始化
+cd AIC8800-Linux-Driver
+sudo su && sh install_setup.sh
+cd drivers/aic8800
 
 # 编译
 make
