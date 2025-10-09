@@ -27,14 +27,15 @@ git clone https://github.com/BLUEMOON233/AIC8800-Linux-Driver.git
 
 #初始化
 cd AIC8800-Linux-Driver
-sudo su && sh install_setup.sh
+sudo su
+sh install_setup.sh
 cd drivers/aic8800
 
 # 编译
 make
 
 # 安装
-sudo make install
+make install
 
 # 加载驱动
 modprobe cfg80211
