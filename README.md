@@ -5,6 +5,7 @@ AIC8800 WiFi 驱动程序,适用于 Arch Linux 平台。
 ## 概述
 
 本驱动修复了 AIC8800 芯片在 Linux Kernel 6.17.1-arch1-1 版本下的编译错误问题。
+2025.11.11更新： Linux Kernel 6.17.7-arch1-1 在Arch Linux x64平台上仍可以编译通过
 
 ## 测试环境
 
