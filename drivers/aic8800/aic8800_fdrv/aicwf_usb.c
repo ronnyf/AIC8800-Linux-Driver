@@ -1840,11 +1840,13 @@ static int aicwf_usb_bus_txdata(struct device *dev, struct sk_buff *skb)
 #else
     if (!IS_ALIGNED((unsigned long)buf, align_param)) {
         usb_buf->usb_align_data = (u8*)kmalloc(sizeof(u8) * buf_len + align_param, GFP_ATOMIC);
-        if (usb_buf->usb_align_data) {
-            align = ((unsigned long)(usb_buf->usb_align_data)) & (align_param - 1);
-            buf_align = usb_buf->usb_align_data + (align_param - align);
-            memcpy(buf_align, buf, buf_len);
+        if (!usb_buf->usb_align_data) {
+            usb_err("kmalloc fail\n");
+            return -ENOMEM;
         }
+        align = ((unsigned long)(usb_buf->usb_align_data)) & (align_param - 1);
+        buf_align = usb_buf->usb_align_data + (align_param - align);
+        memcpy(buf_align, buf, buf_len);
     } else {
         buf_align = buf;
     }
