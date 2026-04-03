@@ -17,6 +17,7 @@
 #include <linux/device.h>
 #include <linux/dmapool.h>
 #include <linux/skbuff.h>
+#include <linux/timer.h>
 #include <net/cfg80211.h>
 #include <linux/slab.h>
 
