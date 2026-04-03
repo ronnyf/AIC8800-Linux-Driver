@@ -5049,68 +5049,6 @@ int rwnx_send_reboot(struct rwnx_hw *rwnx_hw)
     ret = rwnx_send_dbg_start_app_req(rwnx_hw, delay, HOST_START_APP_REBOOT);
     return ret;
 }
-
-int rwnx_send_pwm_init_req(struct rwnx_hw *rwnx_hw, u8 pwm_gpidx, u8 mode, u8 run, u32 tmr_cnt,
-    u32 dty_cnt, u32 step_val, u8 gpio_en, u8 gpio_dir, u8 gpio_val)
-{
-    struct dbg_pwm_init_req *pwm_init_req;
-
-    pwm_init_req = rwnx_msg_zalloc(DBG_PWM_INIT_REQ, TASK_DBG, DRV_TASK_ID,
-                                    sizeof(struct dbg_pwm_init_req));
-    if (!pwm_init_req)
-        return -ENOMEM;
-
-    pwm_init_req->pwm_gpidx = pwm_gpidx;
-    pwm_init_req->mode      = mode;
-    pwm_init_req->run       = run;
-    pwm_init_req->tmr_cnt   = tmr_cnt;
-    pwm_init_req->dty_cnt   = dty_cnt;
-    pwm_init_req->step_val  = step_val;
-    pwm_init_req->gpio_en   = gpio_en;
-    pwm_init_req->gpio_dir  = gpio_dir;
-    pwm_init_req->gpio_val  = gpio_val;
-
-
-    return rwnx_send_msg(rwnx_hw, pwm_init_req, 1, DBG_PWM_INIT_CFM, NULL);
-}
-
-int rwnx_send_pwm_deinit_req(struct rwnx_hw *rwnx_hw, u8 pwm_gpidx, u8 gpio_en, u8 gpio_dir, u8 gpio_val)
-{
-    struct dbg_pwm_deinit_req *pwm_deinit_req;
-
-    pwm_deinit_req = rwnx_msg_zalloc(DBG_PWM_DEINIT_REQ, TASK_DBG, DRV_TASK_ID,
-                                    sizeof(struct dbg_pwm_deinit_req));
-    if (!pwm_deinit_req)
-        return -ENOMEM;
-
-    pwm_deinit_req->pwm_gpidx = pwm_gpidx;
-    pwm_deinit_req->gpio_en   = gpio_en;
-    pwm_deinit_req->gpio_dir  = gpio_dir;
-    pwm_deinit_req->gpio_val  = gpio_val;
-
-    return rwnx_send_msg(rwnx_hw, pwm_deinit_req, 1, DBG_PWM_DEINIT_CFM, NULL);
-}
-
-u32 pwm_tbl[][2] = {
-    {0x40504088, 4},
-};
-
-void rwnx_set_pwm_tbl(struct rwnx_hw *rwnx_hw)
-{
-    int patch_num = 0;
-    int cnt = 0;
-    int ret = 0;
-
-    patch_num = sizeof(pwm_tbl) / sizeof(u32) / 2;
-    for (cnt = 0; cnt < patch_num; cnt++) {
-        ret = rwnx_send_dbg_mem_write_req(rwnx_hw, pwm_tbl[cnt][0], pwm_tbl[cnt][1]);
-        if (ret) {
-            break;
-        }
-    }
-}
-
-
 //#endif // CONFIG_USB_BT
 #ifdef CONFIG_WOWLAN
 int rwnx_send_dummy_reboot(struct rwnx_hw *rwnx_hw)

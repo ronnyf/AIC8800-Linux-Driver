@@ -22,7 +22,6 @@
 #include <linux/if_arp.h>
 #include <linux/ctype.h>
 #include <linux/random.h>
-#include <linux/timer.h>
 #include "rwnx_defs.h"
 #include "rwnx_dini.h"
 #include "rwnx_msg_tx.h"
@@ -776,7 +775,7 @@ struct rwnx_sta *rwnx_get_sta(struct rwnx_hw *rwnx_hw, const u8 *mac_addr)
 void rwnx_enable_wapi(struct rwnx_hw *rwnx_hw)
 {
     //cipher_suites[rwnx_hw->wiphy->n_cipher_suites] = WLAN_CIPHER_SUITE_SMS4;
-    rwnx_hw->wiphy->n_cipher_suites ++;
+    //rwnx_hw->wiphy->n_cipher_suites ++;
     rwnx_hw->wiphy->flags |= WIPHY_FLAG_CONTROL_PORT_PROTOCOL;
 }
 
@@ -1461,7 +1460,7 @@ static int rwnx_open(struct net_device *dev)
     netdev_br_init(dev);
 #endif /* CONFIG_BR_SUPPORT */
 
-    //netif_carrier_off(dev);
+    netif_carrier_off(dev);
     netif_start_queue(dev);
 
     return error;
@@ -1506,7 +1505,7 @@ static int rwnx_close(struct net_device *dev)
 		test_counter--;
 		if(test_counter == 0){
 			AICWFDBG(LOGERROR, "%s connecting or disconnecting, not finish\r\n", __func__);
-			//WARN_ON(1);
+			WARN_ON(1);
 			break;
 		}
 	}
@@ -2038,7 +2037,7 @@ void aicwf_p2p_alive_timeout(struct timer_list *t)
     rwnx_vif = (struct rwnx_vif *)data;
     rwnx_hw = rwnx_vif->rwnx_hw;
     #else
-    rwnx_hw = container_of(t, struct rwnx_hw, p2p_alive_timer);
+    rwnx_hw = from_timer(rwnx_hw, t, p2p_alive_timer);
     rwnx_vif = rwnx_hw->p2p_dev_vif;
     #endif
 
@@ -2232,7 +2231,7 @@ static void aicwf_pwrloss_timer(struct timer_list *t)
 	rwnx_vif = (struct rwnx_vif *)data;
 	rwnx_hw = rwnx_vif->rwnx_hw;
 #else
-	rwnx_hw = container_of(t, struct rwnx_hw, pwrloss_timer);
+	rwnx_hw = from_timer(rwnx_hw, t, pwrloss_timer);
 #endif
 	if (!work_pending(&rwnx_hw->pwrloss_work))
 		schedule_work(&rwnx_hw->pwrloss_work);
@@ -4271,21 +4270,6 @@ static int rwnx_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
     return 0;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0)
-/*
- * Kernel >= 6.17 adds an extra argument to cfg80211_ops.set_wiphy_params.
- * Keep the legacy implementation above and provide a small shim here that
- * matches the new signature and forwards to the existing implementation.
- */
-static int rwnx_cfg80211_set_wiphy_params_6_17(struct wiphy *wiphy,
-                                               int unused,
-                                               u32 changed)
-{
-    (void)unused; /* not used by this driver */
-    return rwnx_cfg80211_set_wiphy_params(wiphy, changed);
-}
-#endif
-
 
 /**
  * @set_tx_power: set the transmit power according to the parameters,
@@ -4327,23 +4311,6 @@ static int rwnx_cfg80211_set_tx_power(struct wiphy *wiphy,
 
     return res;
 }
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0)
-/*
- * Kernel >= 6.17 adds link_id to cfg80211_ops.set_tx_power for MLO.
- * Provide a wrapper with the new prototype and forward to the existing
- * implementation, ignoring the link_id (single-link for this driver).
- */
-static int rwnx_cfg80211_set_tx_power_6_17(struct wiphy *wiphy,
-                                           struct wireless_dev *wdev,
-                                           int link_id,
-                                           enum nl80211_tx_power_setting type,
-                                           int mbm)
-{
-    (void)link_id; /* not used by this driver */
-    return rwnx_cfg80211_set_tx_power(wiphy, wdev, type, mbm);
-}
-#endif
 
 
 /**
@@ -6240,21 +6207,9 @@ static struct cfg80211_ops rwnx_cfg80211_ops = {
     .set_monitor_channel = rwnx_cfg80211_set_monitor_channel,
     .probe_client = rwnx_cfg80211_probe_client,
 //    .mgmt_frame_register = rwnx_cfg80211_mgmt_frame_register,
-/*
- * Several cfg80211 callbacks had their prototypes extended in newer kernels.
- * Select the appropriate implementation based on the running kernel version.
- */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0)
-    .set_wiphy_params = rwnx_cfg80211_set_wiphy_params_6_17,
-#else
     .set_wiphy_params = rwnx_cfg80211_set_wiphy_params,
-#endif
     .set_txq_params = rwnx_cfg80211_set_txq_params,
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0)
-    .set_tx_power = rwnx_cfg80211_set_tx_power_6_17,
-#else
     .set_tx_power = rwnx_cfg80211_set_tx_power,
-#endif
 //    .get_tx_power = rwnx_cfg80211_get_tx_power,
     .set_power_mgmt = rwnx_cfg80211_set_power_mgmt,
     .get_station = rwnx_cfg80211_get_station,
@@ -8902,12 +8857,6 @@ if((g_rwnx_plat->usbdev->chipid == PRODUCT_ID_AIC8801) ||
         goto err_register_wiphy;
     }
 
-    if ((rwnx_hw->usbdev->vid == 0x2604 && rwnx_hw->usbdev->pid == 0x001f)
-        || (rwnx_hw->usbdev->vid == 0x2604 && rwnx_hw->usbdev->pid == 0x0020)) {
-        rwnx_send_pwm_init_req(rwnx_hw, 8, 1, 1, 400000, 400000, 100, 1, 1, 1);
-        rwnx_send_pwm_deinit_req(rwnx_hw, 8, 1, 1, 1);
-    }
-
     /* Update regulatory (if needed) and set channel parameters to firmware
        (must be done after WiPHY registration) */
     rwnx_custregd(rwnx_hw, wiphy);
@@ -9065,11 +9014,6 @@ void rwnx_cfg80211_deinit(struct rwnx_hw *rwnx_hw)
 		del_timer_sync(&rwnx_hw->pwrloss_timer);}
 	cancel_work_sync(&rwnx_hw->pwrloss_work);
 #endif
-
-    if ((rwnx_hw->usbdev->vid == 0x2604 && rwnx_hw->usbdev->pid == 0x001f)
-        || (rwnx_hw->usbdev->vid == 0x2604 && rwnx_hw->usbdev->pid == 0x0020)) {
-        rwnx_set_pwm_tbl(rwnx_hw);
-    }
 
     spin_lock_bh(&rwnx_hw->defrag_lock);
     if (!list_empty(&rwnx_hw->defrag_list)) {

@@ -52,7 +52,7 @@ typedef struct {
 #define CFG_USER_CHAN_MAX_TXPWR_EN  0
 #endif
 #define CFG_USER_TX_USE_ANA_F       0
-#ifdef CONFIG_BAND_STEERING
+#ifdef CONFIG_PRBREQ_REPORT
 #define CFG_USER_APM_PRBRSP_OFFLOAD_DISABLE	1
 #else
 #define CFG_USER_APM_PRBRSP_OFFLOAD_DISABLE	0
@@ -73,7 +73,7 @@ u32 patch_tbl_d80[][2] =
     {0x0170, 0x0001000A},//rx aggr counter
 #endif
 
-#if CFG_USER_EXT_FLAGS_EN
+#if 0//CFG_USER_EXT_FLAGS_EN
 	{0x0188, 0x00000000
 #if CFG_PWROFST_COVER_CALIB
 		| USER_PWROFST_COVER_CALIB_FLAG
@@ -337,7 +337,7 @@ int system_config_8800d80(struct aic_usb_dev *usb_dev){
 }
 
 
-static int aicbt_ext_patch_data_load(struct aic_usb_dev *usb_dev, struct aicbt_patch_info_t *patch_info)
+static int aicbt_ext_patch_data_load(struct aic_usb_dev *usb_dev, struct aicbt_patch_info_t *patch_info, const char *filename)
 {
     int ret = 0;
     uint32_t ext_patch_nb = patch_info->ext_patch_nb;
@@ -354,7 +354,7 @@ static int aicbt_ext_patch_data_load(struct aic_usb_dev *usb_dev, struct aicbt_p
             addr = *(patch_info->ext_patch_param + (index * 2) + 1);
             memset(ext_patch_file_name, 0, sizeof(ext_patch_file_name));
             sprintf(ext_patch_file_name,"%s%d.bin",
-                FW_PATCH_BASE_NAME_8800D80_U02_EXT,
+                filename,
                 id);
             AICWFDBG(LOGDEBUG, "%s ext_patch_file_name:%s ext_patch_id:%x ext_patch_addr:%x \r\n",
                 __func__,ext_patch_file_name, id, addr);
@@ -426,15 +426,15 @@ int aicfw_download_fw_8800d80(struct aic_usb_dev *usb_dev)
                 return -1;
             }
 
-            if (aicbt_ext_patch_data_load(usb_dev, &patch_info)) {
+            if (aicbt_ext_patch_data_load(usb_dev, &patch_info, FW_PATCH_BASE_NAME_8800D80_U02_EXT)) {
                 return -1;
             }
 
             if (aicbt_patch_table_load(usb_dev, head)) {
                 return -1;
             }
-            #endif
 
+			#endif
             if (IS_CHIP_ID_H()){
                 if(rwnx_plat_bin_fw_upload_android(usb_dev, RAM_FMAC_FW_ADDR_8800D80_U02, FW_BASE_NAME_8800D80_H_U02))
                     return -1;
@@ -491,7 +491,7 @@ int aicfw_download_fw_8800d80(struct aic_usb_dev *usb_dev)
                 return -1;
             }
 
-            if (aicbt_ext_patch_data_load(usb_dev, &patch_info)) {
+            if (aicbt_ext_patch_data_load(usb_dev, &patch_info, FW_PATCH_BASE_NAME_8800D80_U02_EXT)) {
                 return -1;
             }
 
