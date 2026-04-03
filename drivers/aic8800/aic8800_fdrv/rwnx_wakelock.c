@@ -12,13 +12,8 @@
 struct wakeup_source *rwnx_wakeup_init(const char *name)
 {
 	struct wakeup_source *ws;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 0)
-	ws = wakeup_source_register(NULL, name);
-#else
 	ws = wakeup_source_create(name);
-	if (ws)
-		wakeup_source_add(ws);
-#endif
+	wakeup_source_add(ws);
 	return ws;
 }
 
@@ -26,14 +21,8 @@ void rwnx_wakeup_deinit(struct wakeup_source *ws)
 {
 	if (ws && ws->active)
 		__pm_relax(ws);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 0)
-	wakeup_source_unregister(ws);
-#else
-	if (ws) {
-		wakeup_source_remove(ws);
-		wakeup_source_destroy(ws);
-	}
-#endif
+	wakeup_source_remove(ws);
+	wakeup_source_destroy(ws);
 }
 
 struct wakeup_source *rwnx_wakeup_register(struct device *dev, const char *name)

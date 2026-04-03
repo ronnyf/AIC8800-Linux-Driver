@@ -77,59 +77,13 @@
 #endif
 
 
-/*
- * cfg80211 API compat helpers for kernel >= 6.17
- * Some notification helpers gained a link_id argument.
- * Provide thin wrappers so existing call sites keep working.
- */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0)
-static inline bool rwnx_cfg80211_rx_spurious_frame(struct net_device *dev,
-                                                  const u8 *addr,
-                                                  gfp_t gfp)
-{
-    /* -1 means unknown or not applicable link_id for single-link */
-    return cfg80211_rx_spurious_frame(dev, addr, -1, gfp);
-}
-
-static inline bool rwnx_cfg80211_rx_unexpected_4addr_frame(struct net_device *dev,
-                                                          const u8 *addr,
-                                                          gfp_t gfp)
-{
-    return cfg80211_rx_unexpected_4addr_frame(dev, addr, -1, gfp);
-}
-#else
-static inline bool rwnx_cfg80211_rx_spurious_frame(struct net_device *dev,
-                                                  const u8 *addr,
-                                                  gfp_t gfp)
-{
-    return cfg80211_rx_spurious_frame(dev, addr, gfp);
-}
-
-static inline bool rwnx_cfg80211_rx_unexpected_4addr_frame(struct net_device *dev,
-                                                          const u8 *addr,
-                                                          gfp_t gfp)
-{
-    return cfg80211_rx_unexpected_4addr_frame(dev, addr, gfp);
-}
-#endif
-
-
 
 #if LINUX_VERSION_CODE >= HIGH_KERNEL_VERSION
-#ifndef IEEE80211_MAX_AMPDU_BUF
 #define IEEE80211_MAX_AMPDU_BUF                             IEEE80211_MAX_AMPDU_BUF_HE
-#endif
-#ifndef IEEE80211_HE_PHY_CAP6_TRIG_MU_BEAMFORMER_FB
 #define IEEE80211_HE_PHY_CAP6_TRIG_MU_BEAMFORMER_FB         IEEE80211_HE_PHY_CAP6_TRIG_MU_BEAMFORMING_PARTIAL_BW_FB
-#endif
-#ifndef IEEE80211_HE_PHY_CAP6_TRIG_SU_BEAMFORMER_FB
 #define IEEE80211_HE_PHY_CAP6_TRIG_SU_BEAMFORMER_FB         IEEE80211_HE_PHY_CAP6_TRIG_SU_BEAMFORMING_FB
-#endif
-#ifndef IEEE80211_HE_PHY_CAP3_RX_HE_MU_PPDU_FROM_NON_AP_STA 
 #define IEEE80211_HE_PHY_CAP3_RX_HE_MU_PPDU_FROM_NON_AP_STA IEEE80211_HE_PHY_CAP3_RX_PARTIAL_BW_SU_IN_20MHZ_MU
 #endif
-#endif
-
 
 #ifndef IEEE80211_MAX_AMPDU_BUF
 #define IEEE80211_MAX_AMPDU_BUF                             0x100
@@ -143,6 +97,7 @@ static inline bool rwnx_cfg80211_rx_unexpected_4addr_frame(struct net_device *de
 #ifndef IEEE80211_HE_PHY_CAP3_RX_HE_MU_PPDU_FROM_NON_AP_STA
 #define IEEE80211_HE_PHY_CAP3_RX_HE_MU_PPDU_FROM_NON_AP_STA 0x40
 #endif
+
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0) || defined(CONFIG_VHT_FOR_OLD_KERNEL)
 enum nl80211_ac {

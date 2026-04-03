@@ -11,7 +11,6 @@
 #include <linux/ieee80211.h>
 #include <linux/etherdevice.h>
 #include <net/ieee80211_radiotap.h>
-#include <linux/timer.h>
 
 #include "rwnx_defs.h"
 #include "rwnx_rx.h"
@@ -1626,7 +1625,7 @@ void reord_deinit_sta(struct aicwf_rx_priv* rx_priv, struct reord_ctrl_info *reo
             reord_rxframe_free(&rx_priv->freeq_lock, &rx_priv->rxframes_freequeue, &req->rxframe_list);
         }
 
-		AICWFDBG(LOGINFO, "reord dinit in_hardirq():%d in_atomic:%d in_softirq:%d\r\n", (int)in_hardirq()
+		AICWFDBG(LOGINFO, "reord dinit in_irq():%d in_atomic:%d in_softirq:%d\r\n", (int)in_irq()
 			,(int)in_atomic(), (int)in_softirq());
         spin_unlock_bh(&preorder_ctrl->reord_list_lock);
     }
@@ -1859,10 +1858,10 @@ void reord_timeout_handler (ulong data)
 void reord_timeout_handler (struct timer_list *t)
 #endif
 {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(4,15,0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,14,0)
 	struct reord_ctrl *preorder_ctrl = (struct reord_ctrl *)data;
 #else
-	struct reord_ctrl *preorder_ctrl = container_of(t, struct reord_ctrl, reord_timer);
+	struct reord_ctrl *preorder_ctrl = from_timer(preorder_ctrl, t, reord_timer);
 #endif
 
 	AICWFDBG(LOGTRACE, "%s Enter \r\n", __func__);
@@ -2187,7 +2186,7 @@ void defrag_timeout_cb(struct timer_list *t)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 	defrag_ctrl = (struct defrag_ctrl_info *)data;
 #else
-	defrag_ctrl = container_of(t, struct defrag_ctrl_info, defrag_timer);
+	defrag_ctrl = from_timer(defrag_ctrl, t, defrag_timer);
 #endif
 
 	printk("%s:%p\r\n", __func__, defrag_ctrl);
@@ -2353,7 +2352,7 @@ check_len_update:
         hdr = (struct ieee80211_hdr *)(skb->data + msdu_offset);
         rwnx_vif = rwnx_rx_get_vif(rwnx_hw, hw_rxhdr->flags_vif_idx);
         if (rwnx_vif) {
-            rwnx_cfg80211_rx_spurious_frame(rwnx_vif->ndev, hdr->addr2, GFP_ATOMIC);
+            cfg80211_rx_spurious_frame(rwnx_vif->ndev, hdr->addr2, GFP_ATOMIC);
         }
         goto end;
     }
@@ -2599,8 +2598,8 @@ check_len_update:
                 }
 
                 if (hw_rxhdr->flags_is_4addr && !rwnx_vif->use_4addr) {
-                    rwnx_cfg80211_rx_unexpected_4addr_frame(rwnx_vif->ndev,
-                                                            sta->mac_addr, GFP_ATOMIC);
+                    cfg80211_rx_unexpected_4addr_frame(rwnx_vif->ndev,
+                                                       sta->mac_addr, GFP_ATOMIC);
                 }
             }
 

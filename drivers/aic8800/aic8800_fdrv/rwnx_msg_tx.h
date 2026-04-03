@@ -202,9 +202,5 @@ int rwnx_send_txpwr_per_sta_req(struct rwnx_hw *rwnx_hw, struct rwnx_sta *sta);
 int rwnx_send_reboot(struct rwnx_hw *rwnx_hw);
 //#endif // CONFIG_USB_BT
 
-int rwnx_send_pwm_init_req(struct rwnx_hw *rwnx_hw, u8 pwm_gpidx, u8 mode, u8 run, u32 tmr_cnt,
-    u32 dty_cnt, u32 step_val, u8 gpio_en, u8 gpio_dir, u8 gpio_val);
-int rwnx_send_pwm_deinit_req(struct rwnx_hw *rwnx_hw, u8 pwm_gpidx, u8 gpio_en, u8 gpio_dir, u8 gpio_val);
-void rwnx_set_pwm_tbl(struct rwnx_hw *rwnx_hw);
 
 #endif /* _RWNX_MSG_TX_H_ */
