@@ -4286,11 +4286,14 @@ static int rwnx_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
  */
 static int rwnx_cfg80211_set_tx_power(struct wiphy *wiphy,
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
- struct wireless_dev *wdev,
+                                       struct wireless_dev *wdev,
 #else
- struct wireless_dev *wdev/*unused*/,
+                                       struct wireless_dev *wdev/*unused*/,
 #endif
-                                      enum nl80211_tx_power_setting type, int mbm)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0)
+                                       int parent,
+#endif
+                                       enum nl80211_tx_power_setting type, int mbm)
 {
     #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
     struct wireless_dev *wdev = NULL;

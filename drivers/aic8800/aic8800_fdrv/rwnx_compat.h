@@ -430,4 +430,33 @@ enum {
 typedef __s64 time64_t;
 #endif
 
+/* CFG80211 - Kernel 6.x changes */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0)
+#define cfg80211_rx_spurious_frame(dev, addr, gfp) \
+    cfg80211_rx_spurious_frame(dev, addr, -1, gfp)
+
+#define cfg80211_rx_unexpected_4addr_frame(dev, addr, gfp) \
+    cfg80211_rx_unexpected_4addr_frame(dev, addr, -1, gfp)
+#endif
+
+/* KERNEL 6.x timer API changes */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0)
+#define from_timer(var, timer, member) \
+    container_of(timer, typeof(*var), member)
+#endif
+
+#ifndef in_irq
+#define in_irq() (in_hardirq() || in_nmi())
+#endif
+
+/* KERNEL 6.x timer API - renamed functions */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0)
+#ifndef del_timer
+#define del_timer(timer) timer_delete(timer)
+#endif
+#ifndef del_timer_sync
+#define del_timer_sync(timer) timer_delete_sync(timer)
+#endif
+#endif
+
 #endif /* _RWNX_COMPAT_H_ */

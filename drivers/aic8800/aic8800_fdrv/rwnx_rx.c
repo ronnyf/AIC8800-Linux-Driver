@@ -10,6 +10,7 @@
 #include <linux/dma-mapping.h>
 #include <linux/ieee80211.h>
 #include <linux/etherdevice.h>
+#include <linux/timer.h>
 #include <net/ieee80211_radiotap.h>
 
 #include "rwnx_defs.h"
