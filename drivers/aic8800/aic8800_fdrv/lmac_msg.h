@@ -892,6 +892,7 @@ struct mm_ba_add_cfm
     u8_l tid;
     /// Status of ba establishment
     u8_l status;
+	u8_l alligned;
 };
 
 /// Structure containing the parameters of the @ref MM_BA_DEL_REQ message.
@@ -2038,6 +2039,7 @@ struct me_sta_add_cfm
     u8_l status;
     /// PM state of the station
     u8_l pm_state;
+	u8_l alligned;
 };
 
 /// Structure containing the parameters of the @ref ME_STA_DEL_REQ message.
@@ -3463,37 +3465,4 @@ struct mm_set_wakeup_info_req {
 	u16_l length;
 	u8_l mask_and_pattern[];
     };
-
-struct dbg_pwm_init_req
-{
-    /// PWM_CHANNEL_GPIO
-    u8 pwm_gpidx;
-    /// 0 normal 1 breath
-    u8 mode;
-    /// 0 config only 1 run after config
-    u8 run;
-    u32 tmr_cnt;
-    u32 dty_cnt;
-    u32 step_val;
-    /// 0 disable 1 enable
-    u8 gpio_en;
-    /// 0 input 1 output
-    u8 gpio_dir;
-    /// 0 low 1 high
-    u8 gpio_val;
-};
-
-struct dbg_pwm_deinit_req
-{
-    /// PWM_CHANNEL_GPIO
-    u8 pwm_gpidx;
-    /// 0 disable 1 enable
-    u8 gpio_en;
-    /// 0 input 1 output
-    u8 gpio_dir;
-    /// 0 low 1 high
-    u8 gpio_val;
-};
-
-
 #endif // LMAC_MSG_H_
