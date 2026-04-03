@@ -3,7 +3,7 @@
 ## Build System
 
 **Compile**: `make LLVM=1 -C drivers/aic8800`  
-**Install/Clean/Uninstall**: `make -C drivers/aic8800 {install,clean,uninstall}`
+**Install/Clean/Uninstall**: `make -C drivers/aic8800 {install,install_firmware,install_rules,install_modules,clean,uninstall,uninstall_firmware,uninstall_rules,uninstall_modules}`
 
 **Platform configs**: `CONFIG_PLATFORM_ROCKCHIP` (arm64), `CONFIG_PLATFORM_ALLWINNER` (arm64), `CONFIG_PLATFORM_AMLOGIC` (arm), `CONFIG_PLATFORM_HI` (arm), `CONFIG_PLATFORM_UBUNTU` (default)
 

@@ -1,8 +1,11 @@
 #!/bin/bash
 
+echo "WARNING: install_setup.sh is DEPRECATED and will be removed."
+echo "Use 'make install' (or modular targets: install_firmware, install_rules, install_modules)"
+echo ""
 echo "##################################################"
-echo "AIC Wi-Fi driver Setup Files script"
-echo "2023.03.09 v1.1.0"
+echo "AIC Wi-Fi driver Setup Files script (legacy)"
+echo "2023.03.09 v1.1.0 - DEPRECATED"
 echo "##################################################"
 
 Main_version=`uname -r |awk -F'.' '{print $1}'`
