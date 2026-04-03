@@ -12,16 +12,20 @@
 
 #include <linux/module.h>
 #include <linux/pci.h>
+#include <linux/netdevice.h>
 #include <linux/inetdevice.h>
+#include <linux/ieee80211.h>
+#include <linux/byteorder/generic.h>
+#include <linux/bug.h>
 #include <net/cfg80211.h>
 #include <net/ip.h>
 #include <linux/etherdevice.h>
-#include <linux/netdevice.h>
 #include <net/netlink.h>
 #include <linux/wireless.h>
 #include <linux/if_arp.h>
 #include <linux/ctype.h>
 #include <linux/random.h>
+#include <linux/timer.h>
 #include "rwnx_defs.h"
 #include "rwnx_dini.h"
 #include "rwnx_msg_tx.h"
@@ -4259,6 +4263,7 @@ void rwnx_cfg80211_mgmt_frame_register(struct wiphy *wiphy,
 {
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0)
 /**
  * @set_wiphy_params: Notify that wiphy parameters have changed;
  *	@changed bitfield (see &enum wiphy_params_flags) describes which values
@@ -4269,6 +4274,7 @@ static int rwnx_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
 {
     return 0;
 }
+#endif
 
 
 /**
@@ -4281,6 +4287,8 @@ static int rwnx_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
 static int rwnx_cfg80211_set_tx_power(struct wiphy *wiphy,
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
  struct wireless_dev *wdev,
+#else
+ struct wireless_dev *wdev/*unused*/,
 #endif
                                       enum nl80211_tx_power_setting type, int mbm)
 {
@@ -6207,7 +6215,9 @@ static struct cfg80211_ops rwnx_cfg80211_ops = {
     .set_monitor_channel = rwnx_cfg80211_set_monitor_channel,
     .probe_client = rwnx_cfg80211_probe_client,
 //    .mgmt_frame_register = rwnx_cfg80211_mgmt_frame_register,
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0)
     .set_wiphy_params = rwnx_cfg80211_set_wiphy_params,
+#endif
     .set_txq_params = rwnx_cfg80211_set_txq_params,
     .set_tx_power = rwnx_cfg80211_set_tx_power,
 //    .get_tx_power = rwnx_cfg80211_get_tx_power,
