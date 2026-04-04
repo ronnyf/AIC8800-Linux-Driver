@@ -225,7 +225,7 @@ static int parse_line (char *line, char *argv[])
 		*line++ = '\0';         /* terminate current arg     */
 	}
 
-	printk("** Too many args (max. %d) **\n", CMD_MAXARGS);
+	AICWFDBG(LOGERROR, "** Too many args (max. %d) **\n", CMD_MAXARGS);
 
 	return nargs;
 }
@@ -1602,10 +1602,10 @@ static const struct aic_priv_cmd aic_priv_commands[] = {
 static void print_help(const char *cmd)
 {
 	int n;
-	printk("commands:\n");
+	AICWFDBG(LOGERROR, "commands:\n");
 	for (n = 0; aic_priv_commands[n].cmd; n++) {
 		if (cmd != NULL)
-			printk("%s %s\n", aic_priv_commands[n].cmd, aic_priv_commands[n].usage);
+			AICWFDBG(LOGERROR, "%s %s\n", aic_priv_commands[n].cmd, aic_priv_commands[n].usage);
 	}
 }
 

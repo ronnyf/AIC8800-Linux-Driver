@@ -43,7 +43,7 @@ int rwnx_testmode_reg(struct ieee80211_hw *hw, struct nlattr **tb)
 
     /* First check if register address is there */
     if (!tb[RWNX_TM_ATTR_REG_OFFSET]) {
-        printk("Error finding register offset\n");
+        AICWFDBG(LOGERROR, "Error finding register offset\n");
         return -ENOMSG;
     }
 
@@ -61,7 +61,7 @@ int rwnx_testmode_reg(struct ieee80211_hw *hw, struct nlattr **tb)
             /* Allocate the answer message */
             skb = cfg80211_testmode_alloc_reply_skb(hw->wiphy, 20);
             if (!skb) {
-                printk("Error allocating memory\n");
+                AICWFDBG(LOGERROR, "Error allocating memory\n");
                 return -ENOMEM;
             }
 
@@ -72,14 +72,14 @@ int rwnx_testmode_reg(struct ieee80211_hw *hw, struct nlattr **tb)
             /* Send the answer to upper layer */
             status = cfg80211_testmode_reply(skb);
             if (status < 0)
-                printk("Error sending msg : %d\n", status);
+                AICWFDBG(LOGERROR, "Error sending msg : %d\n", status);
         }
         break;
 
     case RWNX_TM_CMD_APP2DEV_REG_WRITE:
         {
             if (!tb[RWNX_TM_ATTR_REG_VALUE32]) {
-                printk("Error finding value to write\n");
+                AICWFDBG(LOGERROR, "Error finding value to write\n");
                 return -ENOMSG;
             } else {
                 val32 = nla_get_u32(tb[RWNX_TM_ATTR_REG_VALUE32]);
@@ -91,7 +91,7 @@ int rwnx_testmode_reg(struct ieee80211_hw *hw, struct nlattr **tb)
         break;
 
     default:
-        printk("Unknown testmode register command ID\n");
+        AICWFDBG(LOGERROR, "Unknown testmode register command ID\n");
         return -ENOSYS;
     }
 
@@ -116,7 +116,7 @@ int rwnx_testmode_dbg_filter(struct ieee80211_hw *hw, struct nlattr **tb)
 
     /* First check if the filter is there */
     if (!tb[RWNX_TM_ATTR_REG_FILTER]) {
-        printk("Error finding filter value\n");
+        AICWFDBG(LOGERROR, "Error finding filter value\n");
         return -ENOMSG;
     }
 
@@ -140,7 +140,7 @@ int rwnx_testmode_dbg_filter(struct ieee80211_hw *hw, struct nlattr **tb)
         break;
 
     default:
-        printk("Unknown testmode register command ID\n");
+        AICWFDBG(LOGERROR, "Unknown testmode register command ID\n");
         return -ENOSYS;
     }
 
@@ -168,7 +168,7 @@ int rwnx_testmode_reg_dbg(struct ieee80211_hw *hw, struct nlattr **tb)
 
     /* First check if register address is there */
     if (!tb[RWNX_TM_ATTR_REG_OFFSET]) {
-        printk("Error finding register offset\n");
+        AICWFDBG(LOGERROR, "Error finding register offset\n");
         return -ENOMSG;
     }
 
@@ -184,7 +184,7 @@ int rwnx_testmode_reg_dbg(struct ieee80211_hw *hw, struct nlattr **tb)
             /* Allocate the answer message */
             skb = cfg80211_testmode_alloc_reply_skb(hw->wiphy, 20);
             if (!skb) {
-                printk("Error allocating memory\n");
+                AICWFDBG(LOGERROR, "Error allocating memory\n");
                 return -ENOMEM;
             }
 
@@ -194,14 +194,14 @@ int rwnx_testmode_reg_dbg(struct ieee80211_hw *hw, struct nlattr **tb)
             /* Send the answer to upper layer */
             status = cfg80211_testmode_reply(skb);
             if (status < 0)
-                printk("Error sending msg : %d\n", status);
+                AICWFDBG(LOGERROR, "Error sending msg : %d\n", status);
         }
         break;
 
     case RWNX_TM_CMD_APP2DEV_REG_WRITE_DBG:
         {
             if (!tb[RWNX_TM_ATTR_REG_VALUE32]) {
-                printk("Error finding value to write\n");
+                AICWFDBG(LOGERROR, "Error finding value to write\n");
                 return -ENOMSG;
             } else {
                 reg_value = nla_get_u32(tb[RWNX_TM_ATTR_REG_VALUE32]);
@@ -214,7 +214,7 @@ int rwnx_testmode_reg_dbg(struct ieee80211_hw *hw, struct nlattr **tb)
         break;
 
     default:
-        printk("Unknown testmode register command ID\n");
+        AICWFDBG(LOGERROR, "Unknown testmode register command ID\n");
         return -ENOSYS;
     }
 

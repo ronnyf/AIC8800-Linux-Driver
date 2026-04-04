@@ -353,7 +353,7 @@ void rwnx_rx_data_skb_resend(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwnx_vif,
 	skb_reset_mac_header(rx_skb);
 	eth = eth_hdr(rx_skb);
 
-    //printk("resend\n");
+    //AICWFDBG(LOGDEBUG, "resend\n");
 	/* resend pkt on wireless interface */
 	/* always need to copy buffer when forward=0 to get enough headrom for tsdesc */
 	skb_copy = skb_copy_expand(rx_skb, sizeof(struct rwnx_txhdr) +
@@ -395,7 +395,7 @@ static void rwnx_rx_data_skb_forward(struct rwnx_hw *rwnx_hw, struct rwnx_vif *r
 	rwnx_vif->net_stats.rx_packets++;
 	rwnx_vif->net_stats.rx_bytes += rx_skb->len;
 
-    //printk("forward\n");
+    //AICWFDBG(LOGDEBUG, "forward\n");
 #ifdef CONFIG_BR_SUPPORT
     void *br_port = NULL;
 
@@ -788,7 +788,7 @@ static void rwnx_rx_mgmt(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwnx_vif,
 	struct ieee80211_he_mcs_nss_supp *he_mcs;
 #endif
 
-	//printk("rwnx_rx_mgmt\n");
+	//AICWFDBG(LOGDEBUG, "rwnx_rx_mgmt\n");
 	if(skb->data[0]!=0x80 && skb->data[0] != 0x40)
 		AICWFDBG(LOGDEBUG,"rxmgmt:%x,%x\n", skb->data[0], skb->data[1]);
 
@@ -798,7 +798,7 @@ static void rwnx_rx_mgmt(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwnx_vif,
 	if (RWNX_VIF_TYPE(rwnx_vif) == NL80211_IFTYPE_AP) {
 #if 0
 		if(skb->data[0] != 0x80)
-			printk("rx mgmt:%02x\n", mgmt->frame_control);
+			AICWFDBG(LOGDEBUG, "rx mgmt:%02x\n", mgmt->frame_control);
 #endif
 
 		if (ieee80211_is_assoc_req(mgmt->frame_control)) {
@@ -839,14 +839,14 @@ static void rwnx_rx_mgmt(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwnx_vif,
 	u32 len;
 
     if (ieee80211_is_assoc_req(mgmt->frame_control) && rwnx_vif->wdev.iftype == NL80211_IFTYPE_AP) {
-        printk("ASSOC_REQ: sta_idx %d MAC %pM\n", rwnx_vif->ap.aic_index, mgmt->sa);
+        AICWFDBG(LOGINFO, "ASSOC_REQ: sta_idx %d MAC %pM\n", rwnx_vif->ap.aic_index, mgmt->sa);
         sta->sta_idx = rwnx_vif->ap.aic_index;
         len = skb->len - (mgmt->u.assoc_req.variable - skb->data);
 
         #ifdef CONFIG_HE_FOR_OLD_KERNEL
         ie = cfg80211_find_ext_ie(WLAN_EID_EXT_HE_CAPABILITY, mgmt->u.assoc_req.variable, len);
         if (ie && ie[1] >= sizeof(*he) + 1) {
-            printk("assoc_req: find he\n");
+            AICWFDBG(LOGINFO, "assoc_req: find he\n");
 			he = (struct ieee80211_he_cap_elem *)(ie+3);
 			he_mcs = (struct ieee80211_he_mcs_nss_supp *)((u8 *)he + sizeof(*he));
 			memcpy(&sta->he_cap_elem,ie+3,sizeof(struct ieee80211_he_cap_elem));
@@ -856,7 +856,7 @@ static void rwnx_rx_mgmt(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwnx_vif,
             sta->he = true;
         }
         else {
-            printk("assoc_req: no find he\n");
+            AICWFDBG(LOGINFO, "assoc_req: no find he\n");
             sta->he = false;
         }
         #endif
@@ -865,27 +865,27 @@ static void rwnx_rx_mgmt(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwnx_vif,
         struct ieee80211_vht_cap *vht;
         ie = cfg80211_find_ie(WLAN_EID_VHT_CAPABILITY, mgmt->u.assoc_req.variable, len);
         if (ie && ie[1] >= sizeof(*vht)) {
-            printk("assoc_req: find vht\n");
+            AICWFDBG(LOGINFO, "assoc_req: find vht\n");
 			memcpy(&sta->vht_cap_info,ie+2,4);
 			memcpy(&sta->supp_mcs,ie+2+4,sizeof(struct ieee80211_vht_mcs_info));
             sta->vht = true;
         } else {
-            printk("assoc_req: no find vht\n");
+            AICWFDBG(LOGINFO, "assoc_req: no find vht\n");
             sta->vht = false;
         }
         #endif
     }
     if (ieee80211_is_deauth(mgmt->frame_control) && rwnx_vif->wdev.iftype == NL80211_IFTYPE_AP) {
-        printk("DEAUTH: sta_idx %d MAC %pM reason:%x\n", rwnx_vif->ap.aic_index, mgmt->sa, mgmt->u.deauth.reason_code);
+        AICWFDBG(LOGINFO, "DEAUTH: sta_idx %d MAC %pM reason:%x\n", rwnx_vif->ap.aic_index, mgmt->sa, mgmt->u.deauth.reason_code);
     }
     if (ieee80211_is_disassoc(mgmt->frame_control) && rwnx_vif->wdev.iftype == NL80211_IFTYPE_AP) {
-        printk("DISASSOC: sta_idx %d MAC %pM reason:%x\n", rwnx_vif->ap.aic_index, mgmt->sa, mgmt->u.disassoc.reason_code);
+        AICWFDBG(LOGINFO, "DISASSOC: sta_idx %d MAC %pM reason:%x\n", rwnx_vif->ap.aic_index, mgmt->sa, mgmt->u.disassoc.reason_code);
     }
 #endif
 
     /*if (ieee80211_is_mgmt(mgmt->frame_control) &&
         (skb->len <= 24 || skb->len > 768)) {
-        printk("mgmt err\n");
+        AICWFDBG(LOGERROR, "mgmt err\n");
         return;
     }*/
 
@@ -1500,7 +1500,7 @@ struct reord_ctrl_info *reord_init_sta(struct aicwf_rx_priv* rx_priv, const u8 *
 #endif
 
     if (bus_if->state == BUS_DOWN_ST || rx_priv == NULL) {
-        printk("bad stat!\n");
+        AICWFDBG(LOGERROR, "bad stat!\n");
         return NULL;
     }
 
@@ -1549,7 +1549,7 @@ int reord_flush_tid(struct aicwf_rx_priv *rx_priv, struct sk_buff *skb, u8 tid)
     else if((rwnx_vif->wdev.iftype == NL80211_IFTYPE_AP) || (rwnx_vif->wdev.iftype == NL80211_IFTYPE_P2P_GO))
         mac = eh->h_source;
     else {
-        printk("error mode:%d!\n", rwnx_vif->wdev.iftype);
+        AICWFDBG(LOGERROR, "error mode:%d!\n", rwnx_vif->wdev.iftype);
         dev_kfree_skb(skb);
         return -1;
     }
@@ -1690,7 +1690,7 @@ int reord_single_frame_ind(struct aicwf_rx_priv *rx_priv, struct recv_msdu *prfr
                 resend_skb = resend_next_skb;
             }
             if(resend_cnt != prframe->ap_resend_cnt)
-                printk("resend cnt error: %d,%d\n", resend_cnt, prframe->ap_resend_cnt);
+                AICWFDBG(LOGERROR, "resend cnt error: %d,%d\n", resend_cnt, prframe->ap_resend_cnt);
 
             if(!prframe->ap_fwd_cnt) {
                 prframe->pkt = NULL;
@@ -1728,7 +1728,7 @@ int reord_single_frame_ind(struct aicwf_rx_priv *rx_priv, struct recv_msdu *prfr
             fwd_skb = fwd_next_skb;
         }
         if(fwd_cnt != prframe->ap_fwd_cnt)
-            printk("fwd cnt error: %d,%d\n", fwd_cnt, prframe->ap_fwd_cnt);
+            AICWFDBG(LOGERROR, "fwd cnt error: %d,%d\n", fwd_cnt, prframe->ap_fwd_cnt);
     }
 
     while (!skb_queue_empty(&list)) {
@@ -2106,14 +2106,14 @@ void remove_sec_hdr_mgmt_frame(struct hw_rxhdr *hw_rxhdr,struct sk_buff *skb)
 
     if(!hw_rxhdr->hwvect.ga_frame){
         if(((skb->data[0] & 0x0C) == 0) && (skb->data[1] & 0x40) == 0x40){ //protect management frame
-            printk("frame type %x\n",skb->data[0]);
+            AICWFDBG(LOGDEBUG, "frame type %x\n",skb->data[0]);
             if(hw_rxhdr->hwvect.decr_status == RWNX_RX_HD_DECR_CCMP128){
                 memcpy(mgmt_header,skb->data,hdr_len);
                 skb_pull(skb,8);
                 memcpy(skb->data,mgmt_header,hdr_len);
                 hw_rxhdr->hwvect.len -= 8;
             } else {
-                printk("unsupport decr_status:%d\n",hw_rxhdr->hwvect.decr_status);
+                AICWFDBG(LOGERROR, "unsupport decr_status:%d\n",hw_rxhdr->hwvect.decr_status);
             }
         }
     }
@@ -2141,14 +2141,14 @@ void rwnx_rxdata_process_amsdu(struct rwnx_hw *rwnx_hw, struct sk_buff *skb, u8 
             else if (skb->len == (sublen+14))
                 len_alligned = sublen+14;
             else {
-                printk("accroding to amsdu: this will not happen\n");
+                AICWFDBG(LOGERROR, "accroding to amsdu: this will not happen\n");
                 break;
             }
             //printk("sublen = %d, %x, %x, %x, %x\r\n", sublen,skb->data[0], skb->data[1], skb->data[12], skb->data[13]);
 #if 1
             sub_skb = __dev_alloc_skb(sublen - 6 + 12, GFP_ATOMIC);
             if(!sub_skb){
-                printk("sub_skb alloc fail:%d\n", sublen);
+                AICWFDBG(LOGERROR, "sub_skb alloc fail:%d\n", sublen);
                 break;
             }
             skb_put(sub_skb, sublen - 6 + 12);
@@ -2158,7 +2158,7 @@ void rwnx_rxdata_process_amsdu(struct rwnx_hw *rwnx_hw, struct sk_buff *skb, u8 
 
             rwnx_vif = rwnx_rx_get_vif(rwnx_hw, vif_idx);
             if (!rwnx_vif) {
-                printk("frame received but no active vif (%d), skb->len:%u\n", vif_idx, skb->len);
+                AICWFDBG(LOGERROR, "frame received but no active vif (%d), skb->len:%u\n", vif_idx, skb->len);
                 //dev_kfree_skb(sub_skb);
                 break;
             }
@@ -2190,7 +2190,7 @@ void defrag_timeout_cb(struct timer_list *t)
 	defrag_ctrl = from_timer(defrag_ctrl, t, defrag_timer);
 #endif
 
-	printk("%s:%p\r\n", __func__, defrag_ctrl);
+ 	AICWFDBG(LOGDEBUG, "%s:%p\r\n", __func__, defrag_ctrl);
 	spin_lock_bh(&defrag_ctrl->rwnx_hw->defrag_lock);
 	list_del_init(&defrag_ctrl->list);
 	dev_kfree_skb(defrag_ctrl->skb);
@@ -2421,7 +2421,7 @@ check_len_update:
                 hw_rxhdr->flags_is_amsdu = 0;
 
             if((ether_type[0] == 0x8e && ether_type[1] == 0x88) || (ether_type[0] == 0x88 && ether_type[1] == 0x8e))
-                printk("rx eapol\n");
+                AICWFDBG(LOGDEBUG, "rx eapol\n");
 			if (is_amsdu) {
                 skb_pull(skb, pull_len-8);
 			}
@@ -2430,7 +2430,7 @@ check_len_update:
 				sta_idx = hw_rxhdr->flags_dst_idx;
 
 			if (!hw_rxhdr->flags_need_reord && ((frame_ctrl & MAC_FCTRL_MOREFRAG) || frag_num)) {
-				printk("rxfrag:%d,%d,%d,sn=%d,%d\r\n", (frame_ctrl & MAC_FCTRL_MOREFRAG), frag_num, skb->len, seq_num,pull_len);
+				AICWFDBG(LOGDEBUG, "rxfrag:%d,%d,%d,sn=%d,%d\r\n", (frame_ctrl & MAC_FCTRL_MOREFRAG), frag_num, skb->len, seq_num,pull_len);
 				if (frame_ctrl & MAC_FCTRL_MOREFRAG) {
 					spin_lock_bh(&rwnx_hw->defrag_lock);
 					if (!list_empty(&rwnx_hw->defrag_list)) {
@@ -2447,7 +2447,7 @@ check_len_update:
 					if (defrag_info) {
 						is_frag = 1;
 						if (defrag_info->next_fn != frag_num) {
-							printk("discard:%d:%d\n", defrag_info->next_fn, frag_num);
+							AICWFDBG(LOGDEBUG, "discard:%d:%d\n", defrag_info->next_fn, frag_num);
 							dev_kfree_skb(skb);
 							spin_unlock_bh(&rwnx_hw->defrag_lock);
 							return 0;
@@ -2465,14 +2465,14 @@ check_len_update:
 					} else {
 						defrag_info = kzalloc(sizeof(struct defrag_ctrl_info), GFP_KERNEL);
 						if (defrag_info == NULL) {
-							printk("no defrag_ctrl_info\r\n");
+							AICWFDBG(LOGDEBUG, "no defrag_ctrl_info\r\n");
 							dev_kfree_skb(skb);
 							spin_unlock_bh(&rwnx_hw->defrag_lock);
 							return 0;
 						}
 						defrag_info->skb = __dev_alloc_skb(2000, GFP_KERNEL);
 						if (defrag_info->skb == NULL) {
-							printk("no fragment skb\r\n");
+							AICWFDBG(LOGDEBUG, "no fragment skb\r\n");
 							dev_kfree_skb(skb);
 							kfree(defrag_info);
 							spin_unlock_bh(&rwnx_hw->defrag_lock);
@@ -2523,7 +2523,7 @@ check_len_update:
 							spin_unlock_bh(&rwnx_hw->defrag_lock);
 						else {
 							if (defrag_info->next_fn != frag_num) {
-								printk("discard:%d:%d\n", defrag_info->next_fn, frag_num);
+								AICWFDBG(LOGDEBUG, "discard:%d:%d\n", defrag_info->next_fn, frag_num);
 								dev_kfree_skb(skb);
 								spin_unlock_bh(&rwnx_hw->defrag_lock);
 								return 0;
@@ -2538,7 +2538,7 @@ check_len_update:
 
 							rwnx_vif = rwnx_rx_get_vif(rwnx_hw, hw_rxhdr->flags_vif_idx);
 							if (!rwnx_vif) {
-								printk("Frame received but no active vif (%d)", hw_rxhdr->flags_vif_idx);
+								AICWFDBG(LOGERROR, "Frame received but no active vif (%d)", hw_rxhdr->flags_vif_idx);
 								dev_kfree_skb(skb);
 								spin_unlock_bh(&rwnx_hw->defrag_lock);
 								return 0;
@@ -2614,9 +2614,9 @@ check_len_update:
                 if(is_qos && hw_rxhdr->flags_need_reord){
     				struct recv_msdu *pframe;
     				pframe = reord_rxframe_alloc(&rx_priv_tmp->freeq_lock, &rx_priv_tmp->rxframes_freequeue);
-    				if (!pframe) {
-                        printk("no pframe\n");
-    					dev_kfree_skb(skb);
+     				if (!pframe) {
+                        AICWFDBG(LOGERROR, "no pframe\n");
+     					dev_kfree_skb(skb);
     					return -1;
     				}
     				pframe->is_ap_reord = 0;

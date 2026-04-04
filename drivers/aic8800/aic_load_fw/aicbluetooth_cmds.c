@@ -16,13 +16,14 @@
 #include "aicbluetooth_cmds.h"
 #include "aic_txrxif.h"
 #include "aicwf_usb.h"
+#include "aicwf_debug.h"
 
 //extern int aicwf_sdio_writeb(struct aic_sdio_dev *sdiodev, uint regaddr, u8 val);
 
 static void cmd_dump(const struct rwnx_cmd *cmd)
 {
-    printk(KERN_CRIT "tkn[%d]  flags:%04x  result:%3d  cmd:%4d - reqcfm(%4d)\n",
-           cmd->tkn, cmd->flags, cmd->result, cmd->id, cmd->reqid);
+    AICWFDBG(LOGTRACE, "tkn[%d]  flags:%04x  result:%3d  cmd:%4d - reqcfm(%4d)\n",
+             cmd->tkn, cmd->flags, cmd->result, cmd->id, cmd->reqid);
 }
 
 static void cmd_complete(struct rwnx_cmd_mgr *cmd_mgr, struct rwnx_cmd *cmd)
@@ -51,7 +52,7 @@ static int cmd_mgr_queue(struct rwnx_cmd_mgr *cmd_mgr, struct rwnx_cmd *cmd)
     spin_lock_bh(&cmd_mgr->lock);
 
     if (cmd_mgr->state == RWNX_CMD_MGR_STATE_CRASHED) {
-        printk(KERN_CRIT"cmd queue crashed\n");
+        AICWFDBG(LOGERROR, "cmd queue crashed\n");
         cmd->result = -EPIPE;
         spin_unlock_bh(&cmd_mgr->lock);
         return -EPIPE;
@@ -61,8 +62,8 @@ static int cmd_mgr_queue(struct rwnx_cmd_mgr *cmd_mgr, struct rwnx_cmd *cmd)
         struct rwnx_cmd *last;
 
         if (cmd_mgr->queue_sz == cmd_mgr->max_queue_sz) {
-            printk(KERN_CRIT"Too many cmds (%d) already queued\n",
-                   cmd_mgr->max_queue_sz);
+            AICWFDBG(LOGERROR, "Too many cmds (%d) already queued\n",
+                     cmd_mgr->max_queue_sz);
             cmd->result = -ENOMEM;
             spin_unlock_bh(&cmd_mgr->lock);
             return -ENOMEM;
@@ -92,14 +93,14 @@ static int cmd_mgr_queue(struct rwnx_cmd_mgr *cmd_mgr, struct rwnx_cmd *cmd)
         aicwf_set_cmd_tx((void *)(cmd_mgr->usbdev), cmd->a2e_msg, sizeof(struct lmac_msg) + cmd->a2e_msg->param_len);
         kfree(cmd->a2e_msg);
     } else {
-        printk("ERR: never defer push!!!!");
+        AICWFDBG(LOGERROR, "ERR: never defer push!!!!\n");
         return 0;
     }
 
     if (!(cmd->flags & RWNX_CMD_FLAG_NONBLOCK)) {
         unsigned long tout = msecs_to_jiffies(RWNX_80211_CMD_TIMEOUT_MS * cmd_mgr->queue_sz);
         if (!wait_for_completion_killable_timeout(&cmd->complete, tout)) {
-            printk(KERN_CRIT"cmd timed-out\n");
+            AICWFDBG(LOGERROR, "cmd timed-out\n");
 
             cmd_dump(cmd);
             spin_lock_bh(&cmd_mgr->lock);
@@ -180,7 +181,7 @@ static void cmd_mgr_print(struct rwnx_cmd_mgr *cmd_mgr)
     struct rwnx_cmd *cur;
 
     spin_lock_bh(&cmd_mgr->lock);
-    printk("q_sz/max: %2d / %2d - next tkn: %d\n",
+    AICWFDBG(LOGDEBUG, "q_sz/max: %2d / %2d - next tkn: %d\n",
              cmd_mgr->queue_sz, cmd_mgr->max_queue_sz,
              cmd_mgr->next_tkn);
     list_for_each_entry(cur, &cmd_mgr->cmds, list) {
@@ -280,7 +281,7 @@ static inline void *rwnx_msg_zalloc(lmac_msg_id_t const id,
     msg = (struct lmac_msg *)kzalloc(sizeof(struct lmac_msg) + param_len,
                                      flags);
     if (msg == NULL) {
-        printk(KERN_CRIT "%s: msg allocation failed\n", __func__);
+        AICWFDBG(LOGERROR, "%s: msg allocation failed\n", __func__);
         return NULL;
     }
     msg->id = id;
@@ -308,7 +309,7 @@ static int rwnx_send_msg(struct aic_usb_dev *usbdev, const void *msg_params,
     msg = container_of((void *)msg_params, struct lmac_msg, param);
     if(usbdev->bus_if->state == BUS_DOWN_ST) {
         rwnx_msg_free(msg, msg_params);
-        printk("bus is down\n");
+        AICWFDBG(LOGERROR, "bus is down\n");
         return 0;
     }
 
@@ -459,7 +460,7 @@ int rwnx_send_reboot(struct aic_usb_dev *usbdev)
     int ret = 0;
     u32 delay = 2 *1000; //1s
 
-    printk("%s enter \r\n", __func__);
+    AICWFDBG(LOGTRACE, "%s enter \r\n", __func__);
 
     ret = rwnx_send_dbg_start_app_req(usbdev, delay, HOST_START_APP_REBOOT);
     return ret;

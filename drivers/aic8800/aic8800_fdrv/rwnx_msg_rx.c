@@ -135,7 +135,7 @@ static inline int rwnx_rx_chan_switch_ind(struct rwnx_hw *rwnx_hw,
             /* Keep in mind that we have switched on the channel */
             roc_elem->on_chan = true;
         } else {
-            printk("roc_elem == null\n");
+            AICWFDBG(LOGERROR, "roc_elem == null\n");
         }
 
         // Enable traffic on OFF channel queue
@@ -407,7 +407,7 @@ static inline int rwnx_radar_detect_ind(struct rwnx_hw *rwnx_hw,
     //printk("%s\n", __func__);
 
     if(pulses->cnt == 0) {
-		printk("cnt error\n");
+		AICWFDBG(LOGERROR, "cnt error\n");
 		return -1;
     }
 
@@ -425,7 +425,7 @@ static inline int rwnx_radar_detect_ind(struct rwnx_hw *rwnx_hw,
 		if(!work_pending(&rwnx_hw->radar.detection_work))
 			schedule_work(&rwnx_hw->radar.detection_work);
     } else
-		printk("not enable\n");
+		AICWFDBG(LOGERROR, "not enable\n");
 
     return 0;
 }
@@ -1680,7 +1680,7 @@ void rwnx_rx_handle_print(struct rwnx_hw *rwnx_hw, u8 *msg, u32 len)
         return;
     }
 
-    printk("FWLOG: %s", msg);
+    AICWFDBG(LOGINFO, "FWLOG: %s", msg);
 
 #ifdef CONFIG_RWNX_DEBUGFS
     data_end = rwnx_hw->debugfs.fw_log.buf.dataend;

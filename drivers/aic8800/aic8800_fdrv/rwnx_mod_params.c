@@ -817,7 +817,7 @@ static void rwnx_set_vht_capa(struct rwnx_hw *rwnx_hw, struct wiphy *wiphy)
 		}
 
 			rwnx_hw->vht_cap_2G.cap |= IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK;
-		printk("%s, vht_capa_info=0x%x\n", __func__, rwnx_hw->vht_cap_2G.cap);
+		AICWFDBG(LOGINFO, "%s, vht_capa_info=0x%x\n", __func__, rwnx_hw->vht_cap_2G.cap);
 #ifdef USE_5G
 	if (rwnx_hw->band_5g_support) {
 	    rwnx_hw->vht_cap_5G.vht_supported = true;
