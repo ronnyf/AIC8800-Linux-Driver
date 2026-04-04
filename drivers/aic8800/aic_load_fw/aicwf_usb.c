@@ -7,7 +7,7 @@
  */
 #include <linux/kthread.h>
 #include <linux/netdevice.h>
-#include <linux/printk.h>
+
 #include <linux/interrupt.h>
 #include <linux/sched.h>
 #include <linux/completion.h>
@@ -235,7 +235,7 @@ static void aicwf_usb_rx_submit_all_urb(struct aic_usb_dev *usb_dev)
         return;
     }
     if (usb_dev->app_cmp) {
-        printk("app_cmp\r\n");
+        AICWFDBG(LOGTRACE, "app_cmp\r\n");
         return;
 }
 
@@ -337,7 +337,7 @@ int usb_bustx_thread(void *data)
 
         if (!wait_for_completion_interruptible(&bus->bustx_trgg)) {
 			if (usbdev->app_cmp == false){
-				printk("usb bustx thread will to stop\n");
+				AICWFDBG(LOGTRACE, "usb bustx thread will to stop\n");
 				//mdelay(100);
 				break;
 				//continue;
@@ -348,7 +348,7 @@ int usb_bustx_thread(void *data)
     }
 
 	aic_thread_wait_stop();
-	printk("usb bustx thread stop\n");
+	AICWFDBG(LOGTRACE, "usb bustx thread stop\n");
 
     return 0;
 }
@@ -372,13 +372,13 @@ int usb_busrx_thread(void *data)
             break;
         }
         if (bus_if->state == BUS_DOWN_ST) {
-            printk("usb busrx thread will to stop\n");
+            AICWFDBG(LOGTRACE, "usb busrx thread will to stop\n");
             break;
         }
 
     }
 	aic_thread_wait_stop();
-    printk("usb busrx thread stop\n");
+    AICWFDBG(LOGTRACE, "usb busrx thread stop\n");
 
     return 0;
 }
@@ -821,12 +821,12 @@ static int aicwf_parse_usb(struct aic_usb_dev *usb_dev, struct usb_interface *in
     }
 
 #ifdef CONFIG_USB_MSG_EP
-	if ( usb_dev->msg_out_pipe != 0 &&
+		if ( usb_dev->msg_out_pipe != 0 &&
         (usb_dev->chipid == PRODUCT_ID_AIC8801 ||
         usb_dev->chipid == PRODUCT_ID_AIC8800D81||
         usb_dev->chipid == PRODUCT_ID_AIC8800D81X2 ||
         usb_dev->chipid == PRODUCT_ID_AIC8800D89X2)){
-		printk("TX Msg Bulk EP found\n");
+		AICWFDBG(LOGINFO, "TX Msg Bulk EP found\n");
 		usb_dev->use_msg_ep = 1;
 	}else{
 		usb_dev->use_msg_ep = 0;
@@ -842,7 +842,7 @@ static int aicwf_parse_usb(struct aic_usb_dev *usb_dev, struct usb_interface *in
 #endif
 #endif
 
-    printk("Aic %s speed USB device detected\n", 
+    AICWFDBG(LOGINFO, "Aic %s speed USB device detected\n", 
             (usb->speed == USB_SPEED_SUPER) ? "super" :
             (usb->speed == USB_SPEED_HIGH)  ? "high"  :
             (usb->speed == USB_SPEED_FULL)  ? "full"  :
@@ -1089,36 +1089,36 @@ static int system_config_8800(struct aic_usb_dev *usb_dev){
     struct dbg_mem_read_cfm rd_mem_addr_cfm;
     ret = rwnx_send_dbg_mem_read_req(usb_dev, mem_addr, &rd_mem_addr_cfm);
     if (ret) {
-        printk("%x rd fail: %d\n", mem_addr, ret);
+        AICWFDBG(LOGERROR, "%x rd fail: %d\n", mem_addr, ret);
         return ret;
     }
     chip_id =(u8)(rd_mem_addr_cfm.memdata >> 16);
     //printk("%x=%x\n", rd_mem_addr_cfm.memaddr, rd_mem_addr_cfm.memdata);
     ret = rwnx_send_dbg_mem_read_req(usb_dev, 0x00000004, &rd_mem_addr_cfm);
     if (ret) {
-        printk("[0x00000004] rd fail: %d\n", ret);
+        AICWFDBG(LOGERROR, "[0x00000004] rd fail: %d\n", ret);
         return ret;
     }
     chip_sub_id = (u8)(rd_mem_addr_cfm.memdata >> 4);
     //printk("%x=%x\n", rd_mem_addr_cfm.memaddr, rd_mem_addr_cfm.memdata);
-    printk("chip_id=%x, chip_sub_id=%x\n", chip_id, chip_sub_id);
+    AICWFDBG(LOGINFO, "chip_id=%x, chip_sub_id=%x\n", chip_id, chip_sub_id);
     if (chip_id == CHIP_REV_U02) {
         syscfg_num = sizeof(syscfg_tbl_pmic_u02) / sizeof(u32) / 2;
         for (cnt = 0; cnt < syscfg_num; cnt++) {
             ret = rwnx_send_dbg_mem_write_req(usb_dev, syscfg_tbl_pmic_u02[cnt][0], syscfg_tbl_pmic_u02[cnt][1]);
             if (ret) {
-                printk("%x write fail: %d\n", syscfg_tbl_pmic_u02[cnt][0], ret);
+                AICWFDBG(LOGERROR, "%x write fail: %d\n", syscfg_tbl_pmic_u02[cnt][0], ret);
                 return ret;
             }
         }
     }
     if ((chip_id == CHIP_REV_U03) && (chip_sub_id == CHIP_SUB_REV_U04)) {
         syscfg_num = sizeof(syscfg_tbl_u04) / sizeof(u32) / 2;
-        printk("cfg u04\n");
+        AICWFDBG(LOGINFO, "cfg u04\n");
         for (cnt = 0; cnt < syscfg_num; cnt++) {
             ret = rwnx_send_dbg_mem_write_req(usb_dev, syscfg_tbl_u04[cnt][0], syscfg_tbl_u04[cnt][1]);
             if (ret) {
-                printk("%x write fail: %d\n", syscfg_tbl_u04[cnt][0], ret);
+                AICWFDBG(LOGERROR, "%x write fail: %d\n", syscfg_tbl_u04[cnt][0], ret);
                 return ret;
             }
         }
@@ -1127,7 +1127,7 @@ static int system_config_8800(struct aic_usb_dev *usb_dev){
     for (cnt = 0; cnt < syscfg_num; cnt++) {
         ret = rwnx_send_dbg_mem_write_req(usb_dev, syscfg_tbl[cnt][0], syscfg_tbl[cnt][1]);
         if (ret) {
-            printk("%x write fail: %d\n", syscfg_tbl[cnt][0], ret);
+            AICWFDBG(LOGERROR, "%x write fail: %d\n", syscfg_tbl[cnt][0], ret);
             return ret;
         }
     }
@@ -1158,7 +1158,7 @@ static int system_reboot(struct aic_usb_dev *usb_dev)
     for (cnt = 0; cnt < syscfg_num; cnt++) {
         ret = rwnx_send_dbg_mem_write_req(usb_dev, sys_reboot_tbl[cnt][0], sys_reboot_tbl[cnt][1]);
         if (ret) {
-            printk("%x write fail: %d\n", sys_reboot_tbl[cnt][0], ret);
+            AICWFDBG(LOGERROR, "%x write fail: %d\n", sys_reboot_tbl[cnt][0], ret);
             return ret;
         }
     }
@@ -1171,7 +1171,7 @@ static int rf_config(struct aic_usb_dev *usb_dev)
     ret = rwnx_send_dbg_mem_mask_write_req(usb_dev,
                 rf_tbl_masked[0][0], rf_tbl_masked[0][1], rf_tbl_masked[0][2]);
     if (ret) {
-        printk("rf config %x write fail: %d\n", rf_tbl_masked[0][0], ret);
+        AICWFDBG(LOGERROR, "rf config %x write fail: %d\n", rf_tbl_masked[0][0], ret);
     }
 
 	return ret;
@@ -1191,33 +1191,33 @@ static int patch_config(struct aic_usb_dev *usb_dev)
 	int tmp_cnt = 0;
 	int adap_patch_num = 0;
 
-    printk("%s enter \r\n", __func__);
+    AICWFDBG(LOGTRACE, "%s enter \r\n", __func__);
 
     //if (testmode) {
         patch_num = sizeof(patch_tbl)/4;
 
-        printk("Read FW mem: %08x\n", rd_patch_addr);
+        AICWFDBG(LOGINFO, "Read FW mem: %08x\n", rd_patch_addr);
         if ((ret = rwnx_send_dbg_mem_read_req(usb_dev, rd_patch_addr, &rd_patch_addr_cfm))) {
-            printk("patch rd fail\n");
+            AICWFDBG(LOGERROR, "patch rd fail\n");
         }
 
-        printk("%x=%x\n", rd_patch_addr_cfm.memaddr, rd_patch_addr_cfm.memdata);
+        AICWFDBG(LOGINFO, "%x=%x\n", rd_patch_addr_cfm.memaddr, rd_patch_addr_cfm.memdata);
         config_base = rd_patch_addr_cfm.memdata;
 
 		//if (testmode == FW_NORMAL_MODE) {
 	        if((ret = rwnx_send_dbg_mem_write_req(usb_dev, 0x1e5318, patch_addr))) {
-	            printk("%x write fail\n", 0x1e5318);
+	            AICWFDBG(LOGERROR, "%x write fail\n", 0x1e5318);
 	        }
             
 			if(adap_test){
-				printk("%s for adaptivity test \r\n", __func__);
+				AICWFDBG(LOGINFO, "%s for adaptivity test \r\n", __func__);
 				adap_patch_num = sizeof(adaptivity_patch_tbl)/4;
 		        if((ret = rwnx_send_dbg_mem_write_req(usb_dev, 0x1e531c, patch_num + adap_patch_num))) {
-		            printk("%x write fail\n", 0x1e531c);
+		            AICWFDBG(LOGERROR, "%x write fail\n", 0x1e531c);
 		        }
 			}else{
 		        if((ret = rwnx_send_dbg_mem_write_req(usb_dev, 0x1e531c, patch_num))) {
-		            printk("%x write fail\n", 0x1e531c);
+		            AICWFDBG(LOGERROR, "%x write fail\n", 0x1e531c);
 		        }
 			}
 		//}else if(testmode == FW_TEST_MODE){//for old rf fw
@@ -1232,11 +1232,11 @@ static int patch_config(struct aic_usb_dev *usb_dev)
         for(cnt = 0; cnt < patch_num/2; cnt+=1)
         {
             if((ret = rwnx_send_dbg_mem_write_req(usb_dev, start_addr+8*cnt, patch_tbl[cnt][0]+config_base))) {
-                printk("%x write fail\n", start_addr+8*cnt);
+                AICWFDBG(LOGERROR, "%x write fail\n", start_addr+8*cnt);
             }
 
             if((ret = rwnx_send_dbg_mem_write_req(usb_dev, start_addr+8*cnt+4, patch_tbl[cnt][1]))) {
-                printk("%x write fail\n", start_addr+8*cnt+4);
+                AICWFDBG(LOGERROR, "%x write fail\n", start_addr+8*cnt+4);
             }
 
         }
@@ -1247,11 +1247,11 @@ static int patch_config(struct aic_usb_dev *usb_dev)
 			for(cnt = 0; cnt < adap_patch_num/2; cnt+=1)
 			{
 				if((ret = rwnx_send_dbg_mem_write_req(usb_dev, start_addr+8*(cnt+tmp_cnt), adaptivity_patch_tbl[cnt][0]+config_base))) {
-					printk("%x write fail\n", start_addr+8*cnt);
+					AICWFDBG(LOGERROR, "%x write fail\n", start_addr+8*cnt);
 				}
 
 				if((ret = rwnx_send_dbg_mem_write_req(usb_dev, start_addr+8*(cnt+tmp_cnt)+4, adaptivity_patch_tbl[cnt][1]))) {
-					printk("%x write fail\n", start_addr+8*cnt+4);
+					AICWFDBG(LOGERROR, "%x write fail\n", start_addr+8*cnt+4);
 				}
 			}
 		}
@@ -1264,7 +1264,7 @@ static int patch_config(struct aic_usb_dev *usb_dev)
         for(cnt = 0; cnt < patch_num; cnt++) {
             ret = rwnx_send_dbg_mem_write_req(usb_dev, patch_tbl[cnt][0], patch_tbl[cnt][1]);
             if(ret) {
-            printk("%x write fail: %d\n", patch_tbl[cnt][0], ret);
+            AICWFDBG(LOGERROR, "%x write fail: %d\n", patch_tbl[cnt][0], ret);
             break;
             }
         }
@@ -1279,11 +1279,11 @@ static int bt_config(struct aic_usb_dev *usb_dev)
     int trap_num = sizeof(bt_config_tbl) / sizeof(u32) / 2;
     int ret, cnt;
 
-    printk("%s enter \r\n", __func__);
+    AICWFDBG(LOGTRACE, "%s enter \r\n", __func__);
     for(cnt = 0; cnt < trap_num; cnt++) {
         ret = rwnx_send_dbg_mem_write_req(usb_dev, bt_config_tbl[cnt][0], bt_config_tbl[cnt][1]);
         if(ret) {
-            printk("%x write fail: %d\n", bt_config_tbl[cnt][0], ret);
+            AICWFDBG(LOGERROR, "%x write fail: %d\n", bt_config_tbl[cnt][0], ret);
             break;
         }
     }
@@ -1310,7 +1310,7 @@ static int get_paring_ids(char* c_paringids, int* i_paringids){
 	}
 
 	if(paring_id_num == 0 && len == 0){
-		printk("%s paring_id_num:%d \r\n", __func__, paring_id_num);
+		AICWFDBG(LOGINFO, "%s paring_id_num:%d \r\n", __func__, paring_id_num);
 		return 0;
 	}else{
 		paring_id_num++;
@@ -1439,7 +1439,7 @@ int aicfw_download_fw_8800(struct aic_usb_dev *usb_dev){
             rwnx_send_dbg_mem_write_req(usb_dev, 0x15FF04, ble_scan_wakeup_reboot_time);//reboot time
             paring_id_num = get_paring_ids(paringid, paring_ids);
             for(i = 0; i < paring_id_num; i++){
-                printk("paring_ids[%d]:0x%X \r\n", i, paring_ids[i]);
+                AICWFDBG(LOGINFO, "paring_ids[%d]:0x%X \r\n", i, paring_ids[i]);
                 rwnx_send_dbg_mem_write_req(usb_dev, 0x15FF08 + (4 * i), paring_ids[i]);
             }
             rwnx_send_dbg_start_app_req(usb_dev, RAM_FW_BLE_SCAN_WAKEUP_ADDR, HOST_START_APP_AUTO);
@@ -1463,7 +1463,7 @@ int aicfw_download_fw_8800(struct aic_usb_dev *usb_dev){
             struct ble_wakeup_param_t* wakeup_param = (struct ble_wakeup_param_t*)kmalloc(sizeof(struct ble_wakeup_param_t), GFP_KERNEL);
             uint32_t *write_blocks = (uint32_t *)wakeup_param;
 
-            printk("%s ble scan wakeup \r\n", __func__);
+            AICWFDBG(LOGINFO, "%s ble scan wakeup \r\n", __func__);
 
             memset(wakeup_param, 0, sizeof(struct ble_wakeup_param_t));
             rwnx_plat_bin_fw_upload_android(usb_dev, RAM_FW_BLE_SCAN_WAKEUP_ADDR, FW_BLE_SCAN_AD_FILTER_NAME);
@@ -1585,7 +1585,7 @@ int aicfw_download_fw_8800(struct aic_usb_dev *usb_dev){
 			}
 
             for(i = 0; i < (sizeof(struct ble_wakeup_param_t)/4 +1); i++){
-                printk("write_blocks[%d]:0x%08X \r\n", i, write_blocks[i]);
+                AICWFDBG(LOGINFO, "write_blocks[%d]:0x%08X \r\n", i, write_blocks[i]);
                 rwnx_send_dbg_mem_write_req(usb_dev, 0x15FE00 + (4 * i), write_blocks[i]);
             }
             rwnx_send_dbg_start_app_req(usb_dev, RAM_FW_BLE_SCAN_WAKEUP_ADDR, HOST_START_APP_AUTO);
@@ -1755,7 +1755,7 @@ static int aicwf_usb_probe(struct usb_interface *intf, const struct usb_device_i
     aic_bt_platform_init(usb_dev);
 
     if ((usb->speed != USB_SPEED_HIGH) && (usb->speed != USB_SPEED_SUPER)) {
-        printk("Aic USB device detected speed = %d\n", usb->speed);
+        AICWFDBG(LOGINFO, "Aic USB device detected speed = %d\n", usb->speed);
         system_reboot(usb_dev);
         goto out_free_bus;
     }
@@ -1800,7 +1800,7 @@ static void aicwf_usb_disconnect(struct usb_interface *intf)
     struct aic_usb_dev *usb_dev =
             (struct aic_usb_dev *) usb_get_intfdata(intf);
 
-	printk("%s enter \r\n", __func__);
+	AICWFDBG(LOGTRACE, "%s enter \r\n", __func__);
 
     if (!usb_dev)
         return;
