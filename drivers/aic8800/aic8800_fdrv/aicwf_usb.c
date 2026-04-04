@@ -405,7 +405,7 @@ static void aicwf_usb_rx_complete(struct urb *urb)
 
 #if 0
     if ((urb->actual_length > 1600 * 30) && (aicwf_usb_rx_aggr)) {
-	printk("r%d\n", urb->actual_length);
+	AICWFDBG(LOGINFO, "r%d\n", urb->actual_length);
     }
 #endif
 
@@ -1812,7 +1812,7 @@ static int aicwf_usb_bus_txdata(struct device *dev, struct sk_buff *skb)
 
 #ifndef CONFIG_USE_USB_ZERO_PACKET
 	if((buf_len % 512) == 0){
-		printk("%s send zero package buf_len: %d\r\n", __func__, buf_len);
+		AICWFDBG(LOGINFO, "%s send zero package buf_len: %d\r\n", __func__, buf_len);
 		if(txhdr->sw_hdr->need_cfm){
 			buf[buf_len] = 0x00;
 			buf_len = buf_len + 1;
@@ -1820,7 +1820,7 @@ static int aicwf_usb_bus_txdata(struct device *dev, struct sk_buff *skb)
 			skb_put(skb, 1);
 			skb->data[buf_len] = 0x00;
 			buf = skb->data;
-       		buf_len = skb->len;
+        		buf_len = skb->len;
 		}
 	}
 #endif
@@ -2270,9 +2270,9 @@ static irqreturn_t rwnx_irq_handler(int irq, void *para)
     spin_lock_irqsave(&irq_lock, irqflags);
     disable_irq_nosync(hostwake_irq_num);
     //do something
-    printk("%s gpio irq trigger\r\n", __func__);
+    AICWFDBG(LOGINFO, "%s gpio irq trigger\r\n", __func__);
     spin_unlock_irqrestore(&irq_lock, irqflags);
-    atomic_dec(&irq_count);
+	atomic_dec(&irq_count);
 	return IRQ_HANDLED;
 }
 
@@ -2288,9 +2288,9 @@ static int rwnx_register_hostwake_irq(struct device *dev)
 //For Rockchip
 #ifdef CONFIG_PLATFORM_ROCKCHIP
 	hostwake_irq_num = rockchip_wifi_get_oob_irq();
-	printk("%s hostwake_irq_num:%d \r\n", __func__, hostwake_irq_num);
+	AICWFDBG(LOGINFO, "%s hostwake_irq_num:%d \r\n", __func__, hostwake_irq_num);
 	irq_flags = (IORESOURCE_IRQ | IORESOURCE_IRQ_HIGHLEVEL | IORESOURCE_IRQ_SHAREABLE) & IRQF_TRIGGER_MASK;
-	printk("%s irq_flags:%d \r\n", __func__, irq_flags);
+	AICWFDBG(LOGINFO, "%s irq_flags:%d \r\n", __func__, irq_flags);
 	wakeup_enable = 1;
 #endif //CONFIG_PLATFORM_ROCKCHIP
 
@@ -2320,7 +2320,7 @@ static int rwnx_unregister_hostwake_irq(struct device *dev)
 {
 	wakeup_enable = 0;
 
-	printk("%s hostwake_irq_num:%d \r\n", __func__, hostwake_irq_num);
+	AICWFDBG(LOGINFO, "%s hostwake_irq_num:%d \r\n", __func__, hostwake_irq_num);
 	disable_irq_wake(hostwake_irq_num);
 	free_irq(hostwake_irq_num, NULL);
 
@@ -2553,7 +2553,7 @@ static void aicwf_usb_disconnect(struct usb_interface *intf)
 
 #if 0
 	if(timer_pending(&usb_dev->rwnx_hw->p2p_alive_timer) && usb_dev->rwnx_hw->is_p2p_alive == 1){
-		printk("%s del timer rwnx_hw->p2p_alive_timer \r\n", __func__);
+		AICWFDBG(LOGINFO, "%s del timer rwnx_hw->p2p_alive_timer \r\n", __func__);
 		rwnx_del_timer(&usb_dev->rwnx_hw->p2p_alive_timer);
 	}
 #endif

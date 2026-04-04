@@ -52,7 +52,7 @@ bool                                  // Linux kernel
 
 ## Module Config
 
-Key options: `CONFIG_AIC8800_WLAN_SUPPORT=m`, `CONFIG_USB_SUPPORT=y`, `CONFIG_SDIO_SUPPORT=n`, `CONFIG_RWNX_FULLMAC=y`, `CONFIG_RWNX_SDM=n`, `CONFIG_RWNX_TL4=n`, `CONFIG_DEBUG_FS=n`, `CONFIG_RWNX_DBG=y`
+Key options: `CONFIG_AIC8800_WLAN_SUPPORT=m`, `CONFIG_USB_SUPPORT=y`, `CONFIG_SDIO_SUPPORT=n`, `CONFIG_RWNX_FULLMAC=y`, `CONFIG_RWNX_SDM=n`, `CONFIG_RWNX_TL4=n`, `CONFIG_DEBUG_FS=n`, `CONFIG_RWNX_DBG=n` (production-safe default)
 
 ## Kconfig Location
 
@@ -83,10 +83,47 @@ Key files: `rwnx_main.c`, `rwnx_tx.c/rwnx_rx.c`, `rwnx_msg_tx.c/rwnx_msg_rx.c`, 
 
 ## Debugging
 
-- `RWNX_DBG(LOGDEBUG/LOGINFO/LOGERROR, ...)`  
-- `AICWFDBG(level, fmt, ...)`  
-- `printk()`  
-- Enable: `CONFIG_RWNX_DBG=y`
+### Debug Macros
+
+- `AICWFDBG(level, fmt, ...)` - Conditional debug based on `aicwf_dbg_level & level`
+- `RWNX_DBG(fmt, ...)` - Equivalent to `AICWFDBG(LOGTRACE, fmt, ...)`
+- `printk(KERN_CRIT ...)` - **Only for critical errors** (always visible)
+
+### Log Levels
+
+```c
+#define LOGERROR    0x0001  // Always visible in production
+#define LOGINFO     0x0002  // Hidden by default
+#define LOGTRACE    0x0004  // Hidden by default
+#define LOGDEBUG    0x0008  // Hidden by default
+#define LOGDATA     0x0010  // Hidden by default
+```
+
+### Control Debug Level
+
+```bash
+# View current level
+cat /sys/module/aic_load_fw/parameters/aicwf_dbg_level
+cat /sys/module/aic8800_fdrv/parameters/aicwf_dbg_level
+
+# Enable verbose (ERROR + INFO + TRACE + DEBUG = 15)
+echo 15 > /sys/module/aic_load_fw/parameters/aicwf_dbg_level
+echo 15 > /sys/module/aic8800_fdrv/parameters/aicwf_dbg_level
+
+# Enable only errors (1) - production default
+echo 1 > /sys/module/aic_load_fw/parameters/aicwf_dbg_level
+echo 1 > /sys/module/aic8800_fdrv/parameters/aicwf_dbg_level
+```
+
+### Default Debug Levels (Production-Safe)
+
+- `aic_load_fw`: `LOGERROR` (0x1) - only errors
+- `aic8800_fdrv`: `LOGERROR` (0x1) - only errors
+
+### Deprecated
+
+- `printk()` - **deprecated**, use `AICWFDBG()` or `RWNX_DBG()`  
+- Enable debug build: `CONFIG_RWNX_DBG=y` (default: only errors visible)
 
 ## Common Commands
 

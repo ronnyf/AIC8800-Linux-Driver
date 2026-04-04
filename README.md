@@ -31,7 +31,7 @@ This project references the following resources:
 
 ```bash
 # Clone the repository
-git clone https://github.com/BLUEMOON233/AIC8800-Linux-Driver.git
+git clone https://github.com/ronnyf/AIC8800-Linux-Driver.git
 cd AIC8800-Linux-Driver
 
 # Compile with LLVM/Clang

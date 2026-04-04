@@ -807,7 +807,7 @@ static ssize_t rwnx_dbgfs_fw_log_read(struct file *file,
 	size_t nb_cpy;
 	char *log = fw_log_buffer;
 
-	printk("%s, %d, %p, %p\n", __func__, priv->debugfs.fw_log.buf.size, priv->debugfs.fw_log.buf.start, priv->debugfs.fw_log.buf.dataend);
+	AICWFDBG(LOGINFO, "%s, %d, %p, %p\n", __func__, priv->debugfs.fw_log.buf.size, priv->debugfs.fw_log.buf.start, priv->debugfs.fw_log.buf.dataend);
 	//spin_lock_bh(&priv->debugfs.fw_log.lock);
 
 	if ((priv->debugfs.fw_log.buf.start + priv->debugfs.fw_log.buf.size) >= priv->debugfs.fw_log.buf.dataend) {
@@ -825,7 +825,7 @@ static ssize_t rwnx_dbgfs_fw_log_read(struct file *file,
 	priv->debugfs.fw_log.buf.size -= nb_cpy;
 	//spin_unlock_bh(&priv->debugfs.fw_log.lock);
 
-	printk("nb_cpy=%lu, not_cpy=%lu, start=%p, end=%p\n", (long unsigned int)nb_cpy, (long unsigned int)not_cpy, priv->debugfs.fw_log.buf.start, priv->debugfs.fw_log.buf.end);
+	AICWFDBG(LOGINFO, "nb_cpy=%lu, not_cpy=%lu, start=%p, end=%p\n", (long unsigned int)nb_cpy, (long unsigned int)not_cpy, priv->debugfs.fw_log.buf.start, priv->debugfs.fw_log.buf.end);
 	return nb_cpy;
 }
 
@@ -835,7 +835,7 @@ static ssize_t rwnx_dbgfs_fw_log_write(struct file *file,
 {
 	//struct rwnx_hw *priv = file->private_data;
 
-	printk("%s\n", __func__);
+	AICWFDBG(LOGINFO, "%s\n", __func__);
 	return count;
 }
 DEBUGFS_READ_WRITE_FILE_OPS(fw_log);
@@ -1256,18 +1256,18 @@ static ssize_t rwnx_dbgfs_regdbg_write(struct file *file,
     	buf[len] = '\0';
 
 	if (sscanf(buf, "%x %x %x" , &oper, &addr, &val ) > 0)
-		printk("addr=%x, val=%x,oper=%d\n", addr, val, oper);
+		AICWFDBG(LOGINFO, "addr=%x, val=%x,oper=%d\n", addr, val, oper);
 
-    	if(oper== 0) {
+     	if(oper== 0) {
 		ret = rwnx_send_dbg_mem_read_req(priv, addr, &mem_read_cfm);
-        	printk("[0x%x] = [0x%x]\n", mem_read_cfm.memaddr, mem_read_cfm.memdata);
+         	AICWFDBG(LOGINFO, "[0x%x] = [0x%x]\n", mem_read_cfm.memaddr, mem_read_cfm.memdata);
 	} else if (oper == 1) {
 		ret = rwnx_send_dbg_mem_read_req(priv, addr, &mem_read_cfm);
-		printk("before write : [0x%x] = [0x%x]\n", mem_read_cfm.memaddr, mem_read_cfm.memdata);
+		AICWFDBG(LOGINFO, "before write : [0x%x] = [0x%x]\n", mem_read_cfm.memaddr, mem_read_cfm.memdata);
 		ret = rwnx_send_dbg_mem_block_write_req(priv, addr, 4, &val);
 		ret = rwnx_send_dbg_mem_read_req(priv, addr, &mem_read_cfm);
-		printk("after write : [0x%x] = [0x%x]\n", mem_read_cfm.memaddr, mem_read_cfm.memdata);
-    	}
+		AICWFDBG(LOGINFO, "after write : [0x%x] = [0x%x]\n", mem_read_cfm.memaddr, mem_read_cfm.memdata);
+     	}
 
 	return count;
 }
@@ -1285,7 +1285,7 @@ static ssize_t rwnx_dbgfs_vendor_hwconfig_write(struct file *file,
 	u32_l hwconfig_id;
 	size_t len = min_t(size_t,count,sizeof(buf)-1);
 	int ret;
-    printk("%s\n",__func__);
+    AICWFDBG(LOGINFO, "%s\n",__func__);
 	//choose the type of write info by struct
 	//struct mm_set_vendor_trx_param_req trx_param;
 
@@ -1297,67 +1297,67 @@ static ssize_t rwnx_dbgfs_vendor_hwconfig_write(struct file *file,
 	ret = sscanf(buf, "%x %x %x %x %x %x %x %x %x %x %x %x %x %x %x",
                             &hwconfig_id, &addr[0], &addr[1], &addr[2], &addr[3], &addr[4], &addr[5], &addr[6], &addr[7], &addr[8], &addr[9], &addr[10], &addr[11], &addr[12], &addr[13]);
 	if(ret > 15) {
-		printk("param error > 15\n");
+		AICWFDBG(LOGERROR, "param error > 15\n");
 	} else {
 		switch(hwconfig_id)
 		    {
 		    case 0:
 			if(ret != 5) {
-			    printk("param error  != 5\n");
+			    AICWFDBG(LOGERROR, "param error  != 5\n");
 			    break;}
 			ret = rwnx_send_vendor_hwconfig_req(priv, hwconfig_id, addr, NULL);
-			printk("ACS_TXOP_REQ bk:0x%x be:0x%x vi:0x%x vo:0x%x\n",addr[0],  addr[1], addr[2], addr[3]);
+			AICWFDBG(LOGINFO, "ACS_TXOP_REQ bk:0x%x be:0x%x vi:0x%x vo:0x%x\n",addr[0],  addr[1], addr[2], addr[3]);
 			break;
 		    case 1:
 			if(ret != 15) {
-			    printk("param error  != 15\n");
+			    AICWFDBG(LOGERROR, "param error  != 15\n");
 			    break;}
 			ret = rwnx_send_vendor_hwconfig_req(priv, hwconfig_id, addr, NULL);
-			printk("CHANNEL_ACCESS_REQ edca:%x,%x,%x,%x, vif:%x, retry_cnt:%x, rts:%x, long_nav:%x, cfe:%x, rc_retry_cnt:%x:%x:%x ccademod_th %x, remove_1m2m %x\n",
+			AICWFDBG(LOGINFO, "CHANNEL_ACCESS_REQ edca:%x,%x,%x,%x, vif:%x, retry_cnt:%x, rts:%x, long_nav:%x, cfe:%x, rc_retry_cnt:%x:%x:%x ccademod_th %x, remove_1m2m %x\n",
                                 addr[0],  addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7], addr[8], addr[9], addr[10], addr[11], addr[12], addr[13]);
 			break;
 		    case 2:
 			if(ret != 7) {
-		            printk("param error  != 7\n");
+		            AICWFDBG(LOGERROR, "param error  != 7\n");
 			    break;}
 			ret = rwnx_send_vendor_hwconfig_req(priv, hwconfig_id, addr, NULL);
-			printk("MAC_TIMESCALE_REQ sifsA:%x,sifsB:%x,slot:%x,ofdm_delay:%x,long_delay:%x,short_delay:%x\n",
+			AICWFDBG(LOGINFO, "MAC_TIMESCALE_REQ sifsA:%x,sifsB:%x,slot:%x,ofdm_delay:%x,long_delay:%x,short_delay:%x\n",
                                 addr[0],  addr[1], addr[2], addr[3], addr[4], addr[5]);
 			break;
 		    case 3:
                         if(ret != 6) {
-		            printk("param error  != 6\n");
+		            AICWFDBG(LOGERROR, "param error  != 6\n");
 			    break;}
 			addr[1] = ~addr[1] + 1;
 			addr[2] = ~addr[2] + 1;
 			addr[3] = ~addr[3] + 1;
 			addr[4] = ~addr[4] + 1;
 			ret = rwnx_send_vendor_hwconfig_req(priv, hwconfig_id, addr, NULL);
-			printk("CCA_THRESHOLD_REQ auto_cca:%d, cca20p_rise:%d cca20s_rise:%d cca20p_fail:%d cca20s_fail:%d\n",
+			AICWFDBG(LOGINFO, "CCA_THRESHOLD_REQ auto_cca:%d, cca20p_rise:%d cca20s_rise:%d cca20p_fail:%d cca20s_fail:%d\n",
                                 addr[0],  addr[1], addr[2], addr[3], addr[4]);
 			break;
             case 4: // BWMODE_REQ
                 if (ret != 2) {
-                    printk("param error != 2\n");
+                    AICWFDBG(LOGERROR, "param error != 2\n");
                 } else {
                     ret = rwnx_send_vendor_hwconfig_req(priv, hwconfig_id, addr, NULL);
-                    printk("BWMODE_REQ md=%d\n", addr[0]);
+                    AICWFDBG(LOGINFO, "BWMODE_REQ md=%d\n", addr[0]);
                 }
             break;
             case 5: // CHIP_TEMP_GET_REQ
                 if (ret != 1) {
-                    printk("param error != 1\n");
+                    AICWFDBG(LOGERROR, "param error != 1\n");
                 } else {
                     ret = rwnx_send_vendor_hwconfig_req(priv, hwconfig_id, addr, addr_out);
-                    printk("CHIP_TEMP_GET_REQ degree=%d\n", addr_out[0]);
+                    AICWFDBG(LOGINFO, "CHIP_TEMP_GET_REQ degree=%d\n", addr_out[0]);
                 }
             break;
 		    default:
-			printk("param error\n");
+			AICWFDBG(LOGERROR, "param error\n");
 			break;
 		}
 		if(ret) {
-		    printk("rwnx_send_vendor_hwconfig_req fail: %x\n", ret);
+		    AICWFDBG(LOGERROR, "rwnx_send_vendor_hwconfig_req fail: %x\n", ret);
 		}
 	}
 
@@ -1377,7 +1377,7 @@ static ssize_t rwnx_dbgfs_vendor_swconfig_write(struct file *file,
     u32_l swconfig_id;
     size_t len = min_t(size_t, count, sizeof(buf) - 1);
     int ret;
-    printk("%s\n", __func__);
+    AICWFDBG(LOGINFO, "%s\n", __func__);
 
     if (copy_from_user(buf, user_buf, len)) {
         return -EFAULT;
@@ -1386,74 +1386,74 @@ static ssize_t rwnx_dbgfs_vendor_swconfig_write(struct file *file,
     buf[len] = '\0';
     ret = sscanf(buf, "%x %x %x", &swconfig_id, &addr[0], &addr[1]);
     if (ret > 3) {
-        printk("param error > 3\n");
+        AICWFDBG(LOGERROR, "param error > 3\n");
     } else {
         switch (swconfig_id)
         {
             case 0: // BCN_CFG_REQ
                 if (ret != 2) {
-                    printk("param error != 2\n");
+                    AICWFDBG(LOGERROR, "param error != 2\n");
                 } else {
                     ret = rwnx_send_vendor_swconfig_req(priv, swconfig_id, addr, addr_out);
-                    printk("BCN_CFG_REQ set_en=%d, get_en=%d\n", addr[0], addr_out[0]);
+                    AICWFDBG(LOGINFO, "BCN_CFG_REQ set_en=%d, get_en=%d\n", addr[0], addr_out[0]);
                 }
             break;
 
             case 1: // TEMP_COMP_SET_REQ
                 if (ret != 3) {
-                    printk("param error != 3\n");
+                    AICWFDBG(LOGERROR, "param error != 3\n");
                 } else {
                     ret = rwnx_send_vendor_swconfig_req(priv, swconfig_id, addr, addr_out);
-                    printk("TEMP_COMP_SET_REQ set_en=%d, tmr=%dms, get_st=%d\n",
+                    AICWFDBG(LOGINFO, "TEMP_COMP_SET_REQ set_en=%d, tmr=%dms, get_st=%d\n",
                         addr[0], addr[1], addr_out[0]);
                 }
             break;
 
             case 2: // TEMP_COMP_GET_REQ
                 if (ret != 1) {
-                    printk("param error != 1\n");
+                    AICWFDBG(LOGERROR, "param error != 1\n");
                 } else {
                     ret = rwnx_send_vendor_swconfig_req(priv, swconfig_id, addr, addr_out);
-                    printk("TEMP_COMP_GET_REQ get_st=%d, degree=%d\n", addr_out[0], addr_out[1]);
+                    AICWFDBG(LOGINFO, "TEMP_COMP_GET_REQ get_st=%d, degree=%d\n", addr_out[0], addr_out[1]);
                 }
             break;
 
             case 3: // EXT_FLAGS_SET_REQ
                 if (ret != 2) {
-                    printk("param error != 2\n");
+                    AICWFDBG(LOGERROR, "param error != 2\n");
                 } else {
                     ret = rwnx_send_vendor_swconfig_req(priv, swconfig_id, addr, addr_out);
-                    printk("EXT_FLAGS_SET_REQ set ext_flags=0x%x, get ext_flags=0x%x\n",
+                    AICWFDBG(LOGINFO, "EXT_FLAGS_SET_REQ set ext_flags=0x%x, get ext_flags=0x%x\n",
                         addr[0], addr_out[0]);
                 }
             break;
 
             case 4: // EXT_FLAGS_GET_REQ
                 if (ret != 1) {
-                    printk("param error != 1\n");
+                    AICWFDBG(LOGERROR, "param error != 1\n");
                 } else {
                     ret = rwnx_send_vendor_swconfig_req(priv, swconfig_id, addr, addr_out);
-                    printk("EXT_FLAGS_GET_REQ get ext_flags=0x%x\n", addr_out[0]);
+                    AICWFDBG(LOGINFO, "EXT_FLAGS_GET_REQ get ext_flags=0x%x\n", addr_out[0]);
                 }
             break;
 
             case 5: // EXT_FLAGS_MASK_SET_REQ
                 if (ret != 3) {
-                    printk("param error != 3\n");
+                    AICWFDBG(LOGERROR, "param error != 3\n");
                 } else {
                     ret = rwnx_send_vendor_swconfig_req(priv, swconfig_id, addr, addr_out);
-                    printk("EXT_FLAGS_MASK_SET_REQ set ext_flags mask=0x%x, val=0x%x, get ext_flags=0x%x\n",
+                    AICWFDBG(LOGINFO, "EXT_FLAGS_MASK_SET_REQ set ext_flags mask=0x%x, val=0x%x, get ext_flags=0x%x\n",
                         addr[0], addr[1], addr_out[0]);
                 }
             break;
 
             default:
-                printk("param error\n");
+                AICWFDBG(LOGERROR, "param error\n");
                 break;
         }
 
         if (ret) {
-            printk("rwnx_send_vendor_swconfig_req fail: %x\n", ret);
+            AICWFDBG(LOGERROR, "rwnx_send_vendor_swconfig_req fail: %x\n", ret);
         }
     }
 
@@ -1473,7 +1473,7 @@ static ssize_t rwnx_dbgfs_vendor_hwconfig_x2_write(struct file *file,
 	u32_l hwconfig_id;
 	size_t len = min_t(size_t,count,sizeof(buf)-1);
 	int ret;
-    printk("%s\n",__func__);
+    AICWFDBG(LOGINFO, "%s\n",__func__);
 	//choose the type of write info by struct
 	//struct mm_set_vendor_trx_param_req trx_param;
 
@@ -1485,71 +1485,71 @@ static ssize_t rwnx_dbgfs_vendor_hwconfig_x2_write(struct file *file,
 	ret = sscanf(buf, "%x %x %x %x %x %x %x %x %x %x %x %x %x %x %x",
                             &hwconfig_id, &addr[0], &addr[1], &addr[2], &addr[3], &addr[4], &addr[5], &addr[6], &addr[7], &addr[8], &addr[9], &addr[10], &addr[11], &addr[12], &addr[13]);
 	if(ret > 15) {
-		printk("param error > 15\n");
+		AICWFDBG(LOGERROR, "param error > 15\n");
 	} else {
 		switch(hwconfig_id)
 		    {
 		    case 0:
 			if(ret != 5) {
-			    printk("param error  != 5\n");
+			    AICWFDBG(LOGERROR, "param error  != 5\n");
 			    break;}
 			ret = rwnx_send_vendor_hwconfig_req_x2(priv, hwconfig_id, addr, NULL);
-			printk("ACS_TXOP_REQ bk:0x%x be:0x%x vi:0x%x vo:0x%x\n",addr[0],  addr[1], addr[2], addr[3]);
+			AICWFDBG(LOGINFO, "ACS_TXOP_REQ bk:0x%x be:0x%x vi:0x%x vo:0x%x\n",addr[0],  addr[1], addr[2], addr[3]);
 			break;
 		    case 1:
 			if(ret != 15) {
-			    printk("param error  != 15\n");
+			    AICWFDBG(LOGERROR, "param error  != 15\n");
 			    break;}
 			ret = rwnx_send_vendor_hwconfig_req_x2(priv, hwconfig_id, addr, NULL);
-			printk("CHANNEL_ACCESS_REQ edca:%x,%x,%x,%x, vif:%x, retry_cnt:%x, rts:%x, long_nav:%x, cfe:%x, rc_retry_cnt:%x:%x:%x ccademod_th %x remove_1m2m %x\n",
+			AICWFDBG(LOGINFO, "CHANNEL_ACCESS_REQ edca:%x,%x,%x,%x, vif:%x, retry_cnt:%x, rts:%x, long_nav:%x, cfe:%x, rc_retry_cnt:%x:%x:%x ccademod_th %x remove_1m2m %x\n",
                                 addr[0],  addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7], addr[8], addr[9], addr[10], addr[11], addr[12], addr[13]);
 			break;
 		    case 2:
 			if(ret != 7) {
-		            printk("param error  != 7\n");
+		            AICWFDBG(LOGERROR, "param error  != 7\n");
 			    break;}
 			ret = rwnx_send_vendor_hwconfig_req_x2(priv, hwconfig_id, addr, NULL);
-			printk("MAC_TIMESCALE_REQ sifsA:%x,sifsB:%x,slot:%x,ofdm_delay:%x,long_delay:%x,short_delay:%x\n",
+			AICWFDBG(LOGINFO, "MAC_TIMESCALE_REQ sifsA:%x,sifsB:%x,slot:%x,ofdm_delay:%x,long_delay:%x,short_delay:%x\n",
                                 addr[0],  addr[1], addr[2], addr[3], addr[4], addr[5]);
 			break;
 		    case 3:
                         if(ret != 6) {
-		            printk("param error  != 6\n");
+		            AICWFDBG(LOGERROR, "param error  != 6\n");
 			    break;}
 			addr[1] = ~addr[1] + 1;
 			addr[2] = ~addr[2] + 1;
 			addr[3] = ~addr[3] + 1;
 			addr[4] = ~addr[4] + 1;
 			ret = rwnx_send_vendor_hwconfig_req_x2(priv, hwconfig_id, addr, NULL);
-			printk("CCA_THRESHOLD_REQ auto_cca:%d, cca20p_rise:%d cca20s_rise:%d cca20p_fail:%d cca20s_fail:%d\n",
+			AICWFDBG(LOGINFO, "CCA_THRESHOLD_REQ auto_cca:%d, cca20p_rise:%d cca20s_rise:%d cca20p_fail:%d cca20s_fail:%d\n",
                                 addr[0],  addr[1], addr[2], addr[3], addr[4]);
 			break;
             case 4: // BWMODE_REQ
                 if (ret != 2) {
-                    printk("param error != 2\n");
+                    AICWFDBG(LOGERROR, "param error != 2\n");
                 } else {
                     ret = rwnx_send_vendor_hwconfig_req_x2(priv, hwconfig_id, addr, NULL);
-                    printk("BWMODE_REQ md=%d\n", addr[0]);
+                    AICWFDBG(LOGINFO, "BWMODE_REQ md=%d\n", addr[0]);
                 }
             break;
             case 5: // CHIP_TEMP_GET_REQ
                 if (ret != 1) {
-                    printk("param error != 1\n");
+                    AICWFDBG(LOGERROR, "param error != 1\n");
                 } else {
                     ret = rwnx_send_vendor_hwconfig_req_x2(priv, hwconfig_id, addr, addr_out);
-                    printk("CHIP_TEMP_GET_REQ degree=%d\n", addr_out[0]);
+                    AICWFDBG(LOGINFO, "CHIP_TEMP_GET_REQ degree=%d\n", addr_out[0]);
                 }
             break;
             case 6: // STBC_MCS_SET_REQ
                 if (ret != 3) {
-                    printk("param error != 3\n");
+                    AICWFDBG(LOGERROR, "param error != 3\n");
                 } else {
-                    printk("ret=%d, id=%d, param=%x, %x\n", ret, hwconfig_id, addr[0], addr[1]);
+                    AICWFDBG(LOGINFO, "ret=%d, id=%d, param=%x, %x\n", ret, hwconfig_id, addr[0], addr[1]);
                     ret = rwnx_send_vendor_hwconfig_req_x2(priv, hwconfig_id, addr, addr_out);
                 }
             break;
             case 7:
-                    printk("ret=%d, id=%d, param=%x, %x\n", ret, hwconfig_id, addr[0], addr[1]);
+                    AICWFDBG(LOGINFO, "ret=%d, id=%d, param=%x, %x\n", ret, hwconfig_id, addr[0], addr[1]);
                     ret = rwnx_send_vendor_hwconfig_req_x2(priv, hwconfig_id, addr, addr_out);
             break;
             case 8:
@@ -1560,11 +1560,11 @@ static ssize_t rwnx_dbgfs_vendor_hwconfig_x2_write(struct file *file,
                 ret = rwnx_send_vendor_hwconfig_req_x2(priv, hwconfig_id, addr, addr_out);
                 break;
 		    default:
-			printk("param error:%d\n", hwconfig_id);
+			AICWFDBG(LOGERROR, "param error:%d\n", hwconfig_id);
 			break;
 		}
 		if(ret) {
-		    printk("rwnx_send_vendor_hwconfig_req fail: %x\n", ret);
+		    AICWFDBG(LOGERROR, "rwnx_send_vendor_hwconfig_req fail: %x\n", ret);
 		}
 	}
 
@@ -1584,7 +1584,7 @@ static ssize_t rwnx_dbgfs_vendor_swconfig_x2_write(struct file *file,
     u32_l swconfig_id;
     size_t len = min_t(size_t, count, sizeof(buf) - 1);
     int ret;
-    printk("%s\n", __func__);
+    AICWFDBG(LOGINFO, "%s\n", __func__);
 
     if (copy_from_user(buf, user_buf, len)) {
         return -EFAULT;
@@ -1593,77 +1593,77 @@ static ssize_t rwnx_dbgfs_vendor_swconfig_x2_write(struct file *file,
     buf[len] = '\0';
     ret = sscanf(buf, "%x %x %x", &swconfig_id, &addr[0], &addr[1]);
     if (ret > 3) {
-        printk("param error > 3\n");
+        AICWFDBG(LOGERROR, "param error > 3\n");
     } else {
         switch (swconfig_id)
         {
             case 0: // BCN_CFG_REQ
                 if (ret != 2) {
-                    printk("param error != 2\n");
+                    AICWFDBG(LOGERROR, "param error != 2\n");
                 } else {
                     ret = rwnx_send_vendor_swconfig_req_x2(priv, swconfig_id, addr, addr_out);
-                    printk("BCN_CFG_REQ set_en=%d, get_en=%d\n", addr[0], addr_out[0]);
+                    AICWFDBG(LOGINFO, "BCN_CFG_REQ set_en=%d, get_en=%d\n", addr[0], addr_out[0]);
                 }
             break;
 
             case 1: // TEMP_COMP_SET_REQ
                 if (ret != 3) {
-                    printk("param error != 3\n");
+                    AICWFDBG(LOGERROR, "param error != 3\n");
                 } else {
                     ret = rwnx_send_vendor_swconfig_req_x2(priv, swconfig_id, addr, addr_out);
-                    printk("TEMP_COMP_SET_REQ set_en=%d, tmr=%dms, get_st=%d\n",
+                    AICWFDBG(LOGINFO, "TEMP_COMP_SET_REQ set_en=%d, tmr=%dms, get_st=%d\n",
                         addr[0], addr[1], addr_out[0]);
                 }
             break;
 
             case 2: // TEMP_COMP_GET_REQ
                 if (ret != 1) {
-                    printk("param error != 1\n");
+                    AICWFDBG(LOGERROR, "param error != 1\n");
                 } else {
                     ret = rwnx_send_vendor_swconfig_req_x2(priv, swconfig_id, addr, addr_out);
-                    printk("TEMP_COMP_GET_REQ get_st=%d, degree=%d\n", addr_out[0], addr_out[1]);
+                    AICWFDBG(LOGINFO, "TEMP_COMP_GET_REQ get_st=%d, degree=%d\n", addr_out[0], addr_out[1]);
                 }
             break;
 
             case 3: // EXT_FLAGS_SET_REQ
                 if (ret != 2) {
-                    printk("param error != 2\n");
+                    AICWFDBG(LOGERROR, "param error != 2\n");
                 } else {
                     ret = rwnx_send_vendor_swconfig_req_x2(priv, swconfig_id, addr, addr_out);
-                    printk("EXT_FLAGS_SET_REQ set ext_flags=0x%x, get ext_flags=0x%x\n",
+                    AICWFDBG(LOGINFO, "EXT_FLAGS_SET_REQ set ext_flags=0x%x, get ext_flags=0x%x\n",
                         addr[0], addr_out[0]);
                 }
             break;
 
             case 4: // EXT_FLAGS_GET_REQ
                 if (ret != 1) {
-                    printk("param error != 1\n");
+                    AICWFDBG(LOGERROR, "param error != 1\n");
                 } else {
                     ret = rwnx_send_vendor_swconfig_req_x2(priv, swconfig_id, addr, addr_out);
-                    printk("EXT_FLAGS_GET_REQ get ext_flags=0x%x\n", addr_out[0]);
+                    AICWFDBG(LOGINFO, "EXT_FLAGS_GET_REQ get ext_flags=0x%x\n", addr_out[0]);
                 }
             break;
 
             case 5: // EXT_FLAGS_MASK_SET_REQ
                 if (ret != 3) {
-                    printk("param error != 3\n");
+                    AICWFDBG(LOGERROR, "param error != 3\n");
                 } else {
                     ret = rwnx_send_vendor_swconfig_req_x2(priv, swconfig_id, addr, addr_out);
-                    printk("EXT_FLAGS_MASK_SET_REQ set ext_flags mask=0x%x, val=0x%x, get ext_flags=0x%x\n",
+                    AICWFDBG(LOGINFO, "EXT_FLAGS_MASK_SET_REQ set ext_flags mask=0x%x, val=0x%x, get ext_flags=0x%x\n",
                         addr[0], addr[1], addr_out[0]);
                 }
             break;
             case 6: // TWO_ANT_RSSI_GET_REQ
                 ret = rwnx_send_vendor_swconfig_req_x2(priv, swconfig_id, addr, addr_out);
-                printk("2 ant rssi=%x\n", addr_out[0]);
+                AICWFDBG(LOGINFO, "2 ant rssi=%x\n", addr_out[0]);
             break;
             default:
-                printk("param error\n");
+                AICWFDBG(LOGERROR, "param error\n");
                 break;
         }
 
         if (ret) {
-            printk("rwnx_send_vendor_swconfig_req fail: %x\n", ret);
+            AICWFDBG(LOGERROR, "rwnx_send_vendor_swconfig_req fail: %x\n", ret);
         }
     }
 
@@ -1681,7 +1681,7 @@ static ssize_t rwnx_dbgfs_agg_disable_write(struct file *file,
     int agg_disable, agg_disable_rx, sta_idx;
     size_t len = min_t(size_t, count, sizeof(buf) - 1);
     int ret;
-    printk("%s\n", __func__);
+    AICWFDBG(LOGINFO, "%s\n", __func__);
 
     if (copy_from_user(buf, user_buf, len)) {
         return -EFAULT;
@@ -1690,15 +1690,15 @@ static ssize_t rwnx_dbgfs_agg_disable_write(struct file *file,
     buf[len] = '\0';
     ret = sscanf(buf, "%d %d %d", &agg_disable, &agg_disable_rx, &sta_idx);
     if ((ret > 3) || (ret < 2)) {
-        printk("param error: cnt=%d\n", ret);
+        AICWFDBG(LOGERROR, "param error: cnt=%d\n", ret);
     } else {
         if (ret < 3) {
             sta_idx = RWNX_INVALID_STA;
         }
-        printk("disable_agg: T=%d, R=%d, staidx=%d\n", agg_disable, agg_disable_rx, sta_idx);
+        AICWFDBG(LOGINFO, "disable_agg: T=%d, R=%d, staidx=%d\n", agg_disable, agg_disable_rx, sta_idx);
         ret = rwnx_send_disable_agg_req(priv, (u8_l)agg_disable, (u8_l)agg_disable_rx, (u8_l)sta_idx);
         if (ret) {
-            printk("rwnx_send_disable_agg_req fail: %d\n", ret);
+            AICWFDBG(LOGERROR, "rwnx_send_disable_agg_req fail: %d\n", ret);
         }
     }
 
@@ -1718,7 +1718,7 @@ static ssize_t rwnx_dbgfs_set_roc_write(struct file *file,
     size_t len = min_t(size_t, count, sizeof(buf) - 1);
     int ret;
     int if_type = NL80211_IFTYPE_STATION;
-    printk("%s\n", __func__);
+    AICWFDBG(LOGINFO, "%s\n", __func__);
 
     if (copy_from_user(buf, user_buf, len)) {
         return -EFAULT;
@@ -1733,7 +1733,7 @@ static ssize_t rwnx_dbgfs_set_roc_write(struct file *file,
         }
     }
     if ((ret > 3) || (ret < 1)) {
-        printk("param error: cnt=%d\n", ret);
+        AICWFDBG(LOGERROR, "param error: cnt=%d\n", ret);
     } else if (vif) {
         struct ieee80211_channel chan_entry = {0,};
         struct ieee80211_channel *chan = &chan_entry;
@@ -1744,7 +1744,7 @@ static ssize_t rwnx_dbgfs_set_roc_write(struct file *file,
                 chan_freq = 2412;
             }
         }
-        printk("set_roc: start=%d, freq=%d\n", roc_start, chan_freq);
+        AICWFDBG(LOGINFO, "set_roc: start=%d, freq=%d\n", roc_start, chan_freq);
         if (roc_start) {
             if (chan_freq <= 2484) {
                 chan->band = NL80211_BAND_2GHZ;
@@ -1755,14 +1755,14 @@ static ssize_t rwnx_dbgfs_set_roc_write(struct file *file,
             chan->max_power = 18;
             ret = rwnx_send_roc(priv, vif, chan, duration, &roc_cfm);
             if (ret) {
-                printk("rwnx_send_roc fail: %d\n", ret);
+                AICWFDBG(LOGERROR, "rwnx_send_roc fail: %d\n", ret);
             } else {
-                printk("roc_cfm: opcode=%x, st=%d, idx=%d\n", roc_cfm.op_code, roc_cfm.status, roc_cfm.chan_ctxt_index);
+                AICWFDBG(LOGINFO, "roc_cfm: opcode=%x, st=%d, idx=%d\n", roc_cfm.op_code, roc_cfm.status, roc_cfm.chan_ctxt_index);
             }
         } else {
             ret = rwnx_send_cancel_roc(priv);
             if (ret) {
-                printk("rwnx_send_cancel_roc fail: %d\n", ret);
+                AICWFDBG(LOGERROR, "rwnx_send_cancel_roc fail: %d\n", ret);
             }
         }
     }
@@ -1782,7 +1782,7 @@ static ssize_t rwnx_dbgfs_dbg_level_read(struct file *file,
     int ret;
     ssize_t read;
 
-	printk("dbg level case 1 3 7 15 31 \n");
+	AICWFDBG(LOGINFO, "dbg level case 1 3 7 15 31 \n");
     ret = scnprintf(buf, min_t(size_t, sizeof(buf) - 1, count),
                     "dbg_level=%d\n", aicwf_dbg_level);
 
@@ -1801,7 +1801,7 @@ static ssize_t rwnx_dbgfs_dbg_level_write(struct file *file,
     int val;
     size_t len = min_t(size_t, count, sizeof(buf) - 1);
 
-	printk("now aicwf_dbg_level = %d ;please set level case 1 3 7 15 31 \n",aicwf_dbg_level);
+	AICWFDBG(LOGINFO, "now aicwf_dbg_level = %d ;please set level case 1 3 7 15 31 \n",aicwf_dbg_level);
 
     if (copy_from_user(buf, user_buf, len))
         return -EFAULT;
@@ -1811,7 +1811,7 @@ static ssize_t rwnx_dbgfs_dbg_level_write(struct file *file,
 	if((sscanf(buf, "%d", &val) > 0)&&(val < 32))
 		aicwf_dbg_level = val;
 
-	printk("set aicwf_dbg_level = %d \n",aicwf_dbg_level);
+	AICWFDBG(LOGINFO, "set aicwf_dbg_level = %d \n",aicwf_dbg_level);
     return count;
 }
 
@@ -2065,7 +2065,7 @@ static void idx_to_rate_cfg1(unsigned int formatmod,
             break;
         }
         default:
-            printk("Don't have the formatmod");
+            AICWFDBG(LOGERROR, "Don't have the formatmod");
     }
 }
 
@@ -2248,10 +2248,10 @@ static ssize_t rwnx_dbgfs_rc_fixed_rate_idx_write(struct file *file,
     buf[len] = '\0';
     //sscanf(buf, "%i\n", &fixed_rate_idx);
 	sscanf(buf, "%u %u %u %u %u",&formatmod, &mcs, &nss, &bwTx, &gi);
-	printk("%u %u %u %u %u\n",formatmod, mcs, nss, bwTx, gi);
+	AICWFDBG(LOGINFO, "%u %u %u %u %u\n",formatmod, mcs, nss, bwTx, gi);
 
     if((formatmod > 6) || (mcs > 11) || (nss > 8) || (bwTx > 6) || (gi > 3)){
-        printk("error parameter");
+        AICWFDBG(LOGERROR, "error parameter");
         return len;
     }
 
@@ -2267,7 +2267,7 @@ static ssize_t rwnx_dbgfs_rc_fixed_rate_idx_write(struct file *file,
         idx_to_rate_cfg1(formatmod, mcs, nss, bwTx, gi, &rate_config, NULL);
     }
 
-	printk("formatModTx=%u mcsIndexTx=%u bwTx=%u giAndPreTypeTx=%u\n",r_cfg->formatModTx,r_cfg->mcsIndexTx,r_cfg->bwTx,r_cfg->giAndPreTypeTx);
+	AICWFDBG(LOGINFO, "formatModTx=%u mcsIndexTx=%u bwTx=%u giAndPreTypeTx=%u\n",r_cfg->formatModTx,r_cfg->mcsIndexTx,r_cfg->bwTx,r_cfg->giAndPreTypeTx);
 	// Forward the request to the LMAC
     if ((error = rwnx_send_me_rc_set_rate(priv, sta->sta_idx,
                                           (u16)rate_config.value)) != 0)
@@ -2275,7 +2275,7 @@ static ssize_t rwnx_dbgfs_rc_fixed_rate_idx_write(struct file *file,
         return error;
     }
 
-	printk("send success \n");
+	AICWFDBG(LOGINFO, "send success \n");
     priv->debugfs.rc_config[sta->sta_idx] = (int)rate_config.value;
     return len;
 

@@ -150,10 +150,10 @@ static int cmd_mgr_queue(struct rwnx_cmd_mgr *cmd_mgr, struct rwnx_cmd *cmd)
             if(!empty) {
                 spin_unlock_bh(&cmd_mgr->lock);
                 if(in_softirq()) {
-                    printk("in_softirq:check cmdqueue empty\n");
+                    AICWFDBG(LOGINFO, "in_softirq:check cmdqueue empty\n");
                     mdelay(10);
                 } else {
-                    printk("check cmdqueue empty\n");
+                    AICWFDBG(LOGINFO, "check cmdqueue empty\n");
                     msleep(50);
                 }
             }
