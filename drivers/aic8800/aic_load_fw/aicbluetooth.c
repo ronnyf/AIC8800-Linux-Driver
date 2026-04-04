@@ -293,13 +293,13 @@ static int aic_load_firmware(u32 ** fw_buf, const char *name, struct device *dev
 	int size = 0;
 	int ret = 0;
 
-	printk("%s: request firmware = %s \n", __func__ ,name);
+	AICWFDBG(LOGTRACE, "%s: request firmware = %s \n", __func__ ,name);
 
 
 	ret = request_firmware(&fw, name, NULL);
 	
 	if (ret < 0) {
-		printk("Load %s fail\n", name);
+		AICWFDBG(LOGERROR, "Load %s fail\n", name);
 		release_firmware(fw);
 		return -1;
 	}
@@ -308,7 +308,7 @@ static int aic_load_firmware(u32 ** fw_buf, const char *name, struct device *dev
 	dst = (u32 *)fw->data;
 
 	if (size <= 0) {
-		printk("wrong size of firmware file\n");
+		AICWFDBG(LOGERROR, "wrong size of firmware file\n");
 		release_firmware(fw);
 		return -1;
 	}
@@ -323,7 +323,7 @@ static int aic_load_firmware(u32 ** fw_buf, const char *name, struct device *dev
 	MD5Init(&md5);
 	MD5Update(&md5, (unsigned char *)buffer, size);
 	MD5Final(&md5, decrypt);
-	printk(MD5PINRT, MD5(decrypt));
+	AICWFDBG(LOGINFO, MD5PINRT, MD5(decrypt));
 	
 	release_firmware(fw);
 	
@@ -350,7 +350,7 @@ static int aic_load_firmware(u32 ** fw_buf, const char *name, struct device *dev
     }
 
     if (strlen(aic_fw_path) > 0) {
-		printk("%s: use customer define fw_path\n", __func__);
+		AICWFDBG(LOGTRACE, "%s: use customer define fw_path\n", __func__);
 		len = snprintf(path, FW_PATH_MAX, "%s/%s", aic_fw_path, name);
     } else {
     #if defined(CONFIG_PLATFORM_UBUNTU)
@@ -361,7 +361,7 @@ static int aic_load_firmware(u32 ** fw_buf, const char *name, struct device *dev
         } else if (usb_dev->chipid == PRODUCT_ID_AIC8800D80X2) {
             len = snprintf(path, FW_PATH_MAX, "%s/%s/%s",aic_default_fw_path, "aic8800D80X2", name);
         }else {
-            printk("%s unknown chipid %d\n", __func__, usb_dev->chipid);
+            AICWFDBG(LOGERROR, "%s unknown chipid %d\n", __func__, usb_dev->chipid);
         }
 	#else
 		len = snprintf(path, FW_PATH_MAX, "%s/%s",aic_default_fw_path, name);
@@ -369,23 +369,23 @@ static int aic_load_firmware(u32 ** fw_buf, const char *name, struct device *dev
     }
 
     if (len >= FW_PATH_MAX) {
-    	printk("%s: %s file's path too long\n", __func__, name);
+    	AICWFDBG(LOGERROR, "%s: %s file's path too long\n", __func__, name);
         *fw_buf=NULL;
         __putname(path);
         return -1;
     }
 
-    printk("%s :firmware path = %s  \n", __func__ ,path);
+    AICWFDBG(LOGTRACE, "%s :firmware path = %s  \n", __func__ ,path);
 
 
     /* open the firmware file */
     fp=filp_open(path, O_RDONLY, 0);
     if(IS_ERR(fp) || (!fp)){
-            printk("%s: %s file failed to open\n", __func__, name);
+            AICWFDBG(LOGERROR, "%s: %s file failed to open\n", __func__, name);
             if(IS_ERR(fp))
-		printk("is_Err\n");
+		AICWFDBG(LOGERROR, "is_Err\n");
 	if((!fp))
-		printk("null\n");
+		AICWFDBG(LOGERROR, "null\n");
 	*fw_buf=NULL;
             __putname(path);
             fp=NULL;
@@ -394,7 +394,7 @@ static int aic_load_firmware(u32 ** fw_buf, const char *name, struct device *dev
 
     size = i_size_read(file_inode(fp));
     if(size<=0){
-            printk("%s: %s file size invalid %d\n", __func__, name, size);
+            AICWFDBG(LOGERROR, "%s: %s file size invalid %d\n", __func__, name, size);
             *fw_buf=NULL;
             __putname(path);
             filp_close(fp,NULL);
@@ -421,7 +421,7 @@ static int aic_load_firmware(u32 ** fw_buf, const char *name, struct device *dev
     #endif
 
     if(size != rdlen){
-            printk("%s: %s file rdlen invalid %d %d\n", __func__, name, (int)rdlen, size);
+            AICWFDBG(LOGERROR, "%s: %s file rdlen invalid %d %d\n", __func__, name, (int)rdlen, size);
             *fw_buf=NULL;
             __putname(path);
             filp_close(fp,NULL);
@@ -471,7 +471,7 @@ static int aic_load_firmware(u32 ** fw_buf, const char *name, struct device *dev
 	MD5Update(&md5, (unsigned char *)buffer, size);
 	MD5Final(&md5, decrypt);
 
-	printk(MD5PINRT, MD5(decrypt));
+	AICWFDBG(LOGINFO, MD5PINRT, MD5(decrypt));
 
     return size;
 #endif
@@ -479,7 +479,7 @@ static int aic_load_firmware(u32 ** fw_buf, const char *name, struct device *dev
 }
 
 int rwnx_plat_bin_fw_upload_android(struct aic_usb_dev *usbdev, u32 fw_addr,
-                               char *filename)
+                                char *filename)
 {
     struct device *dev = usbdev->dev;
     unsigned int i=0;
@@ -490,20 +490,20 @@ int rwnx_plat_bin_fw_upload_android(struct aic_usb_dev *usbdev, u32 fw_addr,
     /* load aic firmware */
     size = aic_load_firmware(&dst, filename, dev);
     if(size<=0){
-            printk("wrong size of firmware file\n");
+            AICWFDBG(LOGERROR, "wrong size of firmware file\n");
             vfree(dst);
             dst = NULL;
             return -1;
     }
 
     /* Copy the file on the Embedded side */
-    printk("### Upload %s firmware, @ = %x  size=%d\n", filename, fw_addr, size);
+    AICWFDBG(LOGINFO, "### Upload %s firmware, @ = %x  size=%d\n", filename, fw_addr, size);
 
     if (size > 1024) {// > 1KB data
         for (i = 0; i < (size - 1024); i += 1024) {//each time write 1KB
             err = rwnx_send_dbg_mem_block_write_req(usbdev, fw_addr + i, 1024, dst + i / 4);
                 if (err) {
-                printk("bin upload fail: %x, err:%d\r\n", fw_addr + i, err);
+                AICWFDBG(LOGERROR, "bin upload fail: %x, err:%d\r\n", fw_addr + i, err);
                 break;
             }
         }
@@ -512,7 +512,7 @@ int rwnx_plat_bin_fw_upload_android(struct aic_usb_dev *usbdev, u32 fw_addr,
     if (!err && (i < size)) {// <1KB data
         err = rwnx_send_dbg_mem_block_write_req(usbdev, fw_addr + i, size - i, dst + i / 4);
         if (err) {
-            printk("bin upload fail: %x, err:%d\r\n", fw_addr + i, err);
+            AICWFDBG(LOGERROR, "bin upload fail: %x, err:%d\r\n", fw_addr + i, err);
         }
     }
 
@@ -521,7 +521,7 @@ int rwnx_plat_bin_fw_upload_android(struct aic_usb_dev *usbdev, u32 fw_addr,
         dst = NULL;
     }
 
-    printk("fw download complete\n\n");
+    AICWFDBG(LOGINFO, "fw download complete\n\n");
 
     return err;
 }
@@ -542,28 +542,28 @@ int rwnx_plat_m2d_flash_ota_android(struct aic_usb_dev *usbdev, char *filename)
 
     ret = rwnx_send_dbg_mem_read_req(usbdev, mem_addr, &rd_mem_addr_cfm);
     if (ret) {
-        printk("m2d %x rd fail: %d\n", mem_addr, ret);
+        AICWFDBG(LOGERROR, "m2d %x rd fail: %d\n", mem_addr, ret);
         return ret;
     }
     bond_id = (u8)(rd_mem_addr_cfm.memdata >> 24);
-    printk("%x=%x\n", rd_mem_addr_cfm.memaddr, rd_mem_addr_cfm.memdata);
+    AICWFDBG(LOGDEBUG, "%x=%x\n", rd_mem_addr_cfm.memaddr, rd_mem_addr_cfm.memdata);
 	if (bond_id & (1<<1)) {
 		//flash is invalid
-		printk("m2d flash is invalid\n");
+		AICWFDBG(LOGERROR, "m2d flash is invalid\n");
 		return -1;
 	}
 
     /* load aic firmware */
     size = aic_load_firmware(&dst, filename, dev);
     if(size<=0){
-            printk("wrong size of m2d file\n");
+            AICWFDBG(LOGERROR, "wrong size of m2d file\n");
             vfree(dst);
             dst = NULL;
             return -1;
     }
 
     /* Copy the file on the Embedded side */
-    printk("### Upload m2d %s flash, size=%d\n", filename, size);
+    AICWFDBG(LOGINFO, "### Upload m2d %s flash, size=%d\n", filename, size);
 
 	/*send info first*/
 	err = rwnx_send_dbg_mem_block_write_req(usbdev, AIC_M2D_OTA_INFO_ADDR, 4, (u32 *)&size);
@@ -573,7 +573,7 @@ int rwnx_plat_m2d_flash_ota_android(struct aic_usb_dev *usbdev, char *filename)
         for (i = 0; i < (size - 1024); i += 1024) {//each time write 1KB
             err = rwnx_send_dbg_mem_block_write_req(usbdev, AIC_M2D_OTA_DATA_ADDR, 1024, dst + i / 4);
                 if (err) {
-                printk("m2d upload fail: %x, err:%d\r\n", AIC_M2D_OTA_DATA_ADDR, err);
+                AICWFDBG(LOGERROR, "m2d upload fail: %x, err:%d\r\n", AIC_M2D_OTA_DATA_ADDR, err);
                 break;
             }
         }
@@ -582,7 +582,7 @@ int rwnx_plat_m2d_flash_ota_android(struct aic_usb_dev *usbdev, char *filename)
     if (!err && (i < size)) {// <1KB data
         err = rwnx_send_dbg_mem_block_write_req(usbdev, AIC_M2D_OTA_DATA_ADDR, size - i, dst + i / 4);
         if (err) {
-            printk("m2d upload fail: %x, err:%d\r\n", AIC_M2D_OTA_DATA_ADDR, err);
+            AICWFDBG(LOGERROR, "m2d upload fail: %x, err:%d\r\n", AIC_M2D_OTA_DATA_ADDR, err);
         }
     }
 
@@ -592,7 +592,7 @@ int rwnx_plat_m2d_flash_ota_android(struct aic_usb_dev *usbdev, char *filename)
     }
 	testmode = FW_NORMAL_MODE;
 
-    printk("m2d flash update complete\n\n");
+    AICWFDBG(LOGINFO, "m2d flash update complete\n\n");
 
     return err;
 }
@@ -624,48 +624,48 @@ int rwnx_plat_m2d_flash_ota_check(struct aic_usb_dev *usbdev, char *filename)
 
     ret = rwnx_send_dbg_mem_read_req(usbdev, mem_addr, &rd_mem_addr_cfm);
     if (ret) {
-        printk("m2d %x rd fail: %d\n", mem_addr, ret);
+        AICWFDBG(LOGERROR, "m2d %x rd fail: %d\n", mem_addr, ret);
         return ret;
     }
     bond_id = (u8)(rd_mem_addr_cfm.memdata >> 24);
-    printk("%x=%x\n", rd_mem_addr_cfm.memaddr, rd_mem_addr_cfm.memdata);
+    AICWFDBG(LOGDEBUG, "%x=%x\n", rd_mem_addr_cfm.memaddr, rd_mem_addr_cfm.memdata);
 	if (bond_id & (1<<1)) {
 		//flash is invalid
-		printk("m2d flash is invalid\n");
+		AICWFDBG(LOGERROR, "m2d flash is invalid\n");
 		return -1;
 	}
     ret = rwnx_send_dbg_mem_read_req(usbdev, mem_addr_code_start, &rd_mem_addr_cfm);
 	if (ret){
-        printk("mem_addr_code_start %x rd fail: %d\n", mem_addr_code_start, ret);
+        AICWFDBG(LOGERROR, "mem_addr_code_start %x rd fail: %d\n", mem_addr_code_start, ret);
         return ret;
 	}
 	code_start_addr = rd_mem_addr_cfm.memdata;
 
     ret = rwnx_send_dbg_mem_read_req(usbdev, mem_addr_sdk_ver, &rd_mem_addr_cfm);
 	if (ret){
-        printk("mem_addr_sdk_ver %x rd fail: %d\n", mem_addr_code_start, ret);
+        AICWFDBG(LOGERROR, "mem_addr_sdk_ver %x rd fail: %d\n", mem_addr_code_start, ret);
         return ret;
 	}
 	sdk_ver_addr = rd_mem_addr_cfm.memdata;
-	printk("code_start_addr: 0x%x,  sdk_ver_addr: 0x%x\n", code_start_addr,sdk_ver_addr);
+	AICWFDBG(LOGINFO, "code_start_addr: 0x%x,  sdk_ver_addr: 0x%x\n", code_start_addr,sdk_ver_addr);
 
 	/* load aic firmware */
 	size = aic_load_firmware(&dst, filename, dev);
 	if(size<=0){
-			printk("wrong size of m2d file\n");
+			AICWFDBG(LOGERROR, "wrong size of m2d file\n");
 			vfree(dst);
 			dst = NULL;
 			return -1;
 	}
 	if(code_start_addr == 0xffffffff && sdk_ver_addr == 0xffffffff) {
-		printk("########m2d flash old version , must be upgrade\n");
+		AICWFDBG(LOGINFO, "########m2d flash old version , must be upgrade\n");
 		drv_code_start_addr = dst[driver_code_start_idx];
 		drv_sdk_ver_addr = dst[driver_sdk_ver_idx];
 
-		printk("drv_code_start_addr: 0x%x,	drv_sdk_ver_addr: 0x%x\n", drv_code_start_addr,drv_sdk_ver_addr);
+		AICWFDBG(LOGINFO, "drv_code_start_addr: 0x%x,	drv_sdk_ver_addr: 0x%x\n", drv_code_start_addr,drv_sdk_ver_addr);
 
 		if(drv_sdk_ver_addr == 0xffffffff){
-			printk("########driver m2d_ota.bin is old ,not need upgrade\n");
+			AICWFDBG(LOGINFO, "########driver m2d_ota.bin is old ,not need upgrade\n");
 			return -1;
 		}
 
@@ -673,46 +673,46 @@ int rwnx_plat_m2d_flash_ota_check(struct aic_usb_dev *usbdev, char *filename)
 		for(i=0;i<16;i++){
 			ret = rwnx_send_dbg_mem_read_req(usbdev, (sdk_ver_addr+i*4), &rd_mem_addr_cfm);
 			if (ret){
-				printk("mem_addr_sdk_ver %x rd fail: %d\n", mem_addr_code_start, ret);
+				AICWFDBG(LOGERROR, "mem_addr_sdk_ver %x rd fail: %d\n", mem_addr_code_start, ret);
 				return ret;
 			}
 			flash_ver[i] = rd_mem_addr_cfm.memdata;
 		}
 		memcpy((u8 *)flash_sdk_ver,(u8 *)flash_ver,64);
         memcpy((u8 *)saved_sdk_ver,(u8 *)flash_sdk_ver,64);
-		printk("flash SDK Version: %s\r\n\r\n", flash_sdk_ver);
+		AICWFDBG(LOGINFO, "flash SDK Version: %s\r\n\r\n", flash_sdk_ver);
 				
 		drv_code_start_addr = dst[driver_code_start_idx];
 		drv_sdk_ver_addr = dst[driver_sdk_ver_idx];
 
-		printk("drv_code_start_addr: 0x%x,	drv_sdk_ver_addr: 0x%x\n", drv_code_start_addr,drv_sdk_ver_addr);
+		AICWFDBG(LOGINFO, "drv_code_start_addr: 0x%x,	drv_sdk_ver_addr: 0x%x\n", drv_code_start_addr,drv_sdk_ver_addr);
 
 		if(drv_sdk_ver_addr == 0xffffffff){
-			printk("########driver m2d_ota.bin is old ,not need upgrade\n");
+			AICWFDBG(LOGINFO, "########driver m2d_ota.bin is old ,not need upgrade\n");
 			return -1;
 		}
 
 		driver_sdk_ver_addr_idx = (drv_sdk_ver_addr-drv_code_start_addr)/4;
-		printk("driver_sdk_ver_addr_idx %d\n",driver_sdk_ver_addr_idx);
+		AICWFDBG(LOGINFO, "driver_sdk_ver_addr_idx %d\n",driver_sdk_ver_addr_idx);
 
 		if (driver_sdk_ver_addr_idx){
 			for(j = 0; j < 16; j++){
 				ota_ver[j] = dst[driver_sdk_ver_addr_idx+j];
 			}
 			memcpy((u8 *)m2d_sdk_ver,(u8 *)ota_ver,64);
-			printk("m2d_ota SDK Version: %s\r\n\r\n", m2d_sdk_ver);
+			AICWFDBG(LOGINFO, "m2d_ota SDK Version: %s\r\n\r\n", m2d_sdk_ver);
 		} else {
 			return -1;
 		}
 		
 		if(!strcmp(m2d_sdk_ver,flash_sdk_ver)){
-			printk("######## m2d %s flash is not need upgrade\r\n", filename);
+			AICWFDBG(LOGINFO, "######## m2d %s flash is not need upgrade\r\n", filename);
 			return -1;
 		}
 	}
 
     /* Copy the file on the Embedded side */
-    printk("### Upload m2d %s flash, size=%d\n", filename, size);
+    AICWFDBG(LOGINFO, "### Upload m2d %s flash, size=%d\n", filename, size);
 
 	/*send info first*/
 	err = rwnx_send_dbg_mem_block_write_req(usbdev, AIC_M2D_OTA_INFO_ADDR, 4, (u32 *)&size);
@@ -722,7 +722,7 @@ int rwnx_plat_m2d_flash_ota_check(struct aic_usb_dev *usbdev, char *filename)
         for (i = 0; i < (size - 1024); i += 1024) {//each time write 1KB
             err = rwnx_send_dbg_mem_block_write_req(usbdev, AIC_M2D_OTA_DATA_ADDR, 1024, dst + i / 4);
                 if (err) {
-                printk("m2d upload fail: %x, err:%d\r\n", AIC_M2D_OTA_DATA_ADDR, err);
+                AICWFDBG(LOGERROR, "m2d upload fail: %x, err:%d\r\n", AIC_M2D_OTA_DATA_ADDR, err);
                 break;
             }
         }
@@ -731,7 +731,7 @@ int rwnx_plat_m2d_flash_ota_check(struct aic_usb_dev *usbdev, char *filename)
     if (!err && (i < size)) {// <1KB data
         err = rwnx_send_dbg_mem_block_write_req(usbdev, AIC_M2D_OTA_DATA_ADDR, size - i, dst + i / 4);
         if (err) {
-            printk("m2d upload fail: %x, err:%d\r\n", AIC_M2D_OTA_DATA_ADDR, err);
+            AICWFDBG(LOGERROR, "m2d upload fail: %x, err:%d\r\n", AIC_M2D_OTA_DATA_ADDR, err);
         }
     }
 
@@ -741,14 +741,14 @@ int rwnx_plat_m2d_flash_ota_check(struct aic_usb_dev *usbdev, char *filename)
     }
 	testmode = FW_NORMAL_MODE;
 
-    printk("m2d flash update complete\n\n");
+    AICWFDBG(LOGINFO, "m2d flash update complete\n\n");
 
     return err;
 }
 #endif//CONFIG_M2D_OTA_AUTO_SUPPORT
 
 int rwnx_plat_flash_bin_upload_android(struct aic_usb_dev *usbdev, u32 fw_addr,
-                               char *filename)
+                                char *filename)
 {
     struct device *dev = usbdev->dev;
     unsigned int i=0;
@@ -763,15 +763,15 @@ int rwnx_plat_flash_bin_upload_android(struct aic_usb_dev *usbdev, u32 fw_addr,
     size = aic_load_firmware(&dst, filename, dev);
     flash_write_size = size;
     if(size<=0){
-            printk("wrong size of firmware file\n");
+            AICWFDBG(LOGERROR, "wrong size of firmware file\n");
             vfree(dst);
             dst = NULL;
             return ENOENT;
     }
 
-    printk("size %x, flash_erase_len %x\n", size, flash_erase_len);
+    AICWFDBG(LOGINFO, "size %x, flash_erase_len %x\n", size, flash_erase_len);
     if (size != flash_erase_len || (flash_erase_len & 0xFFF)) {
-        printk("wrong size of flash_erase_len %d\n", flash_erase_len);
+        AICWFDBG(LOGERROR, "wrong size of flash_erase_len %d\n", flash_erase_len);
         vfree(dst);
         dst = NULL;
         return -1;
@@ -779,7 +779,7 @@ int rwnx_plat_flash_bin_upload_android(struct aic_usb_dev *usbdev, u32 fw_addr,
 
     err = rwnx_send_dbg_mem_read_req(usbdev, mem_addr, &rd_mem_addr_cfm);
     if (err) {
-        printk("%x rd fail: %d\n", mem_addr, err);
+        AICWFDBG(LOGERROR, "%x rd fail: %d\n", mem_addr, err);
         return err;
     }
 
@@ -789,7 +789,7 @@ int rwnx_plat_flash_bin_upload_android(struct aic_usb_dev *usbdev, u32 fw_addr,
             for (i = 0; i < (size - 0x40000); i +=0x40000) {//each time erase 256K
                 err = rwnx_send_dbg_mem_mask_write_req(usbdev, fw_addr+i, 0xf150e250, 0x40000);
                 if (err) {
-                    printk("flash erase fail: %x, err:%d\r\n", fw_addr + i, err);
+                    AICWFDBG(LOGERROR, "flash erase fail: %x, err:%d\r\n", fw_addr + i, err);
                     return err;
                 }
             }
@@ -797,13 +797,13 @@ int rwnx_plat_flash_bin_upload_android(struct aic_usb_dev *usbdev, u32 fw_addr,
         if (!err && (i < size)) {// <256KB data
             err = rwnx_send_dbg_mem_mask_write_req(usbdev, fw_addr + i, 0xf150e250, size - i);
             if (err) {
-                printk("flash erase fail: %x, err:%d\r\n", fw_addr + i, err);
+                AICWFDBG(LOGERROR, "flash erase fail: %x, err:%d\r\n", fw_addr + i, err);
             }
         }
     }
 
     /* Copy the file on the Embedded side */
-    printk("### Upload %s firmware, @ = %x  size=%d\n", filename, fw_addr, size);
+    AICWFDBG(LOGINFO, "### Upload %s firmware, @ = %x  size=%d\n", filename, fw_addr, size);
     crc = aic_crc32((u8 *)dst, size, crc);
     flash_write_bin_crc = crc;
 
@@ -811,7 +811,7 @@ int rwnx_plat_flash_bin_upload_android(struct aic_usb_dev *usbdev, u32 fw_addr,
         for (i = 0; i < (size - 1024); i += 1024) {//each time write 1KB
             err = rwnx_send_dbg_mem_block_write_req(usbdev, fw_addr + i, 1024, dst + i / 4);
                 if (err) {
-                printk("bin upload fail: %x, err:%d\r\n", fw_addr + i, err);
+                AICWFDBG(LOGERROR, "bin upload fail: %x, err:%d\r\n", fw_addr + i, err);
                 break;
             }
         }
@@ -820,7 +820,7 @@ int rwnx_plat_flash_bin_upload_android(struct aic_usb_dev *usbdev, u32 fw_addr,
     if (!err && (i < size)) {// <1KB data
         err = rwnx_send_dbg_mem_block_write_req(usbdev, fw_addr + i, size - i, dst + i / 4);
         if (err) {
-            printk("bin upload fail: %x, err:%d\r\n", fw_addr + i, err);
+            AICWFDBG(LOGERROR, "bin upload fail: %x, err:%d\r\n", fw_addr + i, err);
         }
     }
 
@@ -829,7 +829,7 @@ int rwnx_plat_flash_bin_upload_android(struct aic_usb_dev *usbdev, u32 fw_addr,
         dst = NULL;
     }
 
-    printk("fw download complete\n\n");
+    AICWFDBG(LOGINFO, "fw download complete\n\n");
 
     return err;
 }
@@ -952,9 +952,9 @@ void get_userconfig_xtal_cap(xtal_cap_conf_t *xtal_cap)
 	xtal_cap->xtal_cap = userconfig_xtal_cap.xtal_cap;
 	xtal_cap->xtal_cap_fine = userconfig_xtal_cap.xtal_cap_fine;
 
-    printk("%s:enable       :%d\r\n", __func__, xtal_cap->enable);
-    printk("%s:xtal_cap     :%d\r\n", __func__, xtal_cap->xtal_cap);
-    printk("%s:xtal_cap_fine:%d\r\n", __func__, xtal_cap->xtal_cap_fine);
+    AICWFDBG(LOGINFO, "%s:enable       :%d\r\n", __func__, xtal_cap->enable);
+    AICWFDBG(LOGINFO, "%s:xtal_cap     :%d\r\n", __func__, xtal_cap->xtal_cap);
+    AICWFDBG(LOGINFO, "%s:xtal_cap_fine:%d\r\n", __func__, xtal_cap->xtal_cap_fine);
 }
 
 EXPORT_SYMBOL(get_userconfig_xtal_cap);
@@ -971,16 +971,16 @@ void get_userconfig_txpwr_idx(txpwr_idx_conf_t *txpwr_idx){
 	txpwr_idx->ofdm256qam_5g = userconfig_txpwr_idx.ofdm256qam_5g;
 	txpwr_idx->ofdm1024qam_5g = userconfig_txpwr_idx.ofdm1024qam_5g;
 
-	printk("%s:enable:%d\r\n", __func__, txpwr_idx->enable);
-	printk("%s:dsss:%d\r\n", __func__, txpwr_idx->dsss);
-	printk("%s:ofdmlowrate_2g4:%d\r\n", __func__, txpwr_idx->ofdmlowrate_2g4);
-	printk("%s:ofdm64qam_2g4:%d\r\n", __func__, txpwr_idx->ofdm64qam_2g4);
-	printk("%s:ofdm256qam_2g4:%d\r\n", __func__, txpwr_idx->ofdm256qam_2g4);
-	printk("%s:ofdm1024qam_2g4:%d\r\n", __func__, txpwr_idx->ofdm1024qam_2g4);
-	printk("%s:ofdmlowrate_5g:%d\r\n", __func__, txpwr_idx->ofdmlowrate_5g);
-	printk("%s:ofdm64qam_5g:%d\r\n", __func__, txpwr_idx->ofdm64qam_5g);
-	printk("%s:ofdm256qam_5g:%d\r\n", __func__, txpwr_idx->ofdm256qam_5g);
-	printk("%s:ofdm1024qam_5g:%d\r\n", __func__, txpwr_idx->ofdm1024qam_5g);
+	AICWFDBG(LOGINFO, "%s:enable:%d\r\n", __func__, txpwr_idx->enable);
+	AICWFDBG(LOGINFO, "%s:dsss:%d\r\n", __func__, txpwr_idx->dsss);
+	AICWFDBG(LOGINFO, "%s:ofdmlowrate_2g4:%d\r\n", __func__, txpwr_idx->ofdmlowrate_2g4);
+	AICWFDBG(LOGINFO, "%s:ofdm64qam_2g4:%d\r\n", __func__, txpwr_idx->ofdm64qam_2g4);
+	AICWFDBG(LOGINFO, "%s:ofdm256qam_2g4:%d\r\n", __func__, txpwr_idx->ofdm256qam_2g4);
+	AICWFDBG(LOGINFO, "%s:ofdm1024qam_2g4:%d\r\n", __func__, txpwr_idx->ofdm1024qam_2g4);
+	AICWFDBG(LOGINFO, "%s:ofdmlowrate_5g:%d\r\n", __func__, txpwr_idx->ofdmlowrate_5g);
+	AICWFDBG(LOGINFO, "%s:ofdm64qam_5g:%d\r\n", __func__, txpwr_idx->ofdm64qam_5g);
+	AICWFDBG(LOGINFO, "%s:ofdm256qam_5g:%d\r\n", __func__, txpwr_idx->ofdm256qam_5g);
+	AICWFDBG(LOGINFO, "%s:ofdm1024qam_5g:%d\r\n", __func__, txpwr_idx->ofdm1024qam_5g);
 
 }
 
@@ -996,14 +996,14 @@ void get_userconfig_txpwr_ofst(txpwr_ofst_conf_t *txpwr_ofst){
 	txpwr_ofst->chan_122_140 = userconfig_txpwr_ofst.chan_122_140;
 	txpwr_ofst->chan_142_165 = userconfig_txpwr_ofst.chan_142_165;
 
-	printk("%s:ofst_enable:%d\r\n", __func__, txpwr_ofst->enable);
-	printk("%s:ofst_chan_1_4:%d\r\n", __func__, txpwr_ofst->chan_1_4);
-	printk("%s:ofst_chan_5_9:%d\r\n", __func__, txpwr_ofst->chan_5_9);
-	printk("%s:ofst_chan_10_13:%d\r\n", __func__, txpwr_ofst->chan_10_13);
-	printk("%s:ofst_chan_36_64:%d\r\n", __func__, txpwr_ofst->chan_36_64);
-	printk("%s:ofst_chan_100_120:%d\r\n", __func__, txpwr_ofst->chan_100_120);
-	printk("%s:ofst_chan_122_140:%d\r\n", __func__, txpwr_ofst->chan_122_140);
-	printk("%s:ofst_chan_142_165:%d\r\n", __func__, txpwr_ofst->chan_142_165);
+	AICWFDBG(LOGINFO, "%s:ofst_enable:%d\r\n", __func__, txpwr_ofst->enable);
+	AICWFDBG(LOGINFO, "%s:ofst_chan_1_4:%d\r\n", __func__, txpwr_ofst->chan_1_4);
+	AICWFDBG(LOGINFO, "%s:ofst_chan_5_9:%d\r\n", __func__, txpwr_ofst->chan_5_9);
+	AICWFDBG(LOGINFO, "%s:ofst_chan_10_13:%d\r\n", __func__, txpwr_ofst->chan_10_13);
+	AICWFDBG(LOGINFO, "%s:ofst_chan_36_64:%d\r\n", __func__, txpwr_ofst->chan_36_64);
+	AICWFDBG(LOGINFO, "%s:ofst_chan_100_120:%d\r\n", __func__, txpwr_ofst->chan_100_120);
+	AICWFDBG(LOGINFO, "%s:ofst_chan_122_140:%d\r\n", __func__, txpwr_ofst->chan_122_140);
+	AICWFDBG(LOGINFO, "%s:ofst_chan_142_165:%d\r\n", __func__, txpwr_ofst->chan_142_165);
 
 }
 
@@ -1011,7 +1011,7 @@ EXPORT_SYMBOL(get_userconfig_txpwr_ofst);
 
 void rwnx_plat_userconfig_set_value(char *command, char *value){	
 	//TODO send command
-	printk("%s:command=%s value=%s \r\n", __func__, command, value);
+	AICWFDBG(LOGTRACE, "%s:command=%s value=%s \r\n", __func__, command, value);
 	if(!strcmp(command, "enable")){
 		userconfig_txpwr_idx.enable = rwnx_atoi(value);
 	}else if(!strcmp(command, "dsss")){
@@ -1073,7 +1073,7 @@ void rwnx_plat_userconfig_parsing(char *buffer, int size){
 		if(buffer[i] == 0x0a || buffer[i] == 0x0d){
 			if(command[0] != 0 && value[0] != 0){
 				if(parse_state == PRINT){
-					printk("%s:%s\r\n", __func__, value);
+					AICWFDBG(LOGINFO, "%s:%s\r\n", __func__, value);
 				}else if(parse_state == GET_VALUE){
 					rwnx_plat_userconfig_set_value(command, value);
 				}
@@ -1126,19 +1126,19 @@ int rwnx_plat_userconfig_upload_android(struct aic_usb_dev *usbdev, char *filena
     u32 *dst=NULL;
     struct device *dev = usbdev->dev;
 
-	printk("userconfig file path:%s \r\n", filename);
+	AICWFDBG(LOGTRACE, "userconfig file path:%s \r\n", filename);
 
     /* load aic firmware */
     size = aic_load_firmware(&dst, filename, dev);
     if(size <= 0){
-            printk("wrong size of firmware file\n");
+            AICWFDBG(LOGERROR, "wrong size of firmware file\n");
             vfree(dst);
             dst = NULL;
             return 0;
     }
 
 	/* Copy the file on the Embedded side */
-    printk("### Upload %s userconfig, size=%d\n", filename, size);
+    AICWFDBG(LOGINFO, "### Upload %s userconfig, size=%d\n", filename, size);
 
 	rwnx_plat_userconfig_parsing((char *)dst, size);
 
@@ -1147,7 +1147,7 @@ int rwnx_plat_userconfig_upload_android(struct aic_usb_dev *usbdev, char *filena
         dst = NULL;
     }
 
-	printk("userconfig download complete\n\n");
+	AICWFDBG(LOGINFO, "userconfig download complete\n\n");
 	return 0;
 }
 
@@ -1182,10 +1182,10 @@ struct aicbt_patch_table *aicbt_patch_table_alloc(struct aic_usb_dev *usbdev,con
 	size = aic_load_firmware((u32 **)&rawdata, filename, dev);
 
 	/* Copy the file on the Embedded side */
-	printk("### Upload %s fw_patch_table, size=%d\n", filename, size);
+	AICWFDBG(LOGINFO, "### Upload %s fw_patch_table, size=%d\n", filename, size);
 
 	if (size <= 0) {
-		printk("wrong size of firmware file\n");
+		AICWFDBG(LOGERROR, "wrong size of firmware file\n");
 		ret = -1;
 		goto err;
 	}
@@ -1193,7 +1193,7 @@ struct aicbt_patch_table *aicbt_patch_table_alloc(struct aic_usb_dev *usbdev,con
 	p = rawdata;
 
 	if (memcmp(p, AICBT_PT_TAG, sizeof(AICBT_PT_TAG) < 16 ? sizeof(AICBT_PT_TAG) : 16)) {
-		printk("TAG err\n");
+		AICWFDBG(LOGERROR, "TAG err\n");
 		ret = -1;
 		goto err;
 	}
@@ -1448,21 +1448,21 @@ int aicbt_patch_table_load(struct aic_usb_dev *usbdev, struct aicbt_patch_table 
 			*(data + 11) = aicbt_info[usbdev->chipid].uart_baud;
 			*(data + 13) = aicbt_info[usbdev->chipid].uart_flowctrl;
 			*(data + 15) = aicbt_info[usbdev->chipid].lpm_enable;
-			*(data + 17) = aicbt_info[usbdev->chipid].txpwr_lvl;
+		*(data + 17) = aicbt_info[usbdev->chipid].txpwr_lvl;
 
-			printk("%s bt btmode[%d]:%d\r\n", __func__, usbdev->chipid, aicbt_info[usbdev->chipid].btmode);
-			printk("%s bt btport[%d]:%d\r\n", __func__, usbdev->chipid, aicbt_info[usbdev->chipid].btport);
-			printk("%s bt uart_baud[%d]:%d\r\n", __func__, usbdev->chipid, aicbt_info[usbdev->chipid].uart_baud);
-			printk("%s bt uart_flowctrl[%d]:%d\r\n", __func__, usbdev->chipid, aicbt_info[usbdev->chipid].uart_flowctrl);
-			printk("%s bt lpm_enable[%d]:%d\r\n", __func__, usbdev->chipid, aicbt_info[usbdev->chipid].lpm_enable);
-			printk("%s bt tx_pwr[%d]:%4X\r\n", __func__, usbdev->chipid, aicbt_info[usbdev->chipid].txpwr_lvl);
+		AICWFDBG(LOGINFO, "%s bt btmode[%d]:%d\r\n", __func__, usbdev->chipid, aicbt_info[usbdev->chipid].btmode);
+		AICWFDBG(LOGINFO, "%s bt btport[%d]:%d\r\n", __func__, usbdev->chipid, aicbt_info[usbdev->chipid].btport);
+		AICWFDBG(LOGINFO, "%s bt uart_baud[%d]:%d\r\n", __func__, usbdev->chipid, aicbt_info[usbdev->chipid].uart_baud);
+		AICWFDBG(LOGINFO, "%s bt uart_flowctrl[%d]:%d\r\n", __func__, usbdev->chipid, aicbt_info[usbdev->chipid].uart_flowctrl);
+		AICWFDBG(LOGINFO, "%s bt lpm_enable[%d]:%d\r\n", __func__, usbdev->chipid, aicbt_info[usbdev->chipid].lpm_enable);
+		AICWFDBG(LOGINFO, "%s bt tx_pwr[%d]:%4X\r\n", __func__, usbdev->chipid, aicbt_info[usbdev->chipid].txpwr_lvl);
 
-		}
-		if (p->type == 0x06) {
-			char *data_s = (char *)p->data;
-			printk("patch version %s\n", data_s);
-			continue;
-		}
+	}
+	if (p->type == 0x06) {
+		char *data_s = (char *)p->data;
+		AICWFDBG(LOGINFO, "patch version %s\n", data_s);
+		continue;
+	}
 		for (i = 0; i < p->len; i++) {
 			ret = rwnx_send_dbg_mem_write_req(usbdev, *data, *(data + 1));
 			if (ret != 0)
@@ -1527,7 +1527,7 @@ int rwnx_plat_bin_fw_patch_table_upload_android(struct aic_usb_dev *usbdev, char
 	struct aicbt_patch_table *head = NULL;
 	struct aicbt_patch_table *new = NULL;
 	struct aicbt_patch_table *cur = NULL;
-   	 int size;
+    	 int size;
 	int ret = 0;
    	uint8_t *rawdata=NULL;
 	uint8_t *p = NULL;
@@ -1536,10 +1536,10 @@ int rwnx_plat_bin_fw_patch_table_upload_android(struct aic_usb_dev *usbdev, char
     size = aic_load_firmware((u32 **)&rawdata, filename, dev);
 
 	/* Copy the file on the Embedded side */
-    printk("### Upload %s fw_patch_table, size=%d\n", filename, size);
+    AICWFDBG(LOGINFO, "### Upload %s fw_patch_table, size=%d\n", filename, size);
 
 	if (size <= 0) {
-		printk("wrong size of firmware file\n");
+		AICWFDBG(LOGERROR, "wrong size of firmware file\n");
 		ret = -1;
 		goto err;
 	}
@@ -1547,7 +1547,7 @@ int rwnx_plat_bin_fw_patch_table_upload_android(struct aic_usb_dev *usbdev, char
 	p = rawdata;
 
 	if (memcmp(p, AICBT_PT_TAG, sizeof(AICBT_PT_TAG) < 16 ? sizeof(AICBT_PT_TAG) : 16)) {
-		printk("TAG err\n");
+		AICWFDBG(LOGERROR, "TAG err\n");
 		ret = -1;
 		goto err;
 	}
@@ -1588,7 +1588,7 @@ int rwnx_plat_bin_fw_patch_table_upload_android(struct aic_usb_dev *usbdev, char
 
 	vfree(rawdata);
 	aicbt_patch_table_load(usbdev, head);
-	printk("fw_patch_table download complete\n\n");
+	AICWFDBG(LOGINFO, "fw_patch_table download complete\n\n");
 
 	return ret;
 err:
