@@ -46,6 +46,13 @@ Replace all `printk()` calls with appropriate macros:
 | `printk("trace\n")` | `AICWFDBG(LOGTRACE, "trace\n")` | Trace (hidden by default) |
 | `printk(KERN_CRIT ...)` | Keep as-is | Critical errors only |
 
+**How the macros work:**
+- `AICWFDBG(level, args, ...)` - Checks `aicwf_dbg_level & level` before printing
+- `RWNX_DBG(fmt, ...)` - Equivalent to `AICWFDBG(LOGTRACE, fmt, ...)`
+- Debug level controlled via module parameter: `/sys/module/*/parameters/aicwf_dbg_level`
+- Default: `LOGERROR` (0x0001) - only errors visible
+- Full debug: `15` (0xF) - ERROR|INFO|TRACE|DEBUG
+
 **Files converted (DONE):**
 
 **aic_load_fw/**:
@@ -89,27 +96,27 @@ Replace all `printk()` calls with appropriate macros:
 
 ### Step 4: Remaining printk() Conversions
 
-**Files with only KERN_CRIT printk() (should remain as-is for critical errors):**
-- `rwnx_main.c` - RWNX_PRINT_CFM_ERR macro (line 85)
-- `rwnx_msg_tx.c` - DMA Mapping error (line 4201)
-- `rwnx_mod_params.c` - 2 KERN_CRIT messages (lines 1661, 1670)
-- `rwnx_cfgfile.c` - 2 KERN_CRIT messages (lines 63, 101)
-- `rwnx_fw_dump.c` - KERN_CRIT message (line 484)
-- `rwnx_cmds.c` - 11 KERN_CRIT messages
+**Files with only KERN_CRIT printk() (should remain as-is for critical errors):** ✓
+- `rwnx_main.c` - RWNX_PRINT_CFM_ERR macro (line 85) ✓
+- `rwnx_msg_tx.c` - DMA Mapping error (line 4201) ✓
+- `rwnx_mod_params.c` - 2 KERN_CRIT messages (lines 1661, 1670) ✓
+- `rwnx_cfgfile.c` - 2 KERN_CRIT messages (lines 63, 101) ✓
+- `rwnx_fw_dump.c` - KERN_CRIT message (line 484) ✓
+- `rwnx_cmds.c` - 11 KERN_CRIT messages ✓
 
-**Files with all printk() commented out (disabled code):**
-- `aicbluetooth.c` - all commented
-- `aicbluetooth_cmds.c` - all commented
-- `aicwf_wext_linux.c` - all commented
-- `usb_host.c` - all commented
-- `rwnx_radar.c` - all commented
-- `aicwf_compat_8800dc.c` - all commented
-- `aicwf_sdio.c` - all commented
+**Files with all printk() commented out (disabled code):** ✓
+- `aicbluetooth.c` - all commented ✓
+- `aicbluetooth_cmds.c` - all commented ✓
+- `aicwf_wext_linux.c` - all commented ✓
+- `usb_host.c` - all commented ✓
+- `rwnx_radar.c` - all commented ✓
+- `aicwf_compat_8800dc.c` - all commented ✓
+- `aicwf_sdio.c` - all commented ✓
 
 **Summary:**
-- **~200 printk() calls converted** to AICWFDBG() macros
-- **~15 printk() calls remain** as KERN_CRIT (critical errors - correct to keep)
-- **~350 printk() calls remain** commented out (disabled code in #if 0 blocks)
+- **~200 printk() calls converted** to AICWFDBG() macros ✓
+- **~15 printk() calls remain** as KERN_CRIT (critical errors - correct to keep) ✓
+- **~350 printk() calls remain** commented out (disabled code in #if 0 blocks) ✓
 
 ### Step 5: Verify ✓
 
@@ -227,33 +234,34 @@ echo 1 > /sys/module/aic8800_fdrv/parameters/aicwf_dbg_level
 - `aicwf_txrxif.c` (DONE - 5 printk converted)
 - `usb_host.c` (DONE - all commented)
 
-**Files with only KERN_CRIT printk() (should remain as-is for critical errors):**
-- `rwnx_main.c` - RWNX_PRINT_CFM_ERR macro (line 85)
-- `rwnx_msg_tx.c` - DMA Mapping error (line 4201)
-- `rwnx_mod_params.c` - 2 KERN_CRIT messages (lines 1661, 1670)
-- `rwnx_cfgfile.c` - 2 KERN_CRIT messages (lines 63, 101)
-- `rwnx_fw_dump.c` - KERN_CRIT message (line 484)
-- `rwnx_cmds.c` - 11 KERN_CRIT messages
+**Files with only KERN_CRIT printk() (should remain as-is for critical errors):** ✓
+- `rwnx_main.c` - RWNX_PRINT_CFM_ERR macro (line 85) ✓
+- `rwnx_msg_tx.c` - DMA Mapping error (line 4201) ✓
+- `rwnx_mod_params.c` - 2 KERN_CRIT messages (lines 1661, 1670) ✓
+- `rwnx_cfgfile.c` - 2 KERN_CRIT messages (lines 63, 101) ✓
+- `rwnx_fw_dump.c` - KERN_CRIT message (line 484) ✓
+- `rwnx_cmds.c` - 11 KERN_CRIT messages ✓
 
-**Files with all printk() commented out (disabled code):**
-- `aicbluetooth.c` - all commented
-- `aicbluetooth_cmds.c` - all commented
-- `aicwf_wext_linux.c` - all commented
-- `usb_host.c` - all commented
-- `rwnx_radar.c` - all commented
-- `aicwf_compat_8800dc.c` - all commented
-- `aicwf_sdio.c` - all commented
+**Files with all printk() commented out (disabled code):** ✓
+- `aicbluetooth.c` - all commented ✓
+- `aicbluetooth_cmds.c` - all commented ✓
+- `aicwf_wext_linux.c` - all commented ✓
+- `usb_host.c` - all commented ✓
+- `rwnx_radar.c` - all commented ✓
+- `aicwf_compat_8800dc.c` - all commented ✓
+- `aicwf_sdio.c` - all commented ✓
 
-**Total conversions:**
-- **~200 printk() calls converted** to AICWFDBG() macros
-- **~15 printk() calls remain** as KERN_CRIT (critical errors - correct to keep)
-- **~350 printk() calls remain** commented out (disabled code in #if 0 blocks)
+**Total conversions:** ✓
+- **~200 printk() calls converted** to AICWFDBG() macros ✓
+- **~15 printk() calls remain** as KERN_CRIT (critical errors - correct to keep) ✓
+- **~350 printk() calls remain** commented out (disabled code in #if 0 blocks) ✓
 
 ## Success Criteria
 
-- [x] No kernel warnings about debug mode
-- [x] Default dmesg shows only errors
-- [x] Verbose debug available via module parameter
-- [x] All active printk() calls converted to conditional macros
-- [x] Build succeeds with `CONFIG_RWNX_DBG=n`
-- [x] AGENTS.md updated with production config
+- [x] No kernel warnings about debug mode ✓
+- [x] Default dmesg shows only errors ✓
+- [x] Verbose debug available via module parameter ✓
+- [x] All active printk() calls converted to conditional macros ✓
+- [x] Build succeeds with `CONFIG_RWNX_DBG=n` ✓
+- [x] AGENTS.md updated with production config ✓
+- [x] Plan document updated with macro reference and file completion markers ✓
