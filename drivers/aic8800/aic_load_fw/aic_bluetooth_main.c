@@ -20,7 +20,7 @@ int adap_test = 0;
 char paringid[100];
 int n_para = 1;
 int ble_scan_wakeup_reboot_time = 1000;
-int aicwf_dbg_level = LOGERROR|LOGINFO|LOGDEBUG|LOGTRACE;
+int aicwf_dbg_level = LOGERROR;
 int flash_erase_len = 0x400000;
 uint32_t ad_data_filter_mask = 0;
 uint32_t gpio_num = 2;//default select gpiob2 for fw_wakeup_host
@@ -41,8 +41,8 @@ static void aicsmac_driver_register(void)
 
 static int __init aic_bluetooth_mod_init(void)
 {
-    printk("%s \n", __func__);
-    printk("RELEASE DATE:%s \r\n", RELEASE_DATE);
+    AICWFDBG(LOGINFO, "%s \n", __func__);
+    AICWFDBG(LOGINFO, "RELEASE DATE:%s \r\n", RELEASE_DATE);
 #ifdef CONFIG_PREALLOC_RX_SKB
     aicwf_prealloc_init();
 #endif
@@ -53,7 +53,7 @@ static int __init aic_bluetooth_mod_init(void)
 
 static void __exit aic_bluetooth_mod_exit(void)
 {
-    printk("%s\n", __func__);
+    AICWFDBG(LOGINFO, "%s\n", __func__);
     aicwf_usb_exit();
     
 #ifdef CONFIG_PREALLOC_RX_SKB

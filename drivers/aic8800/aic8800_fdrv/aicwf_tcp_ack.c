@@ -10,7 +10,7 @@ struct msg_buf *intf_tcp_alloc_msg(struct msg_buf *msg)
 	int len=sizeof(struct msg_buf) ;
 	msg = kzalloc(len , GFP_ATOMIC);
 	if(!msg)
-		printk("%s: alloc failed \n", __func__);
+		AICWFDBG(LOGINFO, "%s: alloc failed \n", __func__);
 	memset(msg,0,len);
 	return msg;
 }
@@ -67,7 +67,7 @@ void tcp_ack_init(struct rwnx_hw *priv)
 	struct tcp_ack_info *ack_info;
 	struct tcp_ack_manage *ack_m = &priv->ack_m;
 
-	printk("========== tcp ack debug %s \n",__func__);
+	AICWFDBG(LOGINFO, "========== tcp ack debug %s \n",__func__);
 	memset(ack_m, 0, sizeof(struct tcp_ack_manage));
 	ack_m->priv = priv;
 	spin_lock_init(&ack_m->lock);
@@ -100,7 +100,7 @@ void tcp_ack_deinit(struct rwnx_hw *priv)
 	struct tcp_ack_manage *ack_m = &priv->ack_m;
 	struct msg_buf *drop_msg = NULL;
 
-	printk("%s \n",__func__);
+	AICWFDBG(LOGINFO, "%s \n",__func__);
 	atomic_set(&ack_m->enable, 0);
 
 	for (i = 0; i < TCP_ACK_NUM; i++) {
@@ -384,8 +384,8 @@ int tcp_ack_handle(struct msg_buf *new_msgbuf,
 			ack_info->in_send_msg = NULL;
 			ack_info->drop_cnt = atomic_read(&ack_m->max_drop_cnt);
 		} else {
-			printk("%s before abnormal ack: %d, %d\n",
-			       __func__, ack->seq, ack_msg->seq);
+			AICWFDBG(LOGINFO, "%s before abnormal ack: %d, %d\n",
+				 __func__, ack->seq, ack_msg->seq);
 			drop_msg = new_msgbuf;
 			ret = 1;
 		}
@@ -418,12 +418,12 @@ int tcp_ack_handle(struct msg_buf *new_msgbuf,
 				mod_timer(&ack_info->timer,
 					  (jiffies + msecs_to_jiffies(5)));
 		}
-	} else {
-		printk("%s before ack: %d, %d\n",
-		       __func__, ack->seq, ack_msg->seq);
-		drop_msg = new_msgbuf;
-		ret = 1;
-	}
+		} else {
+			AICWFDBG(LOGINFO, "%s before ack: %d, %d\n",
+				 __func__, ack->seq, ack_msg->seq);
+			drop_msg = new_msgbuf;
+			ret = 1;
+		}
 
 	write_sequnlock_bh(&ack_info->seqlock);
 
@@ -484,8 +484,8 @@ int tcp_ack_handle_new(struct msg_buf *new_msgbuf,
 		
 		//ret = 1;
 	}else {
-		printk("%s before ack: %d, %d\n",
-		       __func__, ack->seq, ack_msg->seq);
+		AICWFDBG(LOGINFO, "%s before ack: %d, %d\n",
+			 __func__, ack->seq, ack_msg->seq);
 		drop_msg = new_msgbuf;
 		ret = 1;
 	}
@@ -572,7 +572,7 @@ int filter_send_tcp_ack(struct rwnx_hw *priv,
 			if ((win_scale!=0) && (win < (ack_m->ack_winsize * SIZE_KB)))
 			{	
 				drop = 2;
-				printk("%d %d %d",win_scale,win,(ack_m->ack_winsize * SIZE_KB));
+				AICWFDBG(LOGINFO, "%d %d %d", win_scale, win, (ack_m->ack_winsize * SIZE_KB));
 			}
 			ret = tcp_ack_handle_new(msgbuf, ack_m, ack_info,
 						&ack_msg, drop);

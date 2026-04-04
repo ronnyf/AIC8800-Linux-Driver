@@ -861,21 +861,21 @@ static int aic_load_firmware(u32 ** fw_buf, const char *name,
 
         len = snprintf(path, FW_PATH_MAX_LEN, "%s/%s",aic_fw_path, name);
         if (len >= FW_PATH_MAX_LEN) {
-                printk("%s: %s file's path too long\n", __func__, name);
+                AICWFDBG(LOGERROR, "%s: %s file's path too long\n", __func__, name);
                 *fw_buf=NULL;
                 __putname(path);
                 return -1;
         }
 
-        printk("%s :firmware path = %s  \n", __func__ ,path);
+        AICWFDBG(LOGINFO, "%s :firmware path = %s  \n", __func__ ,path);
 
 
         /* open the firmware file */
         fp=filp_open(path, O_RDONLY, 0);
         if(IS_ERR(fp) || (!fp)){
-	        printk("%s: %s file failed to open\n", __func__, name);
+ 	        AICWFDBG(LOGERROR, "%s: %s file failed to open\n", __func__, name);
                 if(IS_ERR(fp))
-			printk("is_Err\n");
+			AICWFDBG(LOGERROR, "is_Err\n");
 		*fw_buf=NULL;
                 __putname(path);
                 fp=NULL;
@@ -884,7 +884,7 @@ static int aic_load_firmware(u32 ** fw_buf, const char *name,
 
         size = i_size_read(file_inode(fp));
         if(size<=0){
-                printk("%s: %s file size invalid %d\n", __func__, name, size);
+                AICWFDBG(LOGERROR, "%s: %s file size invalid %d\n", __func__, name, size);
                 *fw_buf=NULL;
                 __putname(path);
                 filp_close(fp,NULL);
@@ -910,7 +910,7 @@ static int aic_load_firmware(u32 ** fw_buf, const char *name,
         #endif
 
         if(size != rdlen){
-                printk("%s: %s file rdlen invalid %ld\n", __func__, name, (long int)rdlen);
+                AICWFDBG(LOGERROR, "%s: %s file rdlen invalid %ld\n", __func__, name, (long int)rdlen);
                 *fw_buf=NULL;
                 __putname(path);
                 filp_close(fp,NULL);
@@ -926,7 +926,7 @@ static int aic_load_firmware(u32 ** fw_buf, const char *name,
 
        /*start to transform the data format*/
         src = (u32*)buffer;
-        printk("malloc dst\n");
+        AICWFDBG(LOGINFO, "malloc dst\n");
         dst = (u32*)kzalloc(size,GFP_KERNEL);
 
         if(!dst){
@@ -974,7 +974,7 @@ static int rwnx_plat_bin_fw_upload_android(struct rwnx_hw *rwnx_hw, u32 fw_addr,
         /* load aic firmware */
         size = aic_load_firmware(&dst, filename, dev);
         if(size<=0){
-                printk("wrong size of firmware file\n");
+                AICWFDBG(LOGERROR, "wrong size of firmware file\n");
                 kfree(dst);
                 dst = NULL;
                 return -1;
@@ -982,13 +982,13 @@ static int rwnx_plat_bin_fw_upload_android(struct rwnx_hw *rwnx_hw, u32 fw_addr,
 
 
     /* Copy the file on the Embedded side */
-    printk("\n### Upload %s firmware, @ = %x  size=%d\n", filename, fw_addr, size);
+    AICWFDBG(LOGINFO, "\n### Upload %s firmware, @ = %x  size=%d\n", filename, fw_addr, size);
 
     if (size > 1024) {// > 1KB data
         for (i = 0; i < (size - 1024); i += 1024) {//each time write 1KB
             err = rwnx_send_dbg_mem_block_write_req(rwnx_hw, fw_addr + i, 1024, dst + i / 4);
                         if (err) {
-                printk("bin upload fail: %x, err:%d\r\n", fw_addr + i, err);
+                AICWFDBG(LOGERROR, "bin upload fail: %x, err:%d\r\n", fw_addr + i, err);
                 break;
             }
         }
@@ -997,7 +997,7 @@ static int rwnx_plat_bin_fw_upload_android(struct rwnx_hw *rwnx_hw, u32 fw_addr,
     if (!err && (i < size)) {// <1KB data
         err = rwnx_send_dbg_mem_block_write_req(rwnx_hw, fw_addr + i, size - i, dst + i / 4);
         if (err) {
-            printk("bin upload fail: %x, err:%d\r\n", fw_addr + i, err);
+            AICWFDBG(LOGERROR, "bin upload fail: %x, err:%d\r\n", fw_addr + i, err);
         }
     }
 

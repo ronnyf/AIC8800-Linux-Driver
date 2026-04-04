@@ -1317,12 +1317,12 @@ struct rx_buff *rxbuff_dequeue(struct rx_frame_queue *pq)
     struct rx_buff *p = NULL;
 
     if (pq->qcnt == 0) {
-        printk("%s %d, rxq is empty\n", __func__, __LINE__);
+        AICWFDBG(LOGERROR, "%s %d, rxq is empty\n", __func__, __LINE__);
         return NULL;
     }
 
     if(list_empty(&pq->queuelist)) {
-        printk("%s %d, rxq is empty\n", __func__, __LINE__);
+        AICWFDBG(LOGERROR, "%s %d, rxq is empty\n", __func__, __LINE__);
         return NULL;
     } else {
         p = list_first_entry(&pq->queuelist, struct rx_buff, queue);
@@ -1338,7 +1338,7 @@ bool aicwf_rxbuff_enqueue(struct device *dev, struct rx_frame_queue *rxq, struct
 //    struct rx_buff *p = NULL;
 
     if ((rxq == NULL) || (pkt == NULL)) {
-        printk("%s %d, rxq or pkt is NULL\n", __func__, __LINE__);
+        AICWFDBG(LOGERROR, "%s %d, rxq or pkt is NULL\n", __func__, __LINE__);
         return false;
     }
 
@@ -1346,11 +1346,11 @@ bool aicwf_rxbuff_enqueue(struct device *dev, struct rx_frame_queue *rxq, struct
         if (rxbuff_queue_penq(rxq, pkt)) {
             return true;
         } else {
-            printk("%s %d, rxbuff enqueue fail\n", __func__, __LINE__);
+            AICWFDBG(LOGERROR, "%s %d, rxbuff enqueue fail\n", __func__, __LINE__);
             return false;
         }
     } else {
-        printk("%s %d, rxq or pkt is full\n", __func__, __LINE__);
+        AICWFDBG(LOGERROR, "%s %d, rxq or pkt is full\n", __func__, __LINE__);
         return false;
     }
 }

@@ -52,7 +52,7 @@ bool                                  // Linux kernel
 
 ## Module Config
 
-Key options: `CONFIG_AIC8800_WLAN_SUPPORT=m`, `CONFIG_USB_SUPPORT=y`, `CONFIG_SDIO_SUPPORT=n`, `CONFIG_RWNX_FULLMAC=y`, `CONFIG_RWNX_SDM=n`, `CONFIG_RWNX_TL4=n`, `CONFIG_DEBUG_FS=n`, `CONFIG_RWNX_DBG=y`
+Key options: `CONFIG_AIC8800_WLAN_SUPPORT=m`, `CONFIG_USB_SUPPORT=y`, `CONFIG_SDIO_SUPPORT=n`, `CONFIG_RWNX_FULLMAC=y`, `CONFIG_RWNX_SDM=n`, `CONFIG_RWNX_TL4=n`, `CONFIG_DEBUG_FS=n`, `CONFIG_RWNX_DBG=n` (production-safe default)
 
 ## Kconfig Location
 
@@ -85,8 +85,9 @@ Key files: `rwnx_main.c`, `rwnx_tx.c/rwnx_rx.c`, `rwnx_msg_tx.c/rwnx_msg_rx.c`, 
 
 - `RWNX_DBG(LOGDEBUG/LOGINFO/LOGERROR, ...)`  
 - `AICWFDBG(level, fmt, ...)`  
-- `printk()`  
-- Enable: `CONFIG_RWNX_DBG=y`
+- `printk()` - **deprecated**, use `AICWFDBG()` or `RWNX_DBG()`  
+- Control debug level via module parameter: `echo 15 > /sys/module/aic_load_fw/parameters/aicwf_dbg_level`  
+- Enable debug build: `CONFIG_RWNX_DBG=y` (default: only errors visible)
 
 ## Common Commands
 

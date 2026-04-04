@@ -582,7 +582,7 @@ void rwnx_tx_push(struct rwnx_hw *rwnx_hw, struct rwnx_txhdr *txhdr, int flags)
 
     lockdep_assert_held(&rwnx_hw->tx_lock);
 
-    //printk("rwnx_tx_push\n");
+        //AICWFDBG(LOGDEBUG, "rwnx_tx_push\n");
     /* RETRY flag is not always set so retest here */
     if (txq->nb_retry) {
         flags |= RWNX_PUSH_RETRY;
@@ -630,7 +630,7 @@ void rwnx_tx_push(struct rwnx_hw *rwnx_hw, struct rwnx_txhdr *txhdr, int flags)
     txq->credits--;
     #endif
     txq->pkt_pushed[user]++;
-    //printk("txq->credits=%d\n",txq->credits);
+    //AICWFDBG(LOGDEBUG, "txq->credits=%d\n",txq->credits);
     #if 0
     if (txq->credits <= 0)
         rwnx_txq_stop(txq, RWNX_TXQ_STOP_FULL);
@@ -1072,7 +1072,7 @@ int aic_br_client_tx(struct rwnx_vif *vif, struct sk_buff **pskb)
 		rcu_read_unlock();
 #endif /* (LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 35)) */
 #ifdef BR_SUPPORT_DEBUG
-		printk("SA=%pM, br_mac=%pM, type=0x%x, da[0]=%x, scdb=%pM, vif_type=%d\n", skb->data + MACADDRLEN,  vif->br_mac, *((unsigned short *)(skb->data + MACADDRLEN * 2)),
+		AICWFDBG(LOGDEBUG, "SA=%pM, br_mac=%pM, type=0x%x, da[0]=%x, scdb=%pM, vif_type=%d\n", skb->data + MACADDRLEN,  vif->br_mac, *((unsigned short *)(skb->data + MACADDRLEN * 2)),
 			skb->data[0], vif->scdb_mac,RWNX_VIF_TYPE(vif));
 #endif
         spin_lock_bh(&vif->br_ext_lock);
@@ -1146,7 +1146,7 @@ int aic_br_client_tx(struct rwnx_vif *vif, struct sk_buff **pskb)
 					newskb = skb_copy(skb, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
 					if (newskb == NULL) {
 						/* priv->ext_stats.tx_drops++; */
-						printk("TX DROP: skb_copy fail!\n");
+						AICWFDBG(LOGERROR, "TX DROP: skb_copy fail!\n");
 						/* goto stop_proc; */
 						return -1;
 					}
@@ -1162,7 +1162,7 @@ int aic_br_client_tx(struct rwnx_vif *vif, struct sk_buff **pskb)
 				}
 
 				if (skb_is_nonlinear(skb))
-					printk("%s(): skb_is_nonlinear!!\n", __FUNCTION__);
+					AICWFDBG(LOGDEBUG, "%s(): skb_is_nonlinear!!\n", __FUNCTION__);
 
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 18))
@@ -1171,7 +1171,7 @@ int aic_br_client_tx(struct rwnx_vif *vif, struct sk_buff **pskb)
 				res = skb_linearize(skb);
 #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 18)) */
 				if (res < 0) {
-					printk("TX DROP: skb_linearize fail!\n");
+					AICWFDBG(LOGERROR, "TX DROP: skb_linearize fail!\n");
 					/* goto free_and_stop; */
 					return -1;
 				}
@@ -1180,7 +1180,7 @@ int aic_br_client_tx(struct rwnx_vif *vif, struct sk_buff **pskb)
 				if (res < 0) {
 					if (res == -2) {
 						/* priv->ext_stats.tx_drops++; */
-						printk("TX DROP: nat25_db_handle fail!\n");
+                        AICWFDBG(LOGERROR, "TX DROP: nat25_db_handle fail!\n");
 						/* goto free_and_stop; */
 						return -1;
 
@@ -1223,13 +1223,13 @@ int aic_br_client_tx(struct rwnx_vif *vif, struct sk_buff **pskb)
 		/* check if SA is equal to our MAC */
 		if (memcmp(skb->data + MACADDRLEN, vif->ndev->dev_addr, MACADDRLEN)) {
 			/* priv->ext_stats.tx_drops++; */
-			printk("TX DROP: untransformed frame SA:%02X%02X%02X%02X%02X%02X!\n",
+                        AICWFDBG(LOGERROR, "TX DROP: untransformed frame SA:%02X%02X%02X%02X%02X%02X!\n",
 				skb->data[6], skb->data[7], skb->data[8], skb->data[9], skb->data[10], skb->data[11]);
 			/* goto free_and_stop; */
 			return -1;
 		}
 	}
-	printk("%s:exit\n",__func__);
+        AICWFDBG(LOGINFO, "%s:exit\n",__func__);
 	return 0;
 }
 #endif /* CONFIG_BR_SUPPORT */
@@ -2214,7 +2214,7 @@ netdev_tx_t rwnx_start_monitor_if_xmit(struct sk_buff *skb, struct net_device *d
         tmp_len = skb->len;
     }
     for (idx = 0; idx < tmp_len; idx+=16) {
-        printk("[%04X] %02X %02X %02X %02X %02X %02X %02X %02X   %02X %02X %02X %02X %02X %02X %02X %02X\n", idx,
+        AICWFDBG(LOGDEBUG, "[%04X] %02X %02X %02X %02X %02X %02X %02X %02X   %02X %02X %02X %02X %02X %02X %02X %02X\n", idx,
             rtap_buf[idx+0],rtap_buf[idx+1],rtap_buf[idx+2],rtap_buf[idx+3],
             rtap_buf[idx+4],rtap_buf[idx+5],rtap_buf[idx+6],rtap_buf[idx+7],
             rtap_buf[idx+8],rtap_buf[idx+9],rtap_buf[idx+10],rtap_buf[idx+11],
@@ -2376,9 +2376,9 @@ int rwnx_txdatacfm(void *pthis, void *host_id)
 
     /* Update txq and HW queue credits */
     if (sw_txhdr->desc.host.flags & TXU_CNTRL_MGMT) {
-        trace_printk("done=%d retry_required=%d sw_retry_required=%d acknowledged=%d\n",
-                     rwnx_txst.tx_done, rwnx_txst.retry_required,
-                     rwnx_txst.sw_retry_required, rwnx_txst.acknowledged);
+        AICWFDBG(LOGTRACE, "done=%d retry_required=%d sw_retry_required=%d acknowledged=%d\n",
+                 rwnx_txst.tx_done, rwnx_txst.retry_required,
+                 rwnx_txst.sw_retry_required, rwnx_txst.acknowledged);
 #ifdef CREATE_TRACE_POINTS
         trace_mgmt_cfm(sw_txhdr->rwnx_vif->vif_index,
                        (sw_txhdr->rwnx_sta) ? sw_txhdr->rwnx_sta->sta_idx : 0xFF,

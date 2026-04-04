@@ -77,7 +77,7 @@ int aic_dev_stop_mkeep_alive(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwnx_vif,
 	if (rwnx_vif->wdev.iftype != NL80211_IFTYPE_STATION)
 		return res;
 
-	printk("%s execution\n", __func__);
+	AICWFDBG(LOGINFO, "%s execution\n", __func__);
 
 	//add send stop keep alive
 	res = 0;
@@ -102,7 +102,7 @@ static int aicwf_vendor_start_mkeep_alive(struct wiphy *wiphy, struct wireless_d
 	struct rwnx_hw *rwnx_hw = wiphy_priv(wiphy);
 	struct rwnx_vif *rwnx_vif = container_of(wdev, struct rwnx_vif, wdev);
 	gfp_t kflags = in_atomic() ? GFP_ATOMIC : GFP_KERNEL;
-	printk("%s\n", __func__);
+	AICWFDBG(LOGINFO, "%s\n", __func__);
 
 	nla_for_each_attr(iter, data, len, rem) {
 		type = nla_type(iter);
@@ -120,13 +120,13 @@ static int aicwf_vendor_start_mkeep_alive(struct wiphy *wiphy, struct wireless_d
 		case MKEEP_ALIVE_ATTRIBUTE_IP_PKT:
 			if (!ip_pkt_len) {
 				ret = -EINVAL;
-				printk("ip packet length is 0\n");
+				AICWFDBG(LOGINFO, "ip packet length is 0\n");
 				goto exit;
 			}
 			ip_pkt = (u8 *)kzalloc(ip_pkt_len, kflags);
 			if (ip_pkt == NULL) {
 				ret = -ENOMEM;
-				printk("Failed to allocate mem for ip packet\n");
+				AICWFDBG(LOGINFO, "Failed to allocate mem for ip packet\n");
 				goto exit;
 			}
 			memcpy(ip_pkt, (u8 *)nla_data(iter), ip_pkt_len);
@@ -149,14 +149,14 @@ static int aicwf_vendor_start_mkeep_alive(struct wiphy *wiphy, struct wireless_d
 
 	if (ip_pkt == NULL) {
 		ret = -EINVAL;
-		printk("ip packet is NULL\n");
+		AICWFDBG(LOGINFO, "ip packet is NULL\n");
 		goto exit;
 	}
 
 	ret = aic_dev_start_mkeep_alive(rwnx_hw, rwnx_vif, mkeep_alive_id, ip_pkt, ip_pkt_len, src_mac,
 		dst_mac, period_msec);
 	if (ret < 0) {
-		printk("start_mkeep_alive is failed ret: %d\n", ret);
+		AICWFDBG(LOGINFO, "start_mkeep_alive is failed ret: %d\n", ret);
 	}
 
 exit:
@@ -176,7 +176,7 @@ static int aicwf_vendor_stop_mkeep_alive(struct wiphy *wiphy, struct wireless_de
 	struct rwnx_hw *rwnx_hw = wiphy_priv(wiphy);
 	struct rwnx_vif *rwnx_vif = container_of(wdev, struct rwnx_vif, wdev);
 
-	printk("%s\n", __func__);
+	AICWFDBG(LOGINFO, "%s\n", __func__);
 	nla_for_each_attr(iter, data, len, rem) {
 		type = nla_type(iter);
 		switch (type) {
@@ -192,7 +192,7 @@ static int aicwf_vendor_stop_mkeep_alive(struct wiphy *wiphy, struct wireless_de
 
 	ret = aic_dev_stop_mkeep_alive(rwnx_hw, rwnx_vif, mkeep_alive_id);
 	if (ret < 0) {
-		printk("stop_mkeep_alive is failed ret: %d\n", ret);
+		AICWFDBG(LOGINFO, "stop_mkeep_alive is failed ret: %d\n", ret);
 	}
 
 	return ret;
@@ -327,7 +327,7 @@ static int aicwf_vendor_subcmd_set_country_code(struct wiphy *wiphy, struct wire
 		type = nla_type(iter);
 		switch (type) {
 		case ANDR_WIFI_ATTRIBUTE_COUNTRY:
-			printk("%s(%d), ANDR_WIFI_ATTRIBUTE_COUNTRY: %s\n", __func__, __LINE__, (char *)nla_data(iter));
+			AICWFDBG(LOGINFO, "%s(%d), ANDR_WIFI_ATTRIBUTE_COUNTRY: %s\n", __func__, __LINE__, (char *)nla_data(iter));
             regdomain = getRegdomainFromRwnxDB(wiphy, (char *)nla_data(iter));
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 0, 0)
         if((ret = regulatory_set_wiphy_regd(wiphy, regdomain))){
@@ -719,7 +719,7 @@ static int aicwf_vendor_sub_cmd_set_mac(struct wiphy *wiphy, struct wireless_dev
 		switch (type) {
 		case WIFI_VENDOR_ATTR_DRIVER_MAC_ADDR:
 			memcpy(mac, nla_data(iter), ETH_ALEN);
-			printk("%s, %02X:%02X:%02X:%02X:%02X:%02X\n", __func__,
+			AICWFDBG(LOGINFO, "%s, %02X:%02X:%02X:%02X:%02X:%02X\n", __func__,
 					mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 			break;
 		default:
