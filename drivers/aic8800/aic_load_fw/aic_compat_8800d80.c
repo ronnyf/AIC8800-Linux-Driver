@@ -306,20 +306,17 @@ int system_config_8800d80(struct aic_usb_dev *usb_dev){
 		struct dbg_mem_read_cfm rd_mem_addr_cfm;
 		ret = rwnx_send_dbg_mem_read_req(usb_dev, mem_addr, &rd_mem_addr_cfm);
 		if (ret) {
-			printk("%x rd fail: %d\n", mem_addr, ret);
+			AICWFDBG(LOGERROR, "%x rd fail: %d\n", mem_addr, ret);
 			return ret;
 		}
-        if (((rd_mem_addr_cfm.memdata >> 25) & 0x01UL) == 0x00UL) {
-            chip_mcu_id = 1;
-        }
 		chip_id = (u8)(rd_mem_addr_cfm.memdata >> 16);
-		printk("chip_id=%x, chip_mcu_id = %d\n", chip_id, chip_mcu_id);
+		AICWFDBG(LOGINFO, "chip_id=%x, chip_mcu_id = %d\n", chip_id, chip_mcu_id);
     #if 1
 		syscfg_num = sizeof(syscfg_tbl_8800d80) / sizeof(u32) / 2;
 		for (cnt = 0; cnt < syscfg_num; cnt++) {
 			ret = rwnx_send_dbg_mem_write_req(usb_dev, syscfg_tbl_8800d80[cnt][0], syscfg_tbl_8800d80[cnt][1]);
 			if (ret) {
-				printk("%x write fail: %d\n", syscfg_tbl_8800d80[cnt][0], ret);
+				AICWFDBG(LOGERROR, "%x write fail: %d\n", syscfg_tbl_8800d80[cnt][0], ret);
 				return ret;
 			}
 		}
@@ -328,7 +325,7 @@ int system_config_8800d80(struct aic_usb_dev *usb_dev){
 			ret = rwnx_send_dbg_mem_mask_write_req(usb_dev,
 				syscfg_tbl_masked_8800d80[cnt][0], syscfg_tbl_masked_8800d80[cnt][1], syscfg_tbl_masked_8800d80[cnt][2]);
 			if (ret) {
-				printk("%x mask write fail: %d\n", syscfg_tbl_masked_8800d80[cnt][0], ret);
+				AICWFDBG(LOGERROR, "%x mask write fail: %d\n", syscfg_tbl_masked_8800d80[cnt][0], ret);
 				return ret;
 			}
 		}
@@ -393,7 +390,7 @@ int aicfw_download_fw_8800d80(struct aic_usb_dev *usb_dev)
         head = aicbt_patch_table_alloc(usb_dev, FW_PATCH_TABLE_NAME_8800D80_U02);
     }
     if (head == NULL){
-        printk("aicbt_patch_table_alloc fail\n");
+        AICWFDBG(LOGERROR, "aicbt_patch_table_alloc fail\n");
         return -1;
     }
 
@@ -409,11 +406,11 @@ int aicfw_download_fw_8800d80(struct aic_usb_dev *usb_dev)
     }
     aicbt_patch_info_unpack(&patch_info, head);
     if(patch_info.info_len == 0) {
-        printk("%s, aicbt_patch_info_unpack fail\n", __func__);
+        AICWFDBG(LOGERROR, "%s, aicbt_patch_info_unpack fail\n", __func__);
         return -1;
     }
 
-    printk("addr_adid 0x%x, addr_patch 0x%x\n", patch_info.addr_adid, patch_info.addr_patch);
+    AICWFDBG(LOGINFO, "addr_adid 0x%x, addr_patch 0x%x\n", patch_info.addr_adid, patch_info.addr_patch);
 #endif
     if(testmode == FW_NORMAL_MODE){
 
@@ -541,7 +538,7 @@ int aicfw_download_fw_8800d80(struct aic_usb_dev *usb_dev)
             struct ble_wakeup_param_t* wakeup_param = (struct ble_wakeup_param_t*)kmalloc(sizeof(struct ble_wakeup_param_t), GFP_KERNEL);
             uint32_t *write_blocks = (uint32_t *)wakeup_param;
 
-            printk("%s ble scan wakeup \r\n", __func__);
+            AICWFDBG(LOGINFO, "%s ble scan wakeup \r\n", __func__);
 
             memset(wakeup_param, 0, sizeof(struct ble_wakeup_param_t));
             rwnx_plat_bin_fw_upload_android(usb_dev, RAM_FW_BLE_SCAN_WAKEUP_ADDR_8800D80, FW_BLE_SCAN_AD_FILTER_NAME);
@@ -663,7 +660,7 @@ int aicfw_download_fw_8800d80(struct aic_usb_dev *usb_dev)
 			}
 
             for(i = 0; i < (sizeof(struct ble_wakeup_param_t)/4 +1); i++){
-                printk("write_blocks[%d]:0x%08X \r\n", i, write_blocks[i]);
+                AICWFDBG(LOGINFO, "write_blocks[%d]:0x%08X \r\n", i, write_blocks[i]);
                 rwnx_send_dbg_mem_write_req(usb_dev, 0x15FE00 + (4 * i), write_blocks[i]);
             }
             rwnx_send_dbg_start_app_req(usb_dev, RAM_FW_BLE_SCAN_WAKEUP_ADDR_8800D80, HOST_START_APP_AUTO);

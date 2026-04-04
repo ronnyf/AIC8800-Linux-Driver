@@ -22,6 +22,7 @@
 	#include <linux/udp.h>
 	#include <linux/if_pppox.h>
 	#include "rwnx_defs.h"
+	#include "aicwf_debug.h"
 #endif
 
 #ifdef CL_IPV6_PASS
@@ -92,7 +93,7 @@ static __inline__ int __nat25_add_pppoe_tag(struct sk_buff *skb, struct pppoe_ta
 
 	data_len = tag->tag_len + TAG_HDR_LEN;
 	if (skb_tailroom(skb) < data_len) {
-		printk("skb_tailroom() failed in add SID tag!\n");
+		AICWFDBG(LOGERROR, "skb_tailroom() failed in add SID tag!\n");
 		return -1;
 	}
 
@@ -232,7 +233,7 @@ static int update_nd_link_layer_addr(unsigned char *data, int len, unsigned char
 		if (len >= 8) {
 			mac = scan_tlv(&data[8], len - 8, 1, 1);
 			if (mac) {
-				printk("Router Solicitation, replace MAC From: %02x:%02x:%02x:%02x:%02x:%02x, To: %02x:%02x:%02x:%02x:%02x:%02x\n",
+				AICWFDBG(LOGINFO, "Router Solicitation, replace MAC From: %02x:%02x:%02x:%02x:%02x:%02x, To: %02x:%02x:%02x:%02x:%02x:%02x\n",
 					mac[0], mac[1], mac[2], mac[3], mac[4], mac[5],
 					replace_mac[0], replace_mac[1], replace_mac[2], replace_mac[3], replace_mac[4], replace_mac[5]);
 				memcpy(mac, replace_mac, 6);
@@ -243,7 +244,7 @@ static int update_nd_link_layer_addr(unsigned char *data, int len, unsigned char
 		if (len >= 16) {
 			mac = scan_tlv(&data[16], len - 16, 1, 1);
 			if (mac) {
-				printk("Router Advertisement, replace MAC From: %02x:%02x:%02x:%02x:%02x:%02x, To: %02x:%02x:%02x:%02x:%02x:%02x\n",
+				AICWFDBG(LOGINFO, "Router Advertisement, replace MAC From: %02x:%02x:%02x:%02x:%02x:%02x, To: %02x:%02x:%02x:%02x:%02x:%02x\n",
 					mac[0], mac[1], mac[2], mac[3], mac[4], mac[5],
 					replace_mac[0], replace_mac[1], replace_mac[2], replace_mac[3], replace_mac[4], replace_mac[5]);
 				memcpy(mac, replace_mac, 6);
@@ -254,7 +255,7 @@ static int update_nd_link_layer_addr(unsigned char *data, int len, unsigned char
 		if (len >= 24) {
 			mac = scan_tlv(&data[24], len - 24, 1, 1);
 			if (mac) {
-				printk("Neighbor Solicitation, replace MAC From: %02x:%02x:%02x:%02x:%02x:%02x, To: %02x:%02x:%02x:%02x:%02x:%02x\n",
+				AICWFDBG(LOGINFO, "Neighbor Solicitation, replace MAC From: %02x:%02x:%02x:%02x:%02x:%02x, To: %02x:%02x:%02x:%02x:%02x:%02x\n",
 					mac[0], mac[1], mac[2], mac[3], mac[4], mac[5],
 					replace_mac[0], replace_mac[1], replace_mac[2], replace_mac[3], replace_mac[4], replace_mac[5]);
 				memcpy(mac, replace_mac, 6);
@@ -265,7 +266,7 @@ static int update_nd_link_layer_addr(unsigned char *data, int len, unsigned char
 		if (len >= 24) {
 			mac = scan_tlv(&data[24], len - 24, 2, 1);
 			if (mac) {
-				printk("Neighbor Advertisement, replace MAC From: %02x:%02x:%02x:%02x:%02x:%02x, To: %02x:%02x:%02x:%02x:%02x:%02x\n",
+				AICWFDBG(LOGINFO, "Neighbor Advertisement, replace MAC From: %02x:%02x:%02x:%02x:%02x:%02x, To: %02x:%02x:%02x:%02x:%02x:%02x\n",
 					mac[0], mac[1], mac[2], mac[3], mac[4], mac[5],
 					replace_mac[0], replace_mac[1], replace_mac[2], replace_mac[3], replace_mac[4], replace_mac[5]);
 				memcpy(mac, replace_mac, 6);
@@ -276,7 +277,7 @@ static int update_nd_link_layer_addr(unsigned char *data, int len, unsigned char
 		if (len >= 40) {
 			mac = scan_tlv(&data[40], len - 40, 2, 1);
 			if (mac) {
-				printk("Redirect,  replace MAC From: %02x:%02x:%02x:%02x:%02x:%02x, To: %02x:%02x:%02x:%02x:%02x:%02x\n",
+				AICWFDBG(LOGINFO, "Redirect,  replace MAC From: %02x:%02x:%02x:%02x:%02x:%02x, To: %02x:%02x:%02x:%02x:%02x:%02x\n",
 					mac[0], mac[1], mac[2], mac[3], mac[4], mac[5],
 					replace_mac[0], replace_mac[1], replace_mac[2], replace_mac[3], replace_mac[4], replace_mac[5]);
 				memcpy(mac, replace_mac, 6);
@@ -408,50 +409,50 @@ static int __nat25_db_network_lookup_and_replace(struct rwnx_vif *vif,
 				atomic_inc(&db->use_count);
 
 #ifdef CL_IPV6_PASS
-				printk("NAT25: Lookup M:%02x%02x%02x%02x%02x%02x N:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-					 "%02x%02x%02x%02x%02x%02x\n",
-					 db->macAddr[0],
-					 db->macAddr[1],
-					 db->macAddr[2],
-					 db->macAddr[3],
-					 db->macAddr[4],
-					 db->macAddr[5],
-					 db->networkAddr[0],
-					 db->networkAddr[1],
-					 db->networkAddr[2],
-					 db->networkAddr[3],
-					 db->networkAddr[4],
-					 db->networkAddr[5],
-					 db->networkAddr[6],
-					 db->networkAddr[7],
-					 db->networkAddr[8],
-					 db->networkAddr[9],
-					 db->networkAddr[10],
-					 db->networkAddr[11],
-					 db->networkAddr[12],
-					 db->networkAddr[13],
-					 db->networkAddr[14],
-					 db->networkAddr[15],
-					 db->networkAddr[16]);
+				AICWFDBG(LOGINFO, "NAT25: Lookup M:%02x%02x%02x%02x%02x%02x N:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+						"%02x%02x%02x%02x%02x%02x\n",
+						db->macAddr[0],
+						db->macAddr[1],
+						db->macAddr[2],
+						db->macAddr[3],
+						db->macAddr[4],
+						db->macAddr[5],
+						db->networkAddr[0],
+						db->networkAddr[1],
+						db->networkAddr[2],
+						db->networkAddr[3],
+						db->networkAddr[4],
+						db->networkAddr[5],
+						db->networkAddr[6],
+						db->networkAddr[7],
+						db->networkAddr[8],
+						db->networkAddr[9],
+						db->networkAddr[10],
+						db->networkAddr[11],
+						db->networkAddr[12],
+						db->networkAddr[13],
+						db->networkAddr[14],
+						db->networkAddr[15],
+						db->networkAddr[16]);
 #else
-				printk("NAT25: Lookup M:%02x%02x%02x%02x%02x%02x N:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n",
-					 db->macAddr[0],
-					 db->macAddr[1],
-					 db->macAddr[2],
-					 db->macAddr[3],
-					 db->macAddr[4],
-					 db->macAddr[5],
-					 db->networkAddr[0],
-					 db->networkAddr[1],
-					 db->networkAddr[2],
-					 db->networkAddr[3],
-					 db->networkAddr[4],
-					 db->networkAddr[5],
-					 db->networkAddr[6],
-					 db->networkAddr[7],
-					 db->networkAddr[8],
-					 db->networkAddr[9],
-					 db->networkAddr[10]);
+				AICWFDBG(LOGINFO, "NAT25: Lookup M:%02x%02x%02x%02x%02x%02x N:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+						db->macAddr[0],
+						db->macAddr[1],
+						db->macAddr[2],
+						db->macAddr[3],
+						db->macAddr[4],
+						db->macAddr[5],
+						db->networkAddr[0],
+						db->networkAddr[1],
+						db->networkAddr[2],
+						db->networkAddr[3],
+						db->networkAddr[4],
+						db->networkAddr[5],
+						db->networkAddr[6],
+						db->networkAddr[7],
+						db->networkAddr[8],
+						db->networkAddr[9],
+						db->networkAddr[10]);
 #endif
 			}
             spin_unlock_bh(&vif->br_ext_lock);
@@ -522,7 +523,7 @@ static void __nat25_db_print(struct rwnx_vif *vif)
 
 		while (db != NULL) {
 #ifdef CL_IPV6_PASS
-			printk("NAT25: DB(%d) H(%02d) C(%d) M:%02x%02x%02x%02x%02x%02x N:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+			AICWFDBG(LOGINFO, "NAT25: DB(%d) H(%02d) C(%d) M:%02x%02x%02x%02x%02x%02x N:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
 				     "%02x%02x%02x%02x%02x%02x\n",
 				     j,
 				     i,
@@ -551,7 +552,7 @@ static void __nat25_db_print(struct rwnx_vif *vif)
 				     db->networkAddr[15],
 				     db->networkAddr[16]);
 #else
-			printk("NAT25: DB(%d) H(%02d) C(%d) M:%02x%02x%02x%02x%02x%02x N:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+			AICWFDBG(LOGINFO, "NAT25: DB(%d) H(%02d) C(%d) M:%02x%02x%02x%02x%02x%02x N:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n",
 				     j,
 				     i,
 				     atomic_read(&db->use_count),
@@ -637,7 +638,7 @@ void nat25_db_expire(struct rwnx_vif *vif)
 					if (atomic_dec_and_test(&f->use_count)) {
 #ifdef BR_SUPPORT_DEBUG
 #ifdef CL_IPV6_PASS
-						panic_printk("NAT25 Expire H(%02d) M:%02x%02x%02x%02x%02x%02x N:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+						AICWFDBG(LOGERROR, "NAT25 Expire H(%02d) M:%02x%02x%02x%02x%02x%02x N:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
 							"%02x%02x%02x%02x%02x%02x\n",
 							     i,
 							     f->macAddr[0],
@@ -665,7 +666,7 @@ void nat25_db_expire(struct rwnx_vif *vif)
 							f->networkAddr[16]);
 #else
 
-						panic_printk("NAT25 Expire H(%02d) M:%02x%02x%02x%02x%02x%02x N:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+						AICWFDBG(LOGERROR, "NAT25 Expire H(%02d) M:%02x%02x%02x%02x%02x%02x N:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n",
 							     i,
 							     f->macAddr[0],
 							     f->macAddr[1],
@@ -753,7 +754,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 		struct iphdr *iph = (struct iphdr *)(skb->data + ETH_HLEN);
 
 		if (((unsigned char *)(iph) + (iph->ihl << 2)) >= (skb->data + ETH_HLEN + skb->len)) {
-			printk("NAT25: malformed IP packet !\n");
+			AICWFDBG(LOGERROR, "NAT25: malformed IP packet !\n");
 			return -1;
 		}
 
@@ -766,7 +767,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 			/* in class A, B, C, host address is all zero or all one is illegal */
 			if (iph->saddr == 0)
 				return 0;
-			printk("NAT25: Insert IP, SA=%08x, DA=%08x\n", iph->saddr, iph->daddr);
+			AICWFDBG(LOGINFO, "NAT25: Insert IP, SA=%08x, DA=%08x\n", iph->saddr, iph->daddr);
 			__nat25_generate_ipv4_network_addr(networkAddr, &iph->saddr);
 			/* record source IP address and , source mac address into db */
 			__nat25_db_network_insert(vif, skb->data + ETH_ALEN, networkAddr);
@@ -776,7 +777,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 		return 0;
 
 		case NAT25_LOOKUP: {
-			printk("NAT25: Lookup IP, SA=%08x, DA=%08x\n", iph->saddr, iph->daddr);
+			AICWFDBG(LOGINFO, "NAT25: Lookup IP, SA=%08x, DA=%08x\n", iph->saddr, iph->daddr);
 #ifdef SUPPORT_TX_MCAST2UNI
 			if (vif->pshare->rf_ft_var.mc2u_disable ||
 			    ((((OPMODE & (WIFI_STATION_STATE | WIFI_ASOC_STATE))
@@ -790,14 +791,14 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 				if (!__nat25_db_network_lookup_and_replace(vif, skb, networkAddr)) {
 					if (*((unsigned char *)&iph->daddr + 3) == 0xff) {
 						/* L2 is unicast but L3 is broadcast, make L2 bacome broadcast */
-						printk("NAT25: Set DA as boardcast\n");
+						AICWFDBG(LOGINFO, "NAT25: Set DA as boardcast\n");
 						memset(skb->data, 0xff, ETH_ALEN);
 					} else {
 						/* forward unknow IP packet to upper TCP/IP */
-						printk("NAT25: Replace DA with BR's MAC\n");
+						AICWFDBG(LOGINFO, "NAT25: Replace DA with BR's MAC\n");
 						if ((*(u32 *)vif->br_mac) == 0 && (*(u16 *)(vif->br_mac + 4)) == 0) {
 							void netdev_br_init(struct net_device *netdev);
-							printk("Re-init netdev_br_init() due to br_mac==0!\n");
+							AICWFDBG(LOGINFO, "Re-init netdev_br_init() due to br_mac==0!\n");
 							netdev_br_init(vif->ndev);
 						}
 						memcpy(skb->data, vif->br_mac, ETH_ALEN);
@@ -821,7 +822,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 		unsigned int *sender, *target;
 
 		if (arp->ar_pro != __constant_htons(ETH_P_IP)) {
-			printk("NAT25: arp protocol unknown (%4x)!\n", htons(arp->ar_pro));
+			AICWFDBG(LOGERROR, "NAT25: arp protocol unknown (%4x)!\n", htons(arp->ar_pro));
 			return -1;
 		}
 
@@ -830,7 +831,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 			return 0;	/* skb_copy for all ARP frame */
 
 		case NAT25_INSERT: {
-			printk("NAT25: Insert ARP, MAC=%02x%02x%02x%02x%02x%02x\n", arp_ptr[0],
+			AICWFDBG(LOGINFO, "NAT25: Insert ARP, MAC=%02x%02x%02x%02x%02x%02x\n", arp_ptr[0],
 				arp_ptr[1], arp_ptr[2], arp_ptr[3], arp_ptr[4], arp_ptr[5]);
 
 			/* change to ARP sender mac address to wlan STA address */
@@ -848,7 +849,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 		return 0;
 
 		case NAT25_LOOKUP: {
-			printk("NAT25: Lookup ARP\n");
+			AICWFDBG(LOGINFO, "NAT25: Lookup ARP\n");
 
 			arp_ptr += arp->ar_hln;
 			sender = (unsigned int *)arp_ptr;
@@ -884,11 +885,11 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 		unsigned char *framePtr = skb->data + ETH_HLEN;
 
 		if (protocol == __constant_htons(ETH_P_IPX)) {
-			printk("NAT25: Protocol=IPX (Ethernet II)\n");
+			AICWFDBG(LOGINFO, "NAT25: Protocol=IPX (Ethernet II)\n");
 			ipx = (struct ipxhdr *)framePtr;
 		} else { /* if(protocol <= __constant_htons(ETH_FRAME_LEN)) */
 			if (!memcmp(ipx_header, framePtr, 2)) {
-				printk("NAT25: Protocol=IPX (Ethernet 802.3)\n");
+				AICWFDBG(LOGINFO, "NAT25: Protocol=IPX (Ethernet 802.3)\n");
 				ipx = (struct ipxhdr *)framePtr;
 			} else {
 				unsigned char ipx_8022_type =  0xE0;
@@ -904,7 +905,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 					if (!memcmp(ipx_snap_id, framePtr, 5)) {
 						framePtr += 5;	/* eliminate the SNAP header */
 
-						printk("NAT25: Protocol=IPX (Ethernet SNAP)\n");
+						AICWFDBG(LOGINFO, "NAT25: Protocol=IPX (Ethernet SNAP)\n");
 						ipx = (struct ipxhdr *)framePtr;
 					} else if (!memcmp(aarp_snap_id, framePtr, 5)) {
 						framePtr += 5;	/* eliminate the SNAP header */
@@ -915,7 +916,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 
 						ddp = (struct ddpehdr *)framePtr;
 					} else {
-						printk("NAT25: Protocol=Ethernet SNAP %02x%02x%02x%02x%02x\n", framePtr[0],
+						AICWFDBG(LOGERROR, "NAT25: Protocol=Ethernet SNAP %02x%02x%02x%02x%02x\n", framePtr[0],
 							framePtr[1], framePtr[2], framePtr[3], framePtr[4]);
 						return -1;
 					}
@@ -923,7 +924,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 					framePtr += 3;	/* eliminate the 802.2 header */
 
 					if (!memcmp(ipx_header, framePtr, 2)) {
-						printk("NAT25: Protocol=IPX (Ethernet 802.2)\n");
+						AICWFDBG(LOGINFO, "NAT25: Protocol=IPX (Ethernet 802.2)\n");
 						ipx = (struct ipxhdr *)framePtr;
 					} else
 						return -1;
@@ -936,13 +937,13 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 			switch (method) {
 			case NAT25_CHECK:
 				if (!memcmp(skb->data + ETH_ALEN, ipx->ipx_source.node, ETH_ALEN)) {
-					printk("NAT25: Check IPX skb_copy\n");
+					AICWFDBG(LOGINFO, "NAT25: Check IPX skb_copy\n");
 					return 0;
 				}
 				return -1;
 
 			case NAT25_INSERT: {
-				printk("NAT25: Insert IPX, Dest=%08x,%02x%02x%02x%02x%02x%02x,%04x Source=%08x,%02x%02x%02x%02x%02x%02x,%04x\n",
+				AICWFDBG(LOGINFO, "NAT25: Insert IPX, Dest=%08x,%02x%02x%02x%02x%02x%02x,%04x Source=%08x,%02x%02x%02x%02x%02x%02x,%04x\n",
 					 ipx->ipx_dest.net,
 					 ipx->ipx_dest.node[0],
 					 ipx->ipx_dest.node[1],
@@ -961,7 +962,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 					 ipx->ipx_source.sock);
 
 				if (!memcmp(skb->data + ETH_ALEN, ipx->ipx_source.node, ETH_ALEN)) {
-					printk("NAT25: Use IPX Net, and Socket as network addr\n");
+					AICWFDBG(LOGINFO, "NAT25: Use IPX Net, and Socket as network addr\n");
 
 					__nat25_generate_ipx_network_addr_with_socket(networkAddr, &ipx->ipx_source.net, &ipx->ipx_source.sock);
 
@@ -978,7 +979,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 
 			case NAT25_LOOKUP: {
 				if (!memcmp(vif->ndev->dev_addr, ipx->ipx_dest.node, ETH_ALEN)) {
-					printk("NAT25: Lookup IPX, Modify Destination IPX Node addr\n");
+					AICWFDBG(LOGINFO, "NAT25: Lookup IPX, Modify Destination IPX Node addr\n");
 
 					__nat25_generate_ipx_network_addr_with_socket(networkAddr, &ipx->ipx_dest.net, &ipx->ipx_dest.sock);
 
@@ -1003,7 +1004,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 		else if (ea != NULL) {
 			/* Sanity check fields. */
 			if (ea->hw_len != ETH_ALEN || ea->pa_len != AARP_PA_ALEN) {
-				printk("NAT25: Appletalk AARP Sanity check fail!\n");
+				AICWFDBG(LOGERROR, "NAT25: Appletalk AARP Sanity check fail!\n");
 				return -1;
 			}
 
@@ -1015,7 +1016,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 				/* change to AARP source mac address to wlan STA address */
 				memcpy(ea->hw_src, vif->ndev->dev_addr, ETH_ALEN);
 
-				printk("NAT25: Insert AARP, Source=%d,%d Destination=%d,%d\n",
+				AICWFDBG(LOGINFO, "NAT25: Insert AARP, Source=%d,%d Destination=%d,%d\n",
 					 ea->pa_src_net,
 					 ea->pa_src_node,
 					 ea->pa_dst_net,
@@ -1030,7 +1031,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 			return 0;
 
 			case NAT25_LOOKUP: {
-				printk("NAT25: Lookup AARP, Source=%d,%d Destination=%d,%d\n",
+				AICWFDBG(LOGINFO, "NAT25: Lookup AARP, Source=%d,%d Destination=%d,%d\n",
 					 ea->pa_src_net,
 					 ea->pa_src_node,
 					 ea->pa_dst_net,
@@ -1057,7 +1058,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 				return -1;
 
 			case NAT25_INSERT: {
-				printk("NAT25: Insert DDP, Source=%d,%d Destination=%d,%d\n",
+				AICWFDBG(LOGINFO, "NAT25: Insert DDP, Source=%d,%d Destination=%d,%d\n",
 					 ddp->deh_snet,
 					 ddp->deh_snode,
 					 ddp->deh_dnet,
@@ -1072,7 +1073,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 			return 0;
 
 			case NAT25_LOOKUP: {
-				printk("NAT25: Lookup DDP, Source=%d,%d Destination=%d,%d\n",
+				AICWFDBG(LOGINFO, "NAT25: Lookup DDP, Source=%d,%d Destination=%d,%d\n",
 					 ddp->deh_snet,
 					 ddp->deh_snode,
 					 ddp->deh_dnet,
@@ -1119,7 +1120,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 						if (pOldTag) { /* if SID existed, copy old value and delete it */
 							old_tag_len = ntohs(pOldTag->tag_len);
 							if (old_tag_len + TAG_HDR_LEN + MAGIC_CODE_LEN + RTL_RELAY_TAG_LEN > sizeof(tag_buf)) {
-								printk("SID tag length too long!\n");
+								AICWFDBG(LOGERROR, "SID tag length too long!\n");
 								return -1;
 							}
 
@@ -1127,7 +1128,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 							       pOldTag->tag_data, old_tag_len);
 
 							if (skb_pull_and_merge(skb, (unsigned char *)pOldTag, TAG_HDR_LEN + old_tag_len) < 0) {
-								printk("call skb_pull_and_merge() failed in PADI/R packet!\n");
+								AICWFDBG(LOGERROR, "call skb_pull_and_merge() failed in PADI/R packet!\n");
 								return -1;
 							}
 							ph->length = htons(ntohs(ph->length) - TAG_HDR_LEN - old_tag_len);
@@ -1145,12 +1146,12 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 						if (__nat25_add_pppoe_tag(skb, tag) < 0)
 							return -1;
 
-						printk("NAT25: Insert PPPoE, forward %s packet\n",
+						AICWFDBG(LOGINFO, "NAT25: Insert PPPoE, forward %s packet\n",
 							(ph->code == PADI_CODE ? "PADI" : "PADR"));
 					} else { /* not add relay tag */
 						if (vif->pppoe_connection_in_progress &&
 						    memcmp(skb->data + ETH_ALEN, vif->pppoe_addr, ETH_ALEN))	 {
-							printk("Discard PPPoE packet due to another PPPoE connection is in progress!\n");
+							AICWFDBG(LOGERROR, "Discard PPPoE packet due to another PPPoE connection is in progress!\n");
 							return -2;
 						}
 
@@ -1162,7 +1163,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 				} else
 					return -1;
 			} else {	/* session phase */
-				printk("NAT25: Insert PPPoE, insert session packet to %s\n", skb->dev->name);
+				AICWFDBG(LOGINFO, "NAT25: Insert PPPoE, insert session packet to %s\n", skb->dev->name);
 
 				__nat25_generate_pppoe_network_addr(networkAddr, skb->data, &(ph->sid));
 
@@ -1187,7 +1188,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 
 					ptr = __nat25_find_pppoe_tag(ph, ntohs(PTT_RELAY_SID));
 					if (ptr == 0) {
-						printk("Fail to find PTT_RELAY_SID in FADO!\n");
+						AICWFDBG(LOGERROR, "Fail to find PTT_RELAY_SID in FADO!\n");
 						return -1;
 					}
 
@@ -1196,13 +1197,13 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 					tagLen = (unsigned short)((ptr[2] << 8) + ptr[3]);
 
 					if ((tagType != ntohs(PTT_RELAY_SID)) || (tagLen < (MAGIC_CODE_LEN + RTL_RELAY_TAG_LEN))) {
-						printk("Invalid PTT_RELAY_SID tag length [%d]!\n", tagLen);
+						AICWFDBG(LOGERROR, "Invalid PTT_RELAY_SID tag length [%d]!\n", tagLen);
 						return -1;
 					}
 
 					pMagic = (unsigned short *)tag->tag_data;
 					if (ntohs(*pMagic) != MAGIC_CODE) {
-						printk("Can't find MAGIC_CODE in %s packet!\n",
+						AICWFDBG(LOGERROR, "Can't find MAGIC_CODE in %s packet!\n",
 							(ph->code == PADO_CODE ? "PADO" : "PADS"));
 						return -1;
 					}
@@ -1213,18 +1214,18 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 						offset = TAG_HDR_LEN;
 
 					if (skb_pull_and_merge(skb, ptr + offset, TAG_HDR_LEN + MAGIC_CODE_LEN + RTL_RELAY_TAG_LEN - offset) < 0) {
-						printk("call skb_pull_and_merge() failed in PADO packet!\n");
+						AICWFDBG(LOGERROR, "call skb_pull_and_merge() failed in PADO packet!\n");
 						return -1;
 					}
 					ph->length = htons(ntohs(ph->length) - (TAG_HDR_LEN + MAGIC_CODE_LEN + RTL_RELAY_TAG_LEN - offset));
 					if (offset > 0)
 						tag->tag_len = htons(tagLen - MAGIC_CODE_LEN - RTL_RELAY_TAG_LEN);
 
-					printk("NAT25: Lookup PPPoE, forward %s Packet from %s\n",
+					AICWFDBG(LOGINFO, "NAT25: Lookup PPPoE, forward %s Packet from %s\n",
 						(ph->code == PADO_CODE ? "PADO" : "PADS"),	skb->dev->name);
 				} else { /* not add relay tag */
 					if (!vif->pppoe_connection_in_progress) {
-						printk("Discard PPPoE packet due to no connection in progresss!\n");
+						AICWFDBG(LOGERROR, "Discard PPPoE packet due to no connection in progresss!\n");
 						return -1;
 					}
 					memcpy(skb->data, vif->pppoe_addr, ETH_ALEN);
@@ -1232,7 +1233,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 				}
 			} else {
 				if (ph->sid != 0) {
-					printk("NAT25: Lookup PPPoE, lookup session packet from %s\n", skb->dev->name);
+					AICWFDBG(LOGINFO, "NAT25: Lookup PPPoE, lookup session packet from %s\n", skb->dev->name);
 					__nat25_generate_pppoe_network_addr(networkAddr, skb->data + ETH_ALEN, &(ph->sid));
 
 					__nat25_db_network_lookup_and_replace(vif, skb, networkAddr);
@@ -1296,7 +1297,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 		struct ipv6hdr *iph = (struct ipv6hdr *)(skb->data + ETH_HLEN);
 
 		if (sizeof(*iph) >= (skb->len - ETH_HLEN)) {
-			printk("NAT25: malformed IPv6 packet !\n");
+			AICWFDBG(LOGERROR, "NAT25: malformed IPv6 packet !\n");
 			return -1;
 		}
 
@@ -1307,7 +1308,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 			return -1;
 
 		case NAT25_INSERT: {
-			printk("NAT25: Insert IP, SA=%4x:%4x:%4x:%4x:%4x:%4x:%4x:%4x,"
+			AICWFDBG(LOGINFO, "NAT25: Insert IP, SA=%4x:%4x:%4x:%4x:%4x:%4x:%4x:%4x,"
 				" DA=%4x:%4x:%4x:%4x:%4x:%4x:%4x:%4x\n",
 				iph->saddr.s6_addr16[0], iph->saddr.s6_addr16[1], iph->saddr.s6_addr16[2], iph->saddr.s6_addr16[3],
 				iph->saddr.s6_addr16[4], iph->saddr.s6_addr16[5], iph->saddr.s6_addr16[6], iph->saddr.s6_addr16[7],
@@ -1336,7 +1337,7 @@ int nat25_db_handle(struct rwnx_vif *vif, struct sk_buff *skb, int method)
 		return 0;
 
 		case NAT25_LOOKUP:
-			printk("NAT25: Lookup IP, SA=%4x:%4x:%4x:%4x:%4x:%4x:%4x:%4x,"
+			AICWFDBG(LOGINFO, "NAT25: Lookup IP, SA=%4x:%4x:%4x:%4x:%4x:%4x:%4x:%4x,"
 				 " DA=%4x:%4x:%4x:%4x:%4x:%4x:%4x:%4x\n",
 				iph->saddr.s6_addr16[0], iph->saddr.s6_addr16[1], iph->saddr.s6_addr16[2], iph->saddr.s6_addr16[3],
 				iph->saddr.s6_addr16[4], iph->saddr.s6_addr16[5], iph->saddr.s6_addr16[6], iph->saddr.s6_addr16[7],
@@ -1368,7 +1369,7 @@ int nat25_handle_frame(struct rwnx_vif *vif, struct sk_buff *skb)
 	//printk("%s : vif_type=%d \n",__func__,RWNX_VIF_TYPE(vif));
 #ifdef BR_SUPPORT_DEBUG
 	if ((!vif->ethBrExtInfo.nat25_disable) && (!(skb->data[0] & 1))) {
-		printk("NAT25: Input Frame: DA=%02x%02x%02x%02x%02x%02x SA=%02x%02x%02x%02x%02x%02x\n",
+		AICWFDBG(LOGINFO, "NAT25: Input Frame: DA=%02x%02x%02x%02x%02x%02x SA=%02x%02x%02x%02x%02x%02x\n",
 			     skb->data[0],
 			     skb->data[1],
 			     skb->data[2],
@@ -1502,7 +1503,7 @@ void dhcp_flag_bcast(struct rwnx_vif *vif, struct sk_buff *skb)
 	//print_hex_dump(KERN_ERR, "SKB DUMP: SKB->DATA== ", DUMP_PREFIX_NONE, 32, 1, skb->data, 64,false);
 	if (!vif->ethBrExtInfo.dhcp_bcst_disable) {
 		unsigned short protocol = *((unsigned short *)(skb->data + 2 * ETH_ALEN));
-		printk("%s  protocol: %04x\n", __func__, protocol);
+		AICWFDBG(LOGINFO, "%s  protocol: %04x\n", __func__, protocol);
 
 		if (protocol == __constant_htons(ETH_P_IP)) { /* IP */
 			struct iphdr *iph = (struct iphdr *)(skb->data + ETH_HLEN);
@@ -1519,7 +1520,7 @@ void dhcp_flag_bcast(struct rwnx_vif *vif, struct sk_buff *skb)
 						if (!(dhcph->flags & htons(BROADCAST_FLAG))) { /* if not broadcast */
 							register int sum = 0;
 
-							printk("DHCP: change flag of DHCP request to broadcast.\n");
+							AICWFDBG(LOGINFO, "DHCP: change flag of DHCP request to broadcast.\n");
 					
 						#if 1
 							/* or BROADCAST flag */
@@ -1543,7 +1544,7 @@ void dhcp_flag_bcast(struct rwnx_vif *vif, struct sk_buff *skb)
 void *scdb_findEntry(struct rwnx_vif *vif, unsigned char *macAddr,
 		     unsigned char *ipAddr)
 {
-	printk("%s()\n",__func__);
+	AICWFDBG(LOGINFO, "%s()\n",__func__);
 	unsigned char networkAddr[MAX_NETWORK_ADDR_LEN];
 	struct nat25_network_db_entry *db;
 	int hash;

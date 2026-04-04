@@ -61,7 +61,7 @@ MAKEFLAGS +=-j$(shell nproc)
 
 MAKEFILE_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 FIRMWARE_PATH ?= $(MAKEFILE_DIR)../../fw/aic8800D80
-FIRMWARE_DEST ?= /lib/firmware
+FIRMWARE_DEST ?= /lib/firmware/aic8800D80
 UDEV_RULES_SRC ?= $(MAKEFILE_DIR)../../tools/aic.rules
 UDEV_RULES_DEST ?= /etc/udev/rules.d
 
@@ -72,7 +72,7 @@ modules:
 install_firmware:
 	@test -d $(FIRMWARE_PATH) || { echo "ERROR: Firmware directory $(FIRMWARE_PATH) not found" >&2; exit 1; }
 	@echo "Installing firmware to $(FIRMWARE_DEST)..."
-	sudo cp -rf $(FIRMWARE_PATH)/* $(FIRMWARE_DEST)/
+	sudo cp -rf $(FIRMWARE_PATH)/* $(FIRMWARE_DEST)
 
 install_rules:
 	@test -f $(UDEV_RULES_SRC) || { echo "ERROR: Udev rules file $(UDEV_RULES_SRC) not found" >&2; exit 1; }
@@ -91,9 +91,9 @@ install: install_firmware install_rules install_modules
 	@echo "All components installed successfully!"
 
 uninstall_firmware:
-	@test -d $(FIRMWARE_DEST)/aic8800D80 || { echo "WARNING: Firmware $(FIRMWARE_DEST)/aic8800D80 not found, skipping" >&2; } || true
+	@test -d $(FIRMWARE_DEST) || { echo "WARNING: Firmware $(FIRMWARE_DEST) not found, skipping" >&2; } || true
 	@echo "Uninstalling firmware from $(FIRMWARE_DEST)..."
-	sudo rm -rf $(FIRMWARE_DEST)/aic8800D80
+	sudo rm -rf $(FIRMWARE_DEST)
 
 uninstall_rules:
 	@test -f $(UDEV_RULES_DEST)/aic.rules || { echo "WARNING: Udev rules $(UDEV_RULES_DEST)/aic.rules not found, skipping" >&2; } || true

@@ -543,7 +543,7 @@ static const int rwnx_hwq2uapsd[NL80211_NUM_ACS] = {
 struct semaphore aicwf_deinit_sem;
 atomic_t aicwf_deinit_atomic;
 
-int aicwf_dbg_level = LOGERROR|LOGINFO;
+int aicwf_dbg_level = LOGERROR;
 module_param(aicwf_dbg_level, int, 0660);
 #ifdef CONFIG_DYNAMIC_PWR
 int dynamic_pwr = 1;
@@ -833,7 +833,7 @@ void rwnx_insert_vendor_extension_in_bcn(struct rwnx_bcn *bcn){
 				bcn->tail[index + 5] == vendor_extension_subelement[2]){
 				index = index + 2;
 				vendor_extension_subelement_len = bcn->tail[index];
-				printk("%s find vendor_extension_subelement,index:%d len:%d\r\n", __func__, index, bcn->tail[index]);
+				AICWFDBG(LOGINFO, "%s find vendor_extension_subelement,index:%d len:%d\r\n", __func__, index, bcn->tail[index]);
 				break;
 			}
 		}
@@ -1043,7 +1043,7 @@ static void rwnx_csa_finish(struct work_struct *ws)
 
     buf = kmalloc(csa->bcn.len, GFP_KERNEL);
     if (!buf) {
-        printk ("%s buf fail\n", __func__);
+        AICWFDBG(LOGERROR, "%s buf fail\n", __func__);
         return;
     }
     pos = buf;
@@ -1755,7 +1755,7 @@ static int rwnx_set_mac_address(struct net_device *dev, void *addr)
     struct sockaddr *sa = addr;
     int ret;
     struct rwnx_vif *rwnx_vif = netdev_priv(dev);
-	printk("%s enter \r\n", __func__);
+	AICWFDBG(LOGINFO, "%s enter \r\n", __func__);
 
     ret = eth_mac_addr(dev, sa);
     memcpy(rwnx_vif->wdev.address, dev->dev_addr, 6);
@@ -3662,7 +3662,7 @@ void apm_staloss_work_process(struct work_struct *work)
 		rwnx_dbgfs_unregister_rc_stat(rwnx_hw, cur);
 #endif
 	}else {
-		printk("sta not found: %pM\n", mac);
+		AICWFDBG(LOGERROR, "sta not found: %pM\n", mac);
 		return;
 	}
 
@@ -3690,7 +3690,7 @@ void apm_probe_sta_work_process(struct work_struct *work)
        }
 	   spin_unlock_bh(&rwnx_vif->rwnx_hw->cb_lock);
 
-       printk("sta %pM found = %d\n", mac, found);
+       AICWFDBG(LOGINFO, "sta %pM found = %d\n", mac, found);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 17, 0)
        if(found)
                cfg80211_probe_status(rwnx_vif->ndev, mac, (u64)rwnx_vif->sta_probe.probe_id, 1, 0, false, GFP_ATOMIC);
@@ -4898,7 +4898,7 @@ int rwnx_cfg80211_start_radar_detection(struct wiphy *wiphy,
     struct rwnx_vif *rwnx_vif = netdev_priv(dev);
     struct apm_start_cac_cfm cfm;
 
-	printk("%s\n", __func__);
+	AICWFDBG(LOGINFO, "%s\n", __func__);
 
     #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 15, 0))
     rwnx_radar_start_cac(&rwnx_hw->radar, cac_time_ms, rwnx_vif);
@@ -5115,13 +5115,13 @@ rwnx_cfg80211_tdls_mgmt(struct wiphy *wiphy,
     if ((action_code == WLAN_TDLS_SETUP_REQUEST) &&
         (rwnx_vif->sta.tdls_sta) &&
         (rwnx_vif->tdls_status == TDLS_LINK_ACTIVE)) {
-        printk("%s: only one TDLS link is supported!\n", __func__);
+            AICWFDBG(LOGERROR, "%s: only one TDLS link is supported!\n", __func__);
         return -ENOTSUPP;
     }
 
     if ((action_code == WLAN_TDLS_DISCOVERY_REQUEST) &&
         (rwnx_hw->mod_params->ps_on)) {
-        printk("%s: discovery request is not supported when "
+        AICWFDBG(LOGERROR, "%s: discovery request is not supported when "
                 "power-save is enabled!\n", __func__);
         return -ENOTSUPP;
     }
@@ -5132,7 +5132,7 @@ rwnx_cfg80211_tdls_mgmt(struct wiphy *wiphy,
         if ((status_code == 0) &&
             (rwnx_vif->sta.tdls_sta) &&
             (rwnx_vif->tdls_status == TDLS_LINK_ACTIVE)) {
-            printk("%s: only one TDLS link is supported!\n", __func__);
+        AICWFDBG(LOGERROR, "%s: only one TDLS link is supported!\n", __func__);
             status_code = WLAN_STATUS_REQUEST_DECLINED;
         }
         /* fall-through */
@@ -5146,7 +5146,7 @@ rwnx_cfg80211_tdls_mgmt(struct wiphy *wiphy,
         break;
 
     default:
-        printk("%s: Unknown TDLS mgmt/action frame %pM\n",
+        AICWFDBG(LOGERROR, "%s: Unknown TDLS mgmt/action frame %pM\n",
                 __func__, peer);
         ret = -EOPNOTSUPP;
         break;
@@ -5188,7 +5188,7 @@ rwnx_cfg80211_tdls_oper(struct wiphy *wiphy,
         return 0;
 
     if (!rwnx_vif->sta.tdls_sta) {
-        printk("%s: TDLS station %pM does not exist\n", __func__, peer);
+        AICWFDBG(LOGERROR, "%s: TDLS station %pM does not exist\n", __func__, peer);
         return -ENOLINK;
     }
 
@@ -5249,12 +5249,12 @@ rwnx_cfg80211_tdls_channel_switch(struct wiphy *wiphy,
     int error;
 
     if ((!rwnx_sta) || (memcmp(addr, rwnx_sta->mac_addr, ETH_ALEN))) {
-        printk("%s: TDLS station %pM doesn't exist\n", __func__, addr);
+        AICWFDBG(LOGERROR, "%s: TDLS station %pM doesn't exist\n", __func__, addr);
         return -ENOLINK;
     }
 
     if (!rwnx_sta->tdls.chsw_allowed) {
-        printk("%s: TDLS station %pM does not support TDLS channel switch\n", __func__, addr);
+        AICWFDBG(LOGERROR, "%s: TDLS station %pM does not support TDLS channel switch\n", __func__, addr);
         return -ENOTSUPP;
     }
 
@@ -5268,7 +5268,7 @@ rwnx_cfg80211_tdls_channel_switch(struct wiphy *wiphy,
         rwnx_sta->tdls.chsw_en = true;
         return 0;
     } else {
-        printk("%s: TDLS channel switch already enabled and only one is supported\n", __func__);
+        AICWFDBG(LOGERROR, "%s: TDLS channel switch already enabled and only one is supported\n", __func__);
         return -EALREADY;
     }
 }
@@ -6289,7 +6289,7 @@ static void rwnx_reg_notifier(struct wiphy *wiphy,
 {
     struct rwnx_hw *rwnx_hw = wiphy_priv(wiphy);
 
-    printk("%s Enter\r\n", __func__);
+    AICWFDBG(LOGINFO, "%s Enter\r\n", __func__);
 
     // For now trust all initiator
 #ifdef CONFIG_RADAR_OR_IR_DETECT
@@ -8305,7 +8305,7 @@ static int wdt_config(struct rwnx_hw *rwnx_hw)
     ret = rwnx_send_dbg_mem_mask_write_req(rwnx_hw,
                 wdt_tbl_masked[0][0], wdt_tbl_masked[0][1], wdt_tbl_masked[0][2]);
     if (ret) {
-        printk("wdt config %x write fail: %d\n", wdt_tbl_masked[0][0], ret);
+        AICWFDBG(LOGERROR, "wdt config %x write fail: %d\n", wdt_tbl_masked[0][0], ret);
     }
     return ret;
 }
@@ -8334,14 +8334,14 @@ static int start_from_bootrom(struct rwnx_hw *rwnx_hw)
 	const u32 fw_addr = RAM_FMAC_FW_ADDR;
 #endif
 	struct dbg_mem_read_cfm rd_cfm;
-	printk("Read FW mem: %08x\n", rd_addr);
+	AICWFDBG(LOGINFO, "Read FW mem: %08x\n", rd_addr);
 	if ((ret = rwnx_send_dbg_mem_read_req(rwnx_hw, rd_addr, &rd_cfm))) {
 		return -1;
 	}
-	printk("cfm: [%08x] = %08x\n", rd_cfm.memaddr, rd_cfm.memdata);
+	AICWFDBG(LOGINFO, "cfm: [%08x] = %08x\n", rd_cfm.memaddr, rd_cfm.memdata);
 
 	/* fw start */
-	printk("Start app: %08x\n", fw_addr);
+	AICWFDBG(LOGINFO, "Start app: %08x\n", fw_addr);
 	if ((ret = rwnx_send_dbg_start_app_req(rwnx_hw, fw_addr, HOST_START_APP_AUTO))) {
 		return -1;
 	}
@@ -8734,7 +8734,7 @@ if((g_rwnx_plat->usbdev->chipid == PRODUCT_ID_AIC8801) ||
 
 #if defined CONFIG_GPIO_WAKEUP || defined CONFIG_WOWLAN
 		/* Set WoWLAN flags */
-		printk("%s Wowlan support\r\n", __func__);
+		AICWFDBG(LOGINFO, "%s Wowlan support\r\n", __func__);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 11, 0)
 		wiphy->wowlan = &aic_wowlan_support;
 #else
