@@ -1409,7 +1409,7 @@ static void rwnx_radar_process_pulse(struct work_struct *ws)
 
 			if(rm->cnt == 1)
 			{
-				struct radar_detector_specs *spc;
+				const struct radar_detector_specs *spc;
 				int k;
 				AICWFDBG(LOGINFO, "dpd: en = %d, region = %d, ntype = %d", dpd->enabled, dpd->region, dpd->num_radar_types);
 				AICWFDBG(LOGINFO, "id  wid.{min, max}  pri.{min, max, num}, ppb, thd, tlrn, type");
