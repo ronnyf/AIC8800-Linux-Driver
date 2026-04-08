@@ -275,7 +275,7 @@ static int aic_priv_cmd_set_tx (struct rwnx_hw *rwnx_hw, int argc, char *argv[],
 {
 	cmd_rf_settx_t settx_param;
 	u8_l set_p = 0;
-	u8_l lvl_band, lvl_mod, lvl_idx, lvl_pwr = 0;
+	u8_l lvl_band = 0, lvl_mod = 0, lvl_idx = 0, lvl_pwr = 0;
 	u8_l buf[10];
 #ifdef CONFIG_POWER_LIMIT
 	int8_t max_pwr;
