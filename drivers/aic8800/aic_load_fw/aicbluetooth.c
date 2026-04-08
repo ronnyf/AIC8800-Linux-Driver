@@ -757,7 +757,7 @@ int rwnx_plat_flash_bin_upload_android(struct aic_usb_dev *usbdev, u32 fw_addr,
     int err=0;
     const u32 mem_addr = fw_addr;
     struct dbg_mem_read_cfm rd_mem_addr_cfm;
-    u32 crc = ~0UL;
+    u32 crc = ~0U;
 
     /* load aic firmware */
     size = aic_load_firmware(&dst, filename, dev);
