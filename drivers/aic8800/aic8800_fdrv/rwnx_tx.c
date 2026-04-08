@@ -1439,7 +1439,7 @@ netdev_tx_t rwnx_start_xmit(struct sk_buff *skb, struct net_device *dev)
     
     struct ethhdr eth_t;
 #ifdef CONFIG_FILTER_TCP_ACK
-    struct msg_buf *msgbuf;
+    struct msg_buf *msgbuf = NULL;
 #endif
 
 #ifdef CONFIG_ONE_TXQ
