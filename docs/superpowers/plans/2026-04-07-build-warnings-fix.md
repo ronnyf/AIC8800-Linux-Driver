@@ -2,15 +2,15 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Fix all 172 kernel module build warnings to produce clean, production-ready code with no compiler warnings
+**Goal:** Fix all kernel module build warnings to produce clean, production-ready code with no compiler warnings
 
 **Architecture:** This plan addresses kernel module build warnings categorized by severity:
 - **Critical (2):** Uninitialized variables causing potential runtime bugs
-- **High (1):** Const qualifier discards affecting type safety
-- **Medium (10):** Implicit fallthrough warnings in switch statements
-- **Low (~150+):** Missing `static` prototypes for internal functions
+- **High (1):** Const qualifier discards affecting type safety  
+- **Medium (~10):** Implicit fallthrough warnings in switch statements
+- **Low (~60):** Missing function prototypes (proper handling: `static` for internal, forward declarations for external)
 - **Low (4):** Unused variables and functions
-- **Low (~5):** Other minor style warnings
+- **Low (~5):** Other minor style warnings (pointer bool conversion, misleading indentation)
 
 **Tech Stack:**
 - Linux kernel 6.19.x (C11)
@@ -24,8 +24,9 @@
 This is a **code quality cleanup plan**. No new features, no API changes, no functional modifications.
 
 All fixes follow established patterns in the codebase:
-- Functions only used within their file → add `static`
-- Intentional fallthrough → add `__attribute__((fallthrough))`
+- Functions only used within their file → add `static` (internal linkage)
+- Functions used by other files → add forward declarations in header files (external linkage)
+- Intentional fallthrough → add `fallthrough;` macro (kernel-provided, NOT `__attribute__((fallthrough))`)
 - Uninitialized variables → initialize at declaration
 - Unused code → remove or comment intention
 
@@ -174,34 +175,36 @@ Read `drivers/aic8800/aic8800_fdrv/rwnx_msg_tx.c:615-635` and `:1705-1712`:
 
 - [ ] **Step 2: Add fallthrough annotations to rwnx_msg_tx.c**
 
-Add `__attribute__((fallthrough));` at lines 618, 631, and 1708:
+Add `fallthrough;` macro at lines 618, 631, and 1708:
 
 ```c
 case NL80211_IFTYPE_STATION:
     // ...
-    __attribute__((fallthrough));
+    fallthrough;
 case NL80211_IFTYPE_AP:
     // ...
-    __attribute__((fallthrough));
+    fallthrough;
 case CUSTOMIZED_FREQ_REQ:
     // ...
 ```
 
+**Important:** Use `fallthrough;` (kernel macro from `<linux/compiler_attributes.h>`), NOT `__attribute__((fallthrough))` which causes compilation errors.
+
 - [ ] **Step 3: Read rwnx_tx.c case**
 
-Read `drivers/aic8800/aic8800_fdrv/rwnx_tx.c:329-335` and add fallthrough before `case NL80211_IFTYPE_AP:`
+Read `drivers/aic8800/aic8800_fdrv/rwnx_tx.c:329-335` and add `fallthrough;` before `case NL80211_IFTYPE_AP:`
 
 - [ ] **Step 4: Read rwnx_txq.c case**
 
-Read `drivers/aic8800/aic8800_fdrv/rwnx_txq.c:638-644` and add fallthrough before `case NL80211_IFTYPE_AP:`
+Read `drivers/aic8800/aic8800_fdrv/rwnx_txq.c:638-644` and add `fallthrough;` before `case NL80211_IFTYPE_AP:`
 
 - [ ] **Step 5: Read rwnx_main.c cases**
 
-Read `drivers/aic8800/aic8800_fdrv/rwnx_main.c` at lines 1932-1940, 2531-2538, 4779-4786, 5615-5622 and add fallthrough annotations
+Read `drivers/aic8800/aic8800_fdrv/rwnx_main.c` at lines 1932-1940, 2531-2538, 4779-4786, 5615-5622 and add `fallthrough;` annotations
 
 - [ ] **Step 6: Read rwnx_tdls.c case**
 
-Read `drivers/aic8800/aic8800_fdrv/rwnx_tdls.c:263-270` and add fallthrough before `case 0:`
+Read `drivers/aic8800/aic8800_fdrv/rwnx_tdls.c:263-270` and add `fallthrough;` before `case 0:`
 
 - [ ] **Step 7: Verify all fixes**
 
@@ -218,7 +221,7 @@ git add drivers/aic8800/aic8800_fdrv/rwnx_msg_tx.c
        drivers/aic8800/aic8800_fdrv/rwnx_txq.c
        drivers/aic8800/aic8800_fdrv/rwnx_main.c
        drivers/aic8800/aic8800_fdrv/rwnx_tdls.c
-git commit -m "fix: add __attribute__((fallthrough)) annotations"
+git commit -m "fix: add fallthrough; macro annotations"
 ```
 
 ---
@@ -336,36 +339,45 @@ Multiple files in `drivers/aic8800/aic_load_fw/` and `drivers/aic8800/aic8800_fd
 
 ### Subtask 6a: Fix aic_load_fw files (Batch 1)
 
+**Approach:** For each function, determine if it's internal or external:
+1. Check if `EXPORT_SYMBOL()` present → keep non-static, ensure forward declaration in header
+2. Check if called from other `.c` files → keep non-static, add forward declaration in header
+3. Only used within same file → add `static`
+
 - [ ] **Step 1: Fix aicwf_txq_prealloc.c**
 
 Read `drivers/aic8800/aic_load_fw/aicwf_txq_prealloc.c:13` and `:50`:
 ```c
-// Line 13 - add static
+// Both functions only used within this file → add static
 static void *aicwf_prealloc_txq_alloc(size_t size)
-
-// Line 50 - add static  
 static void aicwf_prealloc_txq_free(void)
 ```
 
-- [ ] **Step 2: Fix aicbluetooth.c (14 functions)**
+- [ ] **Step 2: Fix aicbluetooth.c**
 
-Read `drivers/aic8800/aic_load_fw/aicbluetooth.c` and add `static` to:
-- Line 259: `aic_crc32`
-- Lines 900, 908, 912, 916, 921, 925, 930: get_* functions
-- Lines 949, 962, 989: get_userconfig_* functions
-- Lines 1012, 1060: rwnx_plat_* functions
+Analyze each function:
+- `aic_crc32` (line 259) → no EXPORT_SYMBOL, only used internally → add `static`
+- `get_fw_path`, `set_testmode`, `get_*` functions → only used internally → add `static`
+- `get_userconfig_xtal_cap`, `get_userconfig_txpwr_idx`, `get_userconfig_txpwr_ofst` → have EXPORT_SYMBOL → keep non-static, add forward declarations in aicbluetooth.h
+- `rwnx_plat_userconfig_set_value`, `rwnx_plat_userconfig_parsing` → only used internally → add `static`
 
 ```c
-// Before each function, add 'static'
+// Before each internal function, add 'static'
 static u32 aic_crc32(u8 *p, u32 len, u32 crc)
 static void get_fw_path(char* fw_path)
-// ... and so on
+// ...
+
+// For exported functions, add forward declarations in aicbluetooth.h:
+extern void get_userconfig_xtal_cap(xtal_cap_conf_t *xtal_cap);
+extern void get_userconfig_txpwr_idx(txpwr_idx_conf_t *txpwr_idx);
+extern void get_userconfig_txpwr_ofst(txpwr_ofst_conf_t *txpwr_ofst);
 ```
 
 - [ ] **Step 3: Fix aicwf_usb.c**
 
 Read `drivers/aic8800/aic_load_fw/aicwf_usb.c:1379` and `:1654`:
 ```c
+// Both functions only used within this file → add static
 static int aicfw_download_fw_8800(struct aic_usb_dev *usb_dev)
 static int aicfw_download_fw(struct aic_usb_dev *usb_dev)
 ```
@@ -374,26 +386,24 @@ static int aicfw_download_fw(struct aic_usb_dev *usb_dev)
 
 ```bash
 make LLVM=1 -C drivers/aic8800 2>&1 | grep 'missing-prototypes' | head -20
-```
-Expected: Reduced missing prototype warnings
-
-```bash
 git add drivers/aic8800/aic_load_fw/
-git commit -m "fix: add static to missing prototypes in aic_load_fw"
+git commit -m "fix: add static to internal functions in aic_load_fw"
 ```
 
 ### Subtask 6b: Fix rwnx_* files (Batch 2)
 
+**Approach:** Same as 6a - check `EXPORT_SYMBOL()` and cross-file usage before deciding static vs external.
+
 - [ ] **Step 1: Fix core rwnx files**
 
-For each file in `drivers/aic8800/aic8800_fdrv/`:
+For each file in `drivers/aic8800/aic8800_fdrv/`, analyze function usage:
 - `rwnx_utils.c`: 1 function
 - `rwnx_msg_tx.c`: 4 functions
 - `rwnx_irqs.c`: 2 functions
 - `rwnx_cmds.c`: 1 function
 - `rwnx_msg_rx.c`: 2 functions
 - `rwnx_rx.c`: 7 functions
-- `rwnx_tx.c`: 1 function
+- `rwnx_tx.c`: 1 function (intf_tx)
 - `rwnx_txq.c`: 2 functions
 - `rwnx_mod_params.c`: 1 function
 - `rwnx_pci.c`: 2 functions
@@ -401,25 +411,26 @@ For each file in `drivers/aic8800/aic8800_fdrv/`:
 - `rwnx_main.c`: 17 functions
 - `rwnx_dini.c`: 2 functions
 
-Add `static` to all these function declarations.
+For each function:
+1. Check for `EXPORT_SYMBOL()` → keep non-static, add forward declaration in header
+2. Check if called from other `.c` files → keep non-static, add forward declaration in appropriate header
+3. Only used within same file → add `static`
 
 - [ ] **Step 2: Verify and commit**
 
 ```bash
 make LLVM=1 -C drivers/aic8800 2>&1 | grep 'missing-prototypes' | wc -l
-```
-Expected: Significantly fewer warnings
-
-```bash
 git add drivers/aic8800/aic8800_fdrv/rwnx_*.c
-git commit -m "fix: add static to missing prototypes in rwnx_* files"
+git commit -m "fix: add static to internal functions in rwnx_* files"
 ```
 
 ### Subtask 6c: Fix remaining files (Batch 3)
 
+**Approach:** Same analysis as 6a/6b - check `EXPORT_SYMBOL()` and cross-file usage.
+
 - [ ] **Step 1: Fix vendor and compat files**
 
-Add `static` to functions in:
+Process functions in:
 - `aic_vendor.c`: 3 functions
 - `aic_priv_cmd.c`: 4 functions
 - `aicwf_compat_*.c`: ~10 functions total
@@ -430,19 +441,18 @@ Add `static` to functions in:
 - `aicwf_txrxif.c`: 1 function
 - `aicwf_wext_linux.c`: 2 functions
 
+For each function:
+1. Check for `EXPORT_SYMBOL()` → keep non-static, add forward declaration in header
+2. Check if called from other `.c` files → keep non-static, add forward declaration in appropriate header
+3. Only used within same file → add `static`
+
 - [ ] **Step 2: Final verification**
 
 ```bash
 make LLVM=1 -C drivers/aic8800 2>&1 | grep 'missing-prototypes' | wc -l
 make LLVM=1 -C drivers/aic8800 2>&1 | grep 'warning:' | wc -l
-```
-Expected: 0 missing-prototypes warnings, minimal remaining warnings
-
-- [ ] **Step 3: Commit**
-
-```bash
 git add drivers/aic8800/aic8800_fdrv/
-git commit -m "fix: add static to remaining missing prototypes"
+git commit -m "fix: add static to internal functions in remaining files"
 ```
 
 ---
@@ -497,10 +507,10 @@ git commit -m "docs: update build review with fixed warnings"
 
 - [ ] All critical issues fixed (uninitialized variables)
 - [ ] All high-priority issues fixed (const qualifiers)
-- [ ] All medium-priority issues fixed (implicit fallthrough)
-- [ ] All low-priority issues addressed (static, unused, conversions)
+- [ ] All medium-priority issues fixed (implicit fallthrough with fallthrough; macro)
+- [ ] All low-priority issues addressed (static/internal vs external with forward declarations, unused, conversions)
 - [ ] Build produces no errors
-- [ ] Warning count significantly reduced (target: 0 warnings)
+- [ ] Missing-prototypes warnings resolved (functions properly marked static or externally visible with declarations)
 - [ ] All changes committed with descriptive messages
 - [ ] Final verification complete
 

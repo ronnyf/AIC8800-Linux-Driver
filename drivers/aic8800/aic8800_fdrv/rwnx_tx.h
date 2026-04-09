@@ -187,16 +187,14 @@ void rwnx_ps_bh_traffic_req(struct rwnx_hw *rwnx_hw, struct rwnx_sta *sta,
                             u16 pkt_req, u8 ps_id);
 
 void rwnx_switch_vif_sta_txq(struct rwnx_sta *sta, struct rwnx_vif *old_vif,
-                             struct rwnx_vif *new_vif);
+                              struct rwnx_vif *new_vif);
 
+struct msg_buf;
 int rwnx_dbgfs_print_sta(char *buf, size_t size, struct rwnx_sta *sta,
                          struct rwnx_hw *rwnx_hw);
+void rwnx_tx_push(struct rwnx_hw *rwnx_hw, struct rwnx_txhdr *txhdr, int flags);
 void rwnx_txq_credit_update(struct rwnx_hw *rwnx_hw, int sta_idx, u8 tid,
                             s8 update);
-void rwnx_tx_push(struct rwnx_hw *rwnx_hw, struct rwnx_txhdr *txhdr, int flags);
-#ifdef CONFIG_BAND_STEERING
-void rwnx_probersp_work(struct work_struct *work);
-#endif
-
+int intf_tx(struct rwnx_hw *priv, struct msg_buf *msg);
 
 #endif /* _RWNX_TX_H_ */
