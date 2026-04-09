@@ -263,7 +263,7 @@ static u8 rwnx_ac_from_wmm(int ac)
 	switch (ac) {
     default:
         WARN_ON_ONCE(1);
-        __attribute__((fallthrough));
+        fallthrough;
     case 0:
 		return AC_BE;
 	case 1:
