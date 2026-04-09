@@ -1377,7 +1377,6 @@ deps_aic8800_fdrv/aicwf_usb.o := \
   aic8800_fdrv/rwnx_tx.h \
     $(wildcard include/config/RWNX_AMSDUS_TX) \
     $(wildcard include/config/RWNX_MON_XMIT) \
-    $(wildcard include/config/BAND_STEERING) \
   /usr/lib/modules/6.19.10-1-cachyos/build/include/linux/ieee80211.h \
   /usr/lib/modules/6.19.10-1-cachyos/build/include/linux/if_ether.h \
   /usr/lib/modules/6.19.10-1-cachyos/build/include/linux/etherdevice.h \
@@ -1706,6 +1705,7 @@ deps_aic8800_fdrv/aicwf_usb.o := \
     $(wildcard include/config/RWNX_SPLIT_TX_BUF) \
   aic8800_fdrv/rwnx_defs.h \
     $(wildcard include/config/FILTER_TCP_ACK) \
+    $(wildcard include/config/BAND_STEERING) \
     $(wildcard include/config/BR_SUPPORT) \
     $(wildcard include/config/RWNX_BFMER) \
     $(wildcard include/config/DYNAMIC_PERPWR) \

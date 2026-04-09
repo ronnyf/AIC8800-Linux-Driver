@@ -17,6 +17,8 @@ int rwnx_cfg80211_init(struct rwnx_plat *rwnx_plat, void **platform_data);
 void rwnx_cfg80211_deinit(struct rwnx_hw *rwnx_hw);
 int rwnx_fill_station_info(struct rwnx_sta *sta, struct rwnx_vif *vif,
 								  struct station_info *sinfo, u8 *phymode, u32 *tx_phyrate, u32 *rx_phyrate);
+int rwnx_cfg80211_set_monitor_channel_(struct wiphy *wiphy, struct net_device *dev,
+                                       struct cfg80211_chan_def *chandef);
 
 extern int testmode;
 extern u8 chip_id;
