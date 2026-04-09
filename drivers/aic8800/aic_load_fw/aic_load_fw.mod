@@ -1,0 +1,10 @@
+aic_load_fw/aic_bluetooth_main.o
+aic_load_fw/aicbluetooth.o
+aic_load_fw/aicwf_usb.o
+aic_load_fw/aic_txrxif.o
+aic_load_fw/aicbluetooth_cmds.o
+aic_load_fw/aic_compat_8800d80.o
+aic_load_fw/aic_compat_8800d80x2.o
+aic_load_fw/md5.o
+aic_load_fw/aicwf_rx_prealloc.o
+aic_load_fw/aicwf_txq_prealloc.o
