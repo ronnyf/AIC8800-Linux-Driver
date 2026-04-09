@@ -292,7 +292,7 @@ ccflags-y += -DNX_TXQ_CNT=4
 endif
 
 # For old kernel (<=3.19)
-ifeq ($(shell test $(VERSION) -lt 4 -a "$(CONFIG_VENDOR_RWNX)" = y ; echo $$?),0)
+ifeq ($(shell if [ "$(VERSION)" -lt 4 ] 2>/dev/null && [ "$(CONFIG_VENDOR_RWNX)" = "y" ]; then echo 0; else echo 1; fi),0)
 ccflags-y += -DCONFIG_VENDOR_RWNX_VHT_NO80
 endif
 

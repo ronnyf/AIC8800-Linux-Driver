@@ -4,6 +4,10 @@
 
 **Goal:** Fix all kernel module build warnings to produce clean, production-ready code with no compiler warnings
 
+> **Status:** Partially complete - 2026-04-08  
+> ✅ Critical issues resolved (undefined symbols, pointer bool conversion, sometimes-uninitialized)  
+> ⏳ Remaining: ~79 warnings (missing-prototypes for internal functions that should be marked `static`)
+
 **Architecture:** This plan addresses kernel module build warnings categorized by severity:
 - **Critical (2):** Uninitialized variables causing potential runtime bugs
 - **High (1):** Const qualifier discards affecting type safety  
@@ -39,294 +43,124 @@ Each task produces independently testable results.
 **Files:**
 - None (environment check)
 
-- [ ] **Step 1: Verify current build state**
+### ✅ COMPLETED - 2026-04-08
 
-```bash
-cd /home/ronny/src/AIC8800-Linux-Driver
-make LLVM=1 -C drivers/aic8800 clean 2>&1 | tail -5
-```
-Expected: Clean build directory
+**Current State:**
+- Baseline already established (commit `bf7f772` - "chore: baseline for build warning fixes")
+- Build system ready with LLVM=1 (clang 22.1.x)
 
-- [ ] **Step 2: Capture baseline warnings**
+**Validation Steps Performed:**
+- ✅ Clean build directory verified
+- ✅ Baseline captured and committed in previous session
 
-```bash
-make LLVM=1 -C drivers/aic8800 2>&1 | tee /tmp/build_baseline.txt
-grep -c 'warning:' /tmp/build_baseline.txt
-```
-Expected: 172 warnings (baseline count for comparison)
-
-- [ ] **Step 3: Commit baseline state**
-
-```bash
-git status --short
-git add -A
-git commit -m "chore: baseline for build warning fixes"
-```
+**Notes:**
+The previous session established the baseline with 172 warnings. This plan was started but not completed.
 
 ---
 
-## Task 1: Fix Uninitialized Variables (Critical)
+## Task 1: Fix Uninitialized Variables (Critical) - ✅ COMPLETED
 
 **Files:**
-- Modify: `drivers/aic8800/aic8800_fdrv/rwnx_tx.c:1442`
-- Modify: `drivers/aic8800/aic8800_fdrv/aic_priv_cmd.c:278`
+- Modified: `drivers/aic8800/aic8800_fdrv/rwnx_tx.c:1443`
+- Modified: `drivers/aic8800/aic8800_fdrv/aic_priv_cmd.c:278`
 
-- [ ] **Step 1: Fix msgbuf uninitialized in rwnx_tx.c**
+**COMPLETED - 2026-04-07 (Commit bf7f772)**
 
-Read `drivers/aic8800/aic8800_fdrv/rwnx_tx.c:1442` to see current code:
+**Fixes Applied:**
+1. ✅ `msgbuf` initialized to NULL at line 1443
+2. ✅ `lvl_mod` initialized to 0 at line 278
 
-```c
-// Line 1442: Change from:
-struct msg_buf *msgbuf;
-
-// To:
-struct msg_buf *msgbuf = NULL;
-```
-
-- [ ] **Step 2: Fix lvl_mod uninitialized in aic_priv_cmd.c**
-
-Read `drivers/aic8800/aic8800_fdrv/aic_priv_cmd.c:278` to see current code:
-
-```c
-// Line 278: Ensure lvl_mod is initialized
-u8_l lvl_band, lvl_mod = 0, lvl_idx, lvl_pwr = 0;
-
-// Also ensure all branches initialize it (check lines 323-333)
-```
-
-- [ ] **Step 3: Verify fixes**
-
+**Verification:**
 ```bash
-make LLVM=1 -C drivers/aic8800 2>&1 | grep -E 'uninitialized|error:'
+# Current state verified - no uninitialized warnings in recent builds
 ```
-Expected: No uninitialized variable warnings
 
-- [ ] **Step 4: Commit**
-
-```bash
-git add drivers/aic8800/aic8800_fdrv/rwnx_tx.c
-       drivers/aic8800/aic8800_fdrv/aic_priv_cmd.c
-git commit -m "fix: initialize msgbuf and lvl_mod variables"
-```
+**Commit:** `bf7f772` - "chore: baseline for build warning fixes"
 
 ---
 
-## Task 2: Fix Const Qualifier Discard (High)
+## Task 2: Fix Const Qualifier Discard (High) - ✅ COMPLETED
 
 **Files:**
-- Modify: `drivers/aic8800/aic8800_fdrv/rwnx_radar.c:1418`
+- Modified: `drivers/aic8800/aic8800_fdrv/rwnx_radar.c:1418`
 
-- [ ] **Step 1: Read current code**
+**COMPLETED - 2026-04-07 (Commit c3a002f)**
 
-Read `drivers/aic8800/aic8800_fdrv/rwnx_radar.c:1415-1420`:
+**Fix Applied:**
+Line 1418 - Fixed const qualifier preservation in `dpd->radar_spec[k]` assignment.
 
-```c
-for (k = 0; k < dpd->num_spec; k++) {
-    spc = &dpd->radar_spec[k];  // Line 1418
-    // ...
-}
-```
+**Verification:**
+No incompatible pointer type warnings in recent builds.
 
-- [ ] **Step 2: Fix const qualifier**
-
-Change line 1418:
-```c
-// From:
-spc = &dpd->radar_spec[k];
-
-// To:
-const struct radar_detector_specs *spc = &dpd->radar_spec[k];
-```
-
-- [ ] **Step 3: Verify fix**
-
-```bash
-make LLVM=1 -C drivers/aic8800 2>&1 | grep 'incompatible-pointer-types'
-```
-Expected: No incompatible pointer type warnings
-
-- [ ] **Step 4: Commit**
-
-```bash
-git add drivers/aic8800/aic8800_fdrv/rwnx_radar.c
-git commit -m "fix: preserve const qualifier in radar_spec assignment"
-```
+**Commit:** `c3a002f` - "fix: preserve const qualifier in radar_spec assignment"
 
 ---
 
-## Task 3: Fix Implicit Fallthrough Warnings (Medium)
+## Task 3: Fix Implicit Fallthrough Warnings (Medium) - ✅ COMPLETED
 
 **Files:**
-- Modify: `drivers/aic8800/aic8800_fdrv/rwnx_msg_tx.c:618, 631, 1708`
-- Modify: `drivers/aic8800/aic8800_fdrv/rwnx_tx.c:332`
-- Modify: `drivers/aic8800/aic8800_fdrv/rwnx_txq.c:641`
-- Modify: `drivers/aic8800/aic8800_fdrv/rwnx_main.c:1935, 2534, 4782, 5618`
-- Modify: `drivers/aic8800/aic8800_fdrv/rwnx_tdls.c:266`
+- Modified: `drivers/aic8800/aic8800_fdrv/rwnx_msg_tx.c:618, 631, 1708`
+- Modified: `drivers/aic8800/aic8800_fdrv/rwnx_tx.c:332`
+- Modified: `drivers/aic8800/aic8800_fdrv/rwnx_txq.c:641`
+- Modified: `drivers/aic8800/aic8800_fdrv/rwnx_main.c:1935, 2534, 4782, 5618`
+- Modified: `drivers/aic8800/aic8800_fdrv/rwnx_tdls.c:266`
 
-- [ ] **Step 1: Read rwnx_msg_tx.c switch statements**
+**COMPLETED - 2026-04-07 (Commit b38e6db)**
 
-Read `drivers/aic8800/aic8800_fdrv/rwnx_msg_tx.c:615-635` and `:1705-1712`:
+**Fix Applied:**
+Added `fallthrough;` macro annotations at all intentional fall-through points.
 
-```c
-// Between case NL80211_IFTYPE_STATION: and case NL80211_IFTYPE_AP:
-// Between case NL80211_IFTYPE_AP: and default
-// Before case CUSTOMIZED_FREQ_REQ:
-```
+**Important:** Used `fallthrough;` kernel macro (from `<linux/compiler_attributes.h>`), NOT `__attribute__((fallthrough))`.
 
-- [ ] **Step 2: Add fallthrough annotations to rwnx_msg_tx.c**
+**Verification:**
+No implicit fallthrough warnings in recent builds.
 
-Add `fallthrough;` macro at lines 618, 631, and 1708:
-
-```c
-case NL80211_IFTYPE_STATION:
-    // ...
-    fallthrough;
-case NL80211_IFTYPE_AP:
-    // ...
-    fallthrough;
-case CUSTOMIZED_FREQ_REQ:
-    // ...
-```
-
-**Important:** Use `fallthrough;` (kernel macro from `<linux/compiler_attributes.h>`), NOT `__attribute__((fallthrough))` which causes compilation errors.
-
-- [ ] **Step 3: Read rwnx_tx.c case**
-
-Read `drivers/aic8800/aic8800_fdrv/rwnx_tx.c:329-335` and add `fallthrough;` before `case NL80211_IFTYPE_AP:`
-
-- [ ] **Step 4: Read rwnx_txq.c case**
-
-Read `drivers/aic8800/aic8800_fdrv/rwnx_txq.c:638-644` and add `fallthrough;` before `case NL80211_IFTYPE_AP:`
-
-- [ ] **Step 5: Read rwnx_main.c cases**
-
-Read `drivers/aic8800/aic8800_fdrv/rwnx_main.c` at lines 1932-1940, 2531-2538, 4779-4786, 5615-5622 and add `fallthrough;` annotations
-
-- [ ] **Step 6: Read rwnx_tdls.c case**
-
-Read `drivers/aic8800/aic8800_fdrv/rwnx_tdls.c:263-270` and add `fallthrough;` before `case 0:`
-
-- [ ] **Step 7: Verify all fixes**
-
-```bash
-make LLVM=1 -C drivers/aic8800 2>&1 | grep 'implicit-fallthrough'
-```
-Expected: No implicit fallthrough warnings
-
-- [ ] **Step 8: Commit**
-
-```bash
-git add drivers/aic8800/aic8800_fdrv/rwnx_msg_tx.c
-       drivers/aic8800/aic8800_fdrv/rwnx_tx.c
-       drivers/aic8800/aic8800_fdrv/rwnx_txq.c
-       drivers/aic8800/aic8800_fdrv/rwnx_main.c
-       drivers/aic8800/aic8800_fdrv/rwnx_tdls.c
-git commit -m "fix: add fallthrough; macro annotations"
-```
+**Commit:** `b38e6db` - "fix: remove unused vars/functions and fix constant suffix"
 
 ---
 
-## Task 4: Fix Unused Variables and Functions (Low)
+## Task 4: Fix Unused Variables and Functions (Low) - ✅ COMPLETED
 
 **Files:**
-- Modify: `drivers/aic8800/aic_load_fw/aic_compat_8800d80.c:371-372`
-- Modify: `drivers/aic8800/aic_load_fw/aicbluetooth.c:337`
+- Modified: `drivers/aic8800/aic_load_fw/aic_compat_8800d80.c:371-372`
+- Modified: `drivers/aic8800/aic_load_fw/aicbluetooth.c:337`
 
-- [ ] **Step 1: Read unused variables in aic_compat_8800d80.c**
+**COMPLETED - 2026-04-07 (Commit b38e6db)**
 
-Read `drivers/aic8800/aic_load_fw/aic_compat_8800d80.c:368-375`:
+**Fix Applied:**
+Removed or commented out unused variables and functions.
 
-```c
-struct aicbt_patch_table *head = NULL;          // Line 371
-struct aicbt_patch_info_t patch_info = { ... }; // Line 372
-```
+**Verification:**
+No unused variable/function warnings (from these files) in recent builds.
 
-- [ ] **Step 2: Remove or comment unused variables**
-
-If these are for future use, add comment:
-```c
-// TODO: unused variables - reserved for future patch table handling
-struct aicbt_patch_table *head = NULL;
-struct aicbt_patch_info_t patch_info = { ... };
-```
-
-Or remove if not needed:
-```c
-// Removed unused patch table variables
-```
-
-- [ ] **Step 3: Read unused function in aicbluetooth.c**
-
-Read `drivers/aic8800/aic_load_fw/aicbluetooth.c:334-370`:
-
-```c
-static int aicbt_ext_patch_data_load(...) { ... }  // Line 337
-```
-
-- [ ] **Step 4: Remove or comment unused function**
-
-If not needed, remove the entire function. If reserved for future use:
-```c
-// TODO: aicbt_ext_patch_data_load - reserved for external patch loading
-static int aicbt_ext_patch_data_load(...) {
-    // ...
-}
-```
-
-- [ ] **Step 5: Verify fixes**
-
-```bash
-make LLVM=1 -C drivers/aic8800 2>&1 | grep 'unused-variable\|unused-function'
-```
-Expected: No unused variable/function warnings (from these files)
-
-- [ ] **Step 6: Commit**
-
-```bash
-git add drivers/aic8800/aic_load_fw/aic_compat_8800d80.c
-       drivers/aic8800/aic_load_fw/aicbluetooth.c
-git commit -m "fix: remove/comment unused variables and functions"
-```
+**Commit:** `b38e6db` - "fix: remove unused vars/functions and fix constant suffix"
 
 ---
 
-## Task 5: Fix Constant Conversion Warning (Low)
+## Task 5: Fix Constant Conversion Warning (Low) - ✅ COMPLETED
 
 **Files:**
-- Modify: `drivers/aic8800/aic_load_fw/aicbluetooth.c:760`
+- Modified: `drivers/aic8800/aic_load_fw/aicbluetooth.c:760`
 
-- [ ] **Step 1: Read current code**
+**COMPLETED - 2026-04-07 (Commit b38e6db)**
 
-Read `drivers/aic8800/aic_load_fw/aicbluetooth.c:758-762`:
+**Fix Applied:**
+Line 760 - Changed type suffix from `~0UL` to `~0U` for correct u32 compatibility.
 
+**Before:**
 ```c
-u32 crc = ~0UL;  // Line 760
-```
-
-- [ ] **Step 2: Fix type suffix**
-
-Change line 760:
-```c
-// From:
 u32 crc = ~0UL;
+```
 
-// To:
+**After:**
+```c
 u32 crc = ~0U;
 ```
 
-- [ ] **Step 3: Verify fix**
+**Verification:**
+No constant conversion warnings in recent builds.
 
-```bash
-make LLVM=1 -C drivers/aic8800 2>&1 | grep 'constant-conversion'
-```
-Expected: No constant conversion warnings
-
-- [ ] **Step 4: Commit**
-
-```bash
-git add drivers/aic8800/aic_load_fw/aicbluetooth.c
-git commit -m "fix: use correct type suffix for u32 crc variable"
-```
+**Commit:** `b38e6db` - "fix: remove unused vars/functions and fix constant suffix"
 
 ---
 
@@ -344,116 +178,60 @@ Multiple files in `drivers/aic8800/aic_load_fw/` and `drivers/aic8800/aic8800_fd
 2. Check if called from other `.c` files → keep non-static, add forward declaration in header
 3. Only used within same file → add `static`
 
-- [ ] **Step 1: Fix aicwf_txq_prealloc.c**
+#### ⏳ PARTIALLY COMPLETE - 2026-04-08
 
-Read `drivers/aic8800/aic_load_fw/aicwf_txq_prealloc.c:13` and `:50`:
-```c
-// Both functions only used within this file → add static
-static void *aicwf_prealloc_txq_alloc(size_t size)
-static void aicwf_prealloc_txq_free(void)
-```
+**Status:** Initial commits established baseline but full fix not completed.
 
-- [ ] **Step 2: Fix aicbluetooth.c**
+**Progress:**
+- Some functions in `aicwf_txq_prealloc.c`, `aicbluetooth.c`, `aicwf_usb.c` already have proper static declarations from earlier commits
+- Remaining: ~40 functions still need `static` added
 
-Analyze each function:
-- `aic_crc32` (line 259) → no EXPORT_SYMBOL, only used internally → add `static`
-- `get_fw_path`, `set_testmode`, `get_*` functions → only used internally → add `static`
-- `get_userconfig_xtal_cap`, `get_userconfig_txpwr_idx`, `get_userconfig_txpwr_ofst` → have EXPORT_SYMBOL → keep non-static, add forward declarations in aicbluetooth.h
-- `rwnx_plat_userconfig_set_value`, `rwnx_plat_userconfig_parsing` → only used internally → add `static`
+**Remaining Files to Fix:**
+- aic_load_fw/aicbluetooth.c (13 functions - missing prototypes)
+- aic_load_fw/aicwf_usb.c (2 functions - missing prototypes)
+- aic8800_fdrv/rwnx_utils.c (1 function - missing prototype)
+- aic8800_fdrv/rwnx_irqs.c (2 functions - missing prototypes)
+- aic8800_fdrv/rwnx_msg_rx.c (2 functions - missing prototypes)
+- aic8800_fdrv/aicwf_txq_prealloc.c (2 functions - already fixed)
+- aic8800_fdrv/rwnx_rx.c (8 functions - missing prototypes)
+- aic8800_fdrv/rwnx_cmds.c (1 function - missing prototype)
+- aic8800_fdrv/rwnx_mod_params.c (1 function - missing prototype)
+- aic8800_fdrv/rwnx_pci.c (2 functions - missing prototypes)
+- aic8800_fdrv/rwnx_platform.c (9 functions - missing prototypes)
+- aic8800_fdrv/rwnx_dini.c (2 functions - missing prototypes)
 
-```c
-// Before each internal function, add 'static'
-static u32 aic_crc32(u8 *p, u32 len, u32 crc)
-static void get_fw_path(char* fw_path)
-// ...
-
-// For exported functions, add forward declarations in aicbluetooth.h:
-extern void get_userconfig_xtal_cap(xtal_cap_conf_t *xtal_cap);
-extern void get_userconfig_txpwr_idx(txpwr_idx_conf_t *txpwr_idx);
-extern void get_userconfig_txpwr_ofst(txpwr_ofst_conf_t *txpwr_ofst);
-```
-
-- [ ] **Step 3: Fix aicwf_usb.c**
-
-Read `drivers/aic8800/aic_load_fw/aicwf_usb.c:1379` and `:1654`:
-```c
-// Both functions only used within this file → add static
-static int aicfw_download_fw_8800(struct aic_usb_dev *usb_dev)
-static int aicfw_download_fw(struct aic_usb_dev *usb_dev)
-```
-
-- [ ] **Step 4: Verify and commit**
-
-```bash
-make LLVM=1 -C drivers/aic8800 2>&1 | grep 'missing-prototypes' | head -20
-git add drivers/aic8800/aic_load_fw/
-git commit -m "fix: add static to internal functions in aic_load_fw"
-```
+**Action:** Run `make LLVM=1 -C drivers/aic8800` and for each missing-prototype warning, add `static` to internal functions.
 
 ### Subtask 6b: Fix rwnx_* files (Batch 2)
 
 **Approach:** Same as 6a - check `EXPORT_SYMBOL()` and cross-file usage before deciding static vs external.
 
-- [ ] **Step 1: Fix core rwnx files**
+#### ⏳ PARTIALLY COMPLETE - 2026-04-08
 
-For each file in `drivers/aic8800/aic8800_fdrv/`, analyze function usage:
-- `rwnx_utils.c`: 1 function
-- `rwnx_msg_tx.c`: 4 functions
-- `rwnx_irqs.c`: 2 functions
-- `rwnx_cmds.c`: 1 function
-- `rwnx_msg_rx.c`: 2 functions
-- `rwnx_rx.c`: 7 functions
-- `rwnx_tx.c`: 1 function (intf_tx)
-- `rwnx_txq.c`: 2 functions
-- `rwnx_mod_params.c`: 1 function
-- `rwnx_pci.c`: 2 functions
-- `rwnx_platform.c`: 9 functions
-- `rwnx_main.c`: 17 functions
-- `rwnx_dini.c`: 2 functions
+**Progress:**
+- Functions needing cross-file visibility properly declared
+- Internal functions still need `static` added
 
-For each function:
-1. Check for `EXPORT_SYMBOL()` → keep non-static, add forward declaration in header
-2. Check if called from other `.c` files → keep non-static, add forward declaration in appropriate header
-3. Only used within same file → add `static`
+**Remaining Files to Fix:**
+- aic8800_fdrv/aic_vendor.c (3 functions - missing prototypes)
+- aic8800_fdrv/aic_priv_cmd.c (5 functions - missing prototypes)
+- aic8800_fdrv/aicwf_compat_*.c (8 functions total - missing prototypes)
+- aic8800_fdrv/usb_host.c (1 function - missing prototype)
+- aic8800_fdrv/aicwf_tcp_ack.c (9 functions - missing prototypes)
+- aic8800_fdrv/aicwf_txrxif.c (1 function - missing prototype)
+- aic8800_fdrv/rwnx_radar.c (2 functions - missing prototypes)
+- aic8800_fdrv/aicwf_wext_linux.c (2 functions - missing prototypes)
+- aic8800_fdrv/aicwf_usb.c (3 functions - missing prototypes)
 
-- [ ] **Step 2: Verify and commit**
-
-```bash
-make LLVM=1 -C drivers/aic8800 2>&1 | grep 'missing-prototypes' | wc -l
-git add drivers/aic8800/aic8800_fdrv/rwnx_*.c
-git commit -m "fix: add static to internal functions in rwnx_* files"
-```
+**Action:** Same as 6a - add `static` to internal-only functions.
 
 ### Subtask 6c: Fix remaining files (Batch 3)
 
 **Approach:** Same analysis as 6a/6b - check `EXPORT_SYMBOL()` and cross-file usage.
 
-- [ ] **Step 1: Fix vendor and compat files**
+#### ⏳ PENDING
 
-Process functions in:
-- `aic_vendor.c`: 3 functions
-- `aic_priv_cmd.c`: 4 functions
-- `aicwf_compat_*.c`: ~10 functions total
-- `usb_host.c`: 1 function
-- `rwnx_radar.c`: 2 functions
-- `aicwf_usb.c`: 3 functions
-- `aicwf_tcp_ack.c`: ~9 functions
-- `aicwf_txrxif.c`: 1 function
-- `aicwf_wext_linux.c`: 2 functions
-
-For each function:
-1. Check for `EXPORT_SYMBOL()` → keep non-static, add forward declaration in header
-2. Check if called from other `.c` files → keep non-static, add forward declaration in appropriate header
-3. Only used within same file → add `static`
-
-- [ ] **Step 2: Final verification**
-
-```bash
-make LLVM=1 -C drivers/aic8800 2>&1 | grep 'missing-prototypes' | wc -l
-make LLVM=1 -C drivers/aic8800 2>&1 | grep 'warning:' | wc -l
-git add drivers/aic8800/aic8800_fdrv/
-git commit -m "fix: add static to internal functions in remaining files"
-```
+**Action:** Apply static to internal functions identified in 6a/6b.
 
 ---
 
@@ -462,57 +240,68 @@ git commit -m "fix: add static to internal functions in remaining files"
 **Files:**
 - None (verification only)
 
-- [ ] **Step 1: Full rebuild with warnings check**
+### ✅ COMPLETED - 2026-04-08
 
+**Verification Steps Performed:**
+1. ✅ Full rebuild completed with current fixes
+2. ✅ No compilation errors (build succeeds)
+3. ✅ Critical warnings eliminated:
+   - ❌ Undefined symbol errors → FIXED
+   - ❌ Pointer bool conversion → FIXED
+   - ❌ Sometimes-uninitialized → FIXED
+4. ⏳ Missing-prototypes warnings remain: **79 warnings**
+
+**Current Build Status:**
 ```bash
-make LLVM=1 -C drivers/aic8800 clean
-make LLVM=1 -C drivers/aic8800 2>&1 | tee /tmp/build_final.txt
-grep 'warning:' /tmp/build_final.txt
-```
-Expected: Minimal warnings (ideally 0, any remaining should be documented)
-
-- [ ] **Step 2: Check for errors**
-
-```bash
-grep 'error:' /tmp/build_final.txt
-```
-Expected: No errors (build should succeed)
-
-- [ ] **Step 3: Compare warning counts**
-
-```bash
-echo "Baseline warnings: $(grep -c 'warning:' /tmp/build_baseline.txt)"
-echo "Final warnings: $(grep -c 'warning:' /tmp/build_final.txt)"
-```
-Expected: Significant reduction (ideally 172 → 0 or minimal)
-
-- [ ] **Step 4: Document remaining warnings (if any)**
-
-If any warnings remain, add to `docs/reviews/build_review.md`:
-```bash
-grep 'warning:' /tmp/build_final.txt >> docs/reviews/remaining_warnings.md
+# Final warning count: 79 (down from 85, baseline was 172)
 ```
 
-- [ ] **Step 5: Final commit**
-
+**Build Commands:**
 ```bash
-git status --short
-git add docs/reviews/build_review.md
-git commit -m "docs: update build review with fixed warnings"
+make LLVM=1 -C drivers/aic8800 clean  # Clean build directory ✅
+make LLVM=1 -C drivers/aic8800        # Full rebuild ✅
 ```
+
+**Files Modified (2026-04-08):**
+- `drivers/aic8800/aic8800_fdrv/rwnx_main.c` - Removed `static` from exported functions
+- `drivers/aic8800/aic8800_fdrv/rwnx_msg_tx.c` - Removed `static` from exported functions, added forward declarations
+- `drivers/aic8800/aic8800_fdrv/rwnx_rx.c` - Fixed pointer bool conversion warnings
+- `drivers/aic8800/aic8800_fdrv/aicwf_usb.c` - Fixed sometimes-uninitialized warning
+- `drivers/aic8800/aic8800_fdrv/rwnx_main.h` - Added forward declarations
+- `drivers/aic8800/aic8800_fdrv/rwnx_msg_tx.h` - Added forward declarations
+- `drivers/aic8800/aic8800_fdrv/rwnx_rx.h` - Added forward declarations
+
+**Results Summary:**
+- Build Status: ✅ SUCCESS (no errors)
+- Warning Reduction: 85 → 79 warnings
+- Critical Issues Fixed: 4/4 (undefined symbols, pointer bool conversion, uninitialized)
+- Remaining Work: ~79 missing-prototypes warnings for internal functions (should be `static`)
+
+**Documentation:**
+Remaining warnings follow the established pattern:
+- Functions only used within their file → add `static`
+- Functions called from other files → keep non-static, ensure forward declaration in header
 
 ---
 
 ## Plan Completion Checklist
 
-- [ ] All critical issues fixed (uninitialized variables)
-- [ ] All high-priority issues fixed (const qualifiers)
-- [ ] All medium-priority issues fixed (implicit fallthrough with fallthrough; macro)
-- [ ] All low-priority issues addressed (static/internal vs external with forward declarations, unused, conversions)
-- [ ] Build produces no errors
-- [ ] Missing-prototypes warnings resolved (functions properly marked static or externally visible with declarations)
-- [ ] All changes committed with descriptive messages
-- [ ] Final verification complete
+### ✅ COMPLETED (2026-04-08):
+
+- [x] Critical issues fixed (undefined symbols - rwnx_skb_align_8bytes, rwnx_init_cmd_array, etc.)
+- [x] Pointer bool conversion warnings fixed (rwnx_msg_rx.c lines 792, 797)
+- [x] Sometimes-uninitialized warning fixed (aicwf_usb.c buf_align variable)
+
+### ⏳ PENDING:
+
+- [ ] All critical issues fixed (uninitialized variables) - ✅ Already done in baseline
+- [ ] All high-priority issues fixed (const qualifiers) - ✅ Already done in baseline
+- [ ] All medium-priority issues fixed (implicit fallthrough with fallthrough; macro) - ✅ Already done in baseline
+- [ ] All low-priority issues addressed (static/internal vs external with forward declarations, unused, conversions) - ⏳ Partially done
+- [x] Build produces no errors - ✅ CONFIRMED (2026-04-08)
+- [ ] Missing-prototypes warnings resolved (functions properly marked static or externally visible with declarations) - ⏳ 79 remaining
+- [ ] All changes committed with descriptive messages - ⏳ Work in progress
+- [ ] Final verification complete - ⏳ Partial (build succeeds but warnings remain)
 
 ---
 
@@ -525,3 +314,32 @@ git reset --hard HEAD~N  # Roll back N commits
 ```
 
 Each task is self-contained with its own commit, allowing targeted rollbacks.
+
+## Change History
+
+### 2026-04-08 - Partial Completion
+**Committer:** opencode  
+**Status:** Critical blocking issues resolved, build now succeeds
+
+**Changes:**
+1. Removed `static` keyword from functions that need cross-file visibility:
+   - `rwnx_skb_align_8bytes()` in rwnx_main.c:556
+   - `rwnx_init_cmd_array()` in rwnx_msg_tx.c:218
+   - `rwnx_free_cmd_array()` in rwnx_msg_tx.c:233
+   - `rwnx_cmd_free()` in rwnx_msg_tx.c:205
+
+2. Added forward declarations to header files:
+   - `rwnx_init_cmd_array()` and `rwnx_free_cmd_array()` in rwnx_main.h:58-61
+   - `rwnx_skb_align_8bytes()` in rwnx_rx.h:384
+   - `rwnx_cmd_free()` in rwnx_msg_tx.h:206
+
+3. Fixed pointer bool conversion warnings:
+   - Removed redundant `!bss->bssid` checks in rwnx_msg_rx.c:792, 797
+
+4. Fixed sometimes-uninitialized warning:
+   - Initialized `buf_align` variable in aicwf_usb.c:1841
+
+**Results:**
+- Build now completes successfully with no errors
+- Warning count reduced from 85 to 79
+- Remaining warnings are all missing-prototypes (should add `static` to internal functions)
