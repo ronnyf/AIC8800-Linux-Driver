@@ -1,0 +1,644 @@
+make: Entering directory '/home/ronny/src/AIC8800-Linux-Driver/drivers/aic8800'
+make -C /lib/modules/6.19.12-1-cachyos/build M=/home/ronny/src/AIC8800-Linux-Driver/drivers/aic8800 ARCH=x86_64 CROSS_COMPILE= modules
+make[1]: Entering directory '/usr/lib/modules/6.19.12-1-cachyos/build'
+make[2]: Entering directory '/home/ronny/src/AIC8800-Linux-Driver/drivers/aic8800'
+  CC [M]  aic8800_fdrv/rwnx_wakelock.o
+  CC [M]  aic8800_fdrv/rwnx_msg_tx.o
+  CC [M]  aic_load_fw/aic_bluetooth_main.o
+  CC [M]  aic8800_fdrv/rwnx_msg_rx.o
+  CC [M]  aic_load_fw/aicbluetooth.o
+  CC [M]  aic_load_fw/aicwf_usb.o
+  CC [M]  aic8800_fdrv/rwnx_utils.o
+  CC [M]  aic_load_fw/aic_txrxif.o
+  CC [M]  aic8800_fdrv/rwnx_cmds.o
+  CC [M]  aic_load_fw/aicbluetooth_cmds.o
+  CC [M]  aic8800_fdrv/rwnx_irqs.o
+  CC [M]  aic_load_fw/aic_compat_8800d80.o
+  CC [M]  aic8800_fdrv/rwnx_cfgfile.o
+  CC [M]  aic_load_fw/aic_compat_8800d80x2.o
+  CC [M]  aic8800_fdrv/rwnx_strs.o
+  CC [M]  aic_load_fw/md5.o
+  CC [M]  aic8800_fdrv/rwnx_rx.o
+  CC [M]  aic8800_fdrv/rwnx_tx.o
+aic_load_fw/aicbluetooth.c:259:5: warning: no previous prototype for function 'aic_crc32' [-Wmissing-prototypes]
+  259 | u32 aic_crc32(u8 *p, u32 len, u32 crc)
+      |     ^
+aic_load_fw/aicbluetooth.c:259:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  259 | u32 aic_crc32(u8 *p, u32 len, u32 crc)
+      | ^
+      | static 
+aic_load_fw/aicbluetooth.c:900:6: warning: no previous prototype for function 'get_fw_path' [-Wmissing-prototypes]
+  900 | void get_fw_path(char* fw_path){
+      |      ^
+aic_load_fw/aicbluetooth.c:900:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  900 | void get_fw_path(char* fw_path){
+      | ^
+      | static 
+aic_load_fw/aicbluetooth.c:908:6: warning: no previous prototype for function 'set_testmode' [-Wmissing-prototypes]
+  908 | void set_testmode(int val){
+      |      ^
+aic_load_fw/aicbluetooth.c:908:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  908 | void set_testmode(int val){
+      | ^
+      | static 
+aic_load_fw/aicbluetooth.c:912:5: warning: no previous prototype for function 'get_testmode' [-Wmissing-prototypes]
+  912 | int get_testmode(void){
+      |     ^
+aic_load_fw/aicbluetooth.c:912:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  912 | int get_testmode(void){
+      | ^
+      | static 
+aic_load_fw/aicbluetooth.c:916:5: warning: no previous prototype for function 'get_hardware_info' [-Wmissing-prototypes]
+  916 | int get_hardware_info(void){
+      |     ^
+aic_load_fw/aicbluetooth.c:916:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  916 | int get_hardware_info(void){
+      | ^
+      | static 
+aic_load_fw/aicbluetooth.c:921:5: warning: no previous prototype for function 'get_adap_test' [-Wmissing-prototypes]
+  921 | int get_adap_test(void){
+      |     ^
+aic_load_fw/aicbluetooth.c:921:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  921 | int get_adap_test(void){
+      | ^
+      | static 
+aic_load_fw/aicbluetooth.c:925:5: warning: no previous prototype for function 'get_flash_bin_size' [-Wmissing-prototypes]
+  925 | int get_flash_bin_size(void)
+      |     ^
+aic_load_fw/aicbluetooth.c:925:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  925 | int get_flash_bin_size(void)
+      | ^
+      | static 
+aic_load_fw/aicbluetooth.c:930:5: warning: no previous prototype for function 'get_flash_bin_crc' [-Wmissing-prototypes]
+  930 | u32 get_flash_bin_crc(void)
+      |     ^
+aic_load_fw/aicbluetooth.c:930:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  930 | u32 get_flash_bin_crc(void)
+      | ^
+      | static 
+aic_load_fw/aicbluetooth.c:949:6: warning: no previous prototype for function 'get_userconfig_xtal_cap' [-Wmissing-prototypes]
+  949 | void get_userconfig_xtal_cap(xtal_cap_conf_t *xtal_cap)
+      |      ^
+aic_load_fw/aicbluetooth.c:949:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  949 | void get_userconfig_xtal_cap(xtal_cap_conf_t *xtal_cap)
+      | ^
+      | static 
+aic_load_fw/aicbluetooth.c:962:6: warning: no previous prototype for function 'get_userconfig_txpwr_idx' [-Wmissing-prototypes]
+  962 | void get_userconfig_txpwr_idx(txpwr_idx_conf_t *txpwr_idx){
+      |      ^
+aic_load_fw/aicbluetooth.c:962:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  962 | void get_userconfig_txpwr_idx(txpwr_idx_conf_t *txpwr_idx){
+      | ^
+      | static 
+aic_load_fw/aicbluetooth.c:989:6: warning: no previous prototype for function 'get_userconfig_txpwr_ofst' [-Wmissing-prototypes]
+  989 | void get_userconfig_txpwr_ofst(txpwr_ofst_conf_t *txpwr_ofst){
+      |      ^
+aic_load_fw/aicbluetooth.c:989:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  989 | void get_userconfig_txpwr_ofst(txpwr_ofst_conf_t *txpwr_ofst){
+      | ^
+      | static 
+aic_load_fw/aicbluetooth.c:1012:6: warning: no previous prototype for function 'rwnx_plat_userconfig_set_value' [-Wmissing-prototypes]
+ 1012 | void rwnx_plat_userconfig_set_value(char *command, char *value){        
+      |      ^
+aic_load_fw/aicbluetooth.c:1012:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 1012 | void rwnx_plat_userconfig_set_value(char *command, char *value){        
+      | ^
+      | static 
+aic_load_fw/aicbluetooth.c:1060:6: warning: no previous prototype for function 'rwnx_plat_userconfig_parsing' [-Wmissing-prototypes]
+ 1060 | void rwnx_plat_userconfig_parsing(char *buffer, int size){
+      |      ^
+aic_load_fw/aicbluetooth.c:1060:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 1060 | void rwnx_plat_userconfig_parsing(char *buffer, int size){
+      | ^
+      | static 
+aic_load_fw/aicwf_usb.c:1379:5: warning: no previous prototype for function 'aicfw_download_fw_8800' [-Wmissing-prototypes]
+ 1379 | int aicfw_download_fw_8800(struct aic_usb_dev *usb_dev){
+      |     ^
+aic_load_fw/aicwf_usb.c:1379:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 1379 | int aicfw_download_fw_8800(struct aic_usb_dev *usb_dev){
+      | ^
+      | static 
+aic_load_fw/aicwf_usb.c:1654:5: warning: no previous prototype for function 'aicfw_download_fw' [-Wmissing-prototypes]
+ 1654 | int aicfw_download_fw(struct aic_usb_dev *usb_dev)
+      |     ^
+aic_load_fw/aicwf_usb.c:1654:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 1654 | int aicfw_download_fw(struct aic_usb_dev *usb_dev)
+      | ^
+      | static 
+  CC [M]  aic_load_fw/aicwf_rx_prealloc.o
+  CC [M]  aic_load_fw/aicwf_txq_prealloc.o
+13 warnings generated.
+  CC [M]  aic8800_fdrv/rwnx_txq.o
+  CC [M]  aic8800_fdrv/rwnx_main.o
+2 warnings generated.
+  CC [M]  aic8800_fdrv/rwnx_mod_params.o
+  CC [M]  aic8800_fdrv/rwnx_mesh.o
+  CC [M]  aic8800_fdrv/rwnx_platform.o
+aic8800_fdrv/rwnx_irqs.c:21:13: warning: no previous prototype for function 'rwnx_irq_hdlr' [-Wmissing-prototypes]
+   21 | irqreturn_t rwnx_irq_hdlr(int irq, void *dev_id)
+      |             ^
+aic8800_fdrv/rwnx_irqs.c:21:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   21 | irqreturn_t rwnx_irq_hdlr(int irq, void *dev_id)
+      | ^
+      | static 
+aic8800_fdrv/rwnx_irqs.c:34:6: warning: no previous prototype for function 'rwnx_task' [-Wmissing-prototypes]
+   34 | void rwnx_task(unsigned long data)
+      |      ^
+aic8800_fdrv/rwnx_irqs.c:34:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   34 | void rwnx_task(unsigned long data)
+      | ^
+      | static 
+aic8800_fdrv/rwnx_utils.c:23:5: warning: no previous prototype for function 'rwnx_init_aic' [-Wmissing-prototypes]
+   23 | int rwnx_init_aic(struct rwnx_hw *rwnx_hw)
+      |     ^
+aic8800_fdrv/rwnx_utils.c:23:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   23 | int rwnx_init_aic(struct rwnx_hw *rwnx_hw)
+      | ^
+      | static 
+2 warnings generated.
+  CC [M]  aic8800_fdrv/rwnx_pci.o
+  CC [M]  aic8800_fdrv/rwnx_dini.o
+1 warning generated.
+  CC [M]  aic8800_fdrv/rwnx_v7.o
+  CC [M]  aic8800_fdrv/ipc_host.o
+aic8800_fdrv/rwnx_cmds.c:345:6: warning: no previous prototype for function 'cmd_mgr_task_process' [-Wmissing-prototypes]
+  345 | void cmd_mgr_task_process(struct work_struct *work)
+      |      ^
+aic8800_fdrv/rwnx_cmds.c:345:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  345 | void cmd_mgr_task_process(struct work_struct *work)
+      | ^
+      | static 
+aic8800_fdrv/rwnx_msg_rx.c:792:21: warning: address of array 'bss->bssid' will always evaluate to 'true' [-Wpointer-bool-conversion]
+  792 |                 if (!bss || !bss->bssid) {
+      |                             ~~~~~~^~~~~
+aic8800_fdrv/rwnx_msg_rx.c:797:67: warning: address of array 'scan_re_wext->bss->bssid' will always evaluate to 'true' [-Wpointer-bool-conversion]
+  797 |                         if (!scan_re_wext || !scan_re_wext->bss || !scan_re_wext->bss->bssid) {
+      |                                                                    ~~~~~~~~~~~~~~~~~~~~^~~~~
+aic_load_fw/aicwf_txq_prealloc.c:13:7: warning: no previous prototype for function 'aicwf_prealloc_txq_alloc' [-Wmissing-prototypes]
+   13 | void *aicwf_prealloc_txq_alloc(size_t size)
+      |       ^
+aic_load_fw/aicwf_txq_prealloc.c:13:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   13 | void *aicwf_prealloc_txq_alloc(size_t size)
+      | ^
+      | static 
+aic_load_fw/aicwf_txq_prealloc.c:50:6: warning: no previous prototype for function 'aicwf_prealloc_txq_free' [-Wmissing-prototypes]
+   50 | void aicwf_prealloc_txq_free(void)
+      |      ^
+aic_load_fw/aicwf_txq_prealloc.c:50:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   50 | void aicwf_prealloc_txq_free(void)
+      aic8800_fdrv/rwnx_rx.c:345:6: warning: no previous prototype for function 'rwnx_rx_data_skb_resend' [-Wmissing-prototypes]
+|   ^
+      | static 
+345 | void rwnx_rx_data_skb_resend(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwnx_vif, struct sk_buff *skb)
+      |      ^
+aic8800_fdrv/rwnx_rx.c:345:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  345 | void rwnx_rx_data_skb_resend(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwnx_vif, struct sk_buff *skb)
+      | ^
+      | static 
+2 warnings generated.
+  CC [M]  aic8800_fdrv/rwnx_tdls.o
+aic8800_fdrv/rwnx_msg_rx.c:1661:6: warning: no previous prototype for function 'rwnx_rx_handle_msg' [-Wmissing-prototypes]
+ 1661 | void rwnx_rx_handle_msg(struct rwnx_hw *rwnx_hw, struct ipc_e2a_msg *msg)
+      |      ^
+aic8800_fdrv/rwnx_msg_rx.c:1661:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 1661 | void rwnx_rx_handle_msg(struct rwnx_hw *rwnx_hw, struct ipc_e2a_msg *msg)
+      | ^
+      | static 
+aic8800_fdrv/rwnx_msg_rx.c:1673:6: warning: no previous prototype for function 'rwnx_rx_handle_print' [-Wmissing-prototypes]
+ 1673 | void rwnx_rx_handle_print(struct rwnx_hw *rwnx_hw, u8 *msg, u32 len)
+      |      ^
+aic8800_fdrv/rwnx_msg_rx.c:1673:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 1673 | void rwnx_rx_handle_print(struct rwnx_hw *rwnx_hw, u8 *msg, u32 len)
+      | ^
+      | static 
+aic8800_fdrv/rwnx_rx.c:1534:5: warning: no previous prototype for function 'reord_flush_tid' [-Wmissing-prototypes]
+ 1534 | int reord_flush_tid(struct aicwf_rx_priv *rx_priv, struct sk_buff *skb, u8 tid)
+      |     ^
+aic8800_fdrv/rwnx_rx.c:1534:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 1534 | int reord_flush_tid(struct aicwf_rx_priv *rx_priv, struct sk_buff *skb, u8 tid)
+      | ^
+      | static 
+1 warning generated.
+aic8800_fdrv/rwnx_rx.c:1786:6: warning: no previous prototype for function 'reord_rxframes_process' [-Wmissing-prototypes]
+ 1786 | bool reord_rxframes_process(struct aicwf_rx_priv *rx_priv, struct reord_ctrl *preorder_ctrl, int bforced)
+      |      ^
+aic8800_fdrv/rwnx_rx.c:1786:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 1786 | bool reord_rxframes_process(struct aicwf_rx_priv *rx_priv, struct reord_ctrl *preorder_ctrl, int bforced)
+      | ^
+      | static 
+aic8800_fdrv/rwnx_rx.c:1822:6: warning: no previous prototype for function 'reord_rxframes_ind' [-Wmissing-prototypes]
+ 1822 | void reord_rxframes_ind(struct aicwf_rx_priv *rx_priv,
+      |      ^
+aic8800_fdrv/rwnx_rx.c:1822:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 1822 | void reord_rxframes_ind(struct aicwf_rx_priv *rx_priv,
+      | ^
+      | static 
+aic8800_fdrv/rwnx_rx.c:1906:5: warning: no previous prototype for function 'reord_process_unit' [-Wmissing-prototypes]
+ 1906 | int reord_process_unit(struct recv_msdu *pframe, struct aicwf_rx_priv *rx_priv, struct sk_buff *skb, u16 seq_num, u8 tid, u8 forward, u8 is_amsdu)
+      |     ^
+aic8800_fdrv/rwnx_rx.c:1906:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 1906 | int reord_process_unit(struct recv_msdu *pframe, struct aicwf_rx_priv *rx_priv, struct sk_buff *skb, u16 seq_num, u8 tid, u8 forward, u8 is_amsdu)
+      | ^
+      | static 
+aic8800_fdrv/rwnx_rx.c:2102:6: warning: no previous prototype for function 'remove_sec_hdr_mgmt_frame' [-Wmissing-prototypes]
+ 2102 | void remove_sec_hdr_mgmt_frame(struct hw_rxhdr *hw_rxhdr,struct sk_buff *skb)
+      |      ^
+aic8800_fdrv/rwnx_rx.c:2102:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 2102 | void remove_sec_hdr_mgmt_frame(struct hw_rxhdr *hw_rxhdr,struct sk_buff *skb)
+      | ^
+      | static 
+aic8800_fdrv/rwnx_rx.c:2183:6: warning: no previous prototype for function 'defrag_timeout_cb' [-Wmissing-prototypes]
+ 2183 | void defrag_timeout_cb(struct timer_list *t)
+      |      ^
+aic8800_fdrv/rwnx_rx.c:2183:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 2183 | void defrag_timeout_cb(struct timer_list *t)
+      | ^
+      | static 
+  CC [M]  aic8800_fdrv/regdb.o
+4 warnings generated.
+  CC [M]  aic8800_fdrv/md5.o
+  CC [M]  aic8800_fdrv/aic_vendor.o
+7 warnings generated.
+  CC [M]  aic8800_fdrv/aic_priv_cmd.o
+  LD [M]  aic_load_fw/aic_load_fw.o
+  CC [M]  aic8800_fdrv/aicwf_compat_8800dc.o
+  CC [M]  aic8800_fdrv/aicwf_compat_8800d80.o
+  CC [M]  aic8800_fdrv/aicwf_compat_8800d80x2.o
+  CC [M]  aic8800_fdrv/rwnx_radar.o
+  CC [M]  aic8800_fdrv/aicwf_tcp_ack.o
+aic8800_fdrv/rwnx_main.c:556:6: warning: no previous prototype for function 'rwnx_skb_align_8bytes' [-Wmissing-prototypes]
+  556 | void rwnx_skb_align_8bytes(struct sk_buff *skb){
+      |      ^
+aic8800_fdrv/rwnx_main.c:556:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  556 | void rwnx_skb_align_8bytes(struct sk_buff *skb){
+      | ^
+      | static 
+aic8800_fdrv/rwnx_platform.c:762:5: warning: no previous prototype for function 'rwnx_request_firmware_common' [-Wmissing-prototypes]
+  762 | int rwnx_request_firmware_common(struct rwnx_hw *rwnx_hw, u32** buffer, const char *filename)
+      |     ^
+aic8800_fdrv/rwnx_platform.c:762:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  762 | int rwnx_request_firmware_common(struct rwnx_hw *rwnx_hw, u32** buffer, const char *filename)
+      | ^
+      | static 
+aic8800_fdrv/rwnx_platform.c:773:6: warning: no previous prototype for function 'rwnx_release_firmware_common' [-Wmissing-prototypes]
+  773 | void rwnx_release_firmware_common(u32** buffer)
+      |      ^
+aic8800_fdrv/rwnx_platform.c:773:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  773 | void rwnx_release_firmware_common(u32** buffer)
+      | ^
+      | static 
+aic8800_fdrv/rwnx_platform.c:790:5: warning: no previous prototype for function 'rwnx_plat_bin_fw_upload_2' [-Wmissing-prototypes]
+  790 | int rwnx_plat_bin_fw_upload_2(struct rwnx_hw *rwnx_hw, u32 fw_addr,
+      |     ^
+aic8800_fdrv/rwnx_platform.c:790:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  790 | int rwnx_plat_bin_fw_upload_2(struct rwnx_hw *rwnx_hw, u32 fw_addr,
+      | ^
+      | static 
+aic8800_fdrv/rwnx_mod_params.c:270:6: warning: no previous prototype for function 'rwnx_get_countrycode_channels' [-Wmissing-prototypes]
+  270 | void rwnx_get_countrycode_channels(struct wiphy *wiphy,
+      |      ^
+aic8800_fdrv/rwnx_mod_params.c:270:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  270 | void rwnx_get_countrycode_channels(struct wiphy *wiphy,
+      | ^
+      | static 
+aic8800_fdrv/rwnx_platform.c:1959:5: warning: no previous prototype for function 'rwnx_atoi2' [-Wmissing-prototypes]
+ 1959 | int rwnx_atoi2(char *value, int c_len)
+      |     ^
+aic8800_fdrv/rwnx_platform.c:1959:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 1959 | int rwnx_atoi2(char *value, int c_len)
+      | ^
+      | static 
+aic8800_fdrv/rwnx_platform.c:1986:5: warning: no previous prototype for function 'rwnx_atoi' [-Wmissing-prototypes]
+ 1986 | int rwnx_atoi(char *value)
+      |     ^
+aic8800_fdrv/rwnx_platform.c:1986:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 1986 | int rwnx_atoi(char *value)
+      | ^
+      | static 
+  CC [M]  aic8800_fdrv/usb_host.o
+aic8800_fdrv/rwnx_platform.c:2334:6: warning: no previous prototype for function 'get_userconfig_xtal_cap' [-Wmissing-prototypes]
+ 2334 | void get_userconfig_xtal_cap(xtal_cap_conf_t *xtal_cap)
+      |      ^
+aic8800_fdrv/rwnx_platform.c:2334:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 2334 | void get_userconfig_xtal_cap(xtal_cap_conf_t *xtal_cap)
+      | ^
+      | static 
+aic8800_fdrv/rwnx_platform.c:2343:6: warning: no previous prototype for function 'rwnx_plat_nvram_set_value' [-Wmissing-prototypes]
+ 2343 | void rwnx_plat_nvram_set_value(char *command, char *value)
+      |      ^
+aic8800_fdrv/rwnx_platform.c:2343:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 2343 | void rwnx_plat_nvram_set_value(char *command, char *value)
+      | ^
+      | static 
+aic8800_fdrv/rwnx_main.c:623:13: warning: unused function 'rwnx_frame_parser' [-Wunused-function]
+  623 | static void rwnx_frame_parser(char* tag, char* data, unsigned long len){
+      |             ^~~~~~~~~~~~~~~~~
+aic8800_fdrv/rwnx_main.c:4256:13: warning: unused function 'rwnx_cfg80211_mgmt_frame_register' [-Wunused-function]
+ 4256 | static void rwnx_cfg80211_mgmt_frame_register(struct wiphy *wiphy,
+      |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+aic8800_fdrv/rwnx_main.c:8511:13: warning: unused function 'aic_ipc_setting' [-Wunused-function]
+ 8511 | static void aic_ipc_setting(struct rwnx_vif *rwnx_vif){
+      |             ^~~~~~~~~~~~~~~
+aic8800_fdrv/rwnx_platform.c:2649:6: warning: no previous prototype for function 'rwnx_plat_nvram_set_value_8800d80x2' [-Wmissing-prototypes]
+ 2649 | void rwnx_plat_nvram_set_value_8800d80x2(char *command, char *value)
+      |      ^
+aic8800_fdrv/rwnx_platform.c:2649:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 2649 | void rwnx_plat_nvram_set_value_8800d80x2(char *command, char *value)
+      | ^
+      | static 
+aic8800_fdrv/rwnx_platform.c:2872:6: warning: no previous prototype for function 'rwnx_plat_userconfig_parsing_8800d80x2' [-Wmissing-prototypes]
+ 2872 | void rwnx_plat_userconfig_parsing_8800d80x2(char *buffer, int size)
+      |      ^
+aic8800_fdrv/rwnx_platform.c:2872:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 2872 | void rwnx_plat_userconfig_parsing_8800d80x2(char *buffer, int size)
+      | ^
+      | static 
+aic8800_fdrv/rwnx_dini.c:105:5: warning: no previous prototype for function 'rwnx_cfpga_irq_enable' [-Wmissing-prototypes]
+  105 | int rwnx_cfpga_irq_enable(struct rwnx_hw *rwnx_hw)
+      |     ^
+aic8800_fdrv/rwnx_dini.c:105:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  105 | int rwnx_cfpga_irq_enable(struct rwnx_hw *rwnx_hw)
+      | ^
+      | static 
+1 warning generated.
+aic8800_fdrv/rwnx_dini.c:129:5: warning: no previous prototype for function 'rwnx_cfpga_irq_disable' [-Wmissing-prototypes]
+  129 | int rwnx_cfpga_irq_disable(struct rwnx_hw *rwnx_hw)
+      |     ^
+aic8800_fdrv/rwnx_dini.c:129:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  129 | int rwnx_cfpga_irq_disable(struct rwnx_hw *rwnx_hw)
+      | ^
+      | static 
+  CC [M]  aic8800_fdrv/aicwf_txrxif.o
+aic8800_fdrv/rwnx_pci.c:85:5: warning: no previous prototype for function 'rwnx_pci_register_drv' [-Wmissing-prototypes]
+   85 | int rwnx_pci_register_drv(void)
+      |     ^
+aic8800_fdrv/rwnx_pci.c:85:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   85 | int rwnx_pci_register_drv(void)
+      | ^
+      | static 
+2 warnings generated.
+aic8800_fdrv/rwnx_pci.c:90:6: warning: no previous prototype for function 'rwnx_pci_unregister_drv' [-Wmissing-prototypes]
+   90 | void rwnx_pci_unregister_drv(void)
+      |      ^
+aic8800_fdrv/rwnx_pci.c:90:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   90 | void rwnx_pci_unregister_drv(void)
+      | ^
+      | static 
+  CC [M]  aic8800_fdrv/aicwf_usb.o
+2 warnings generated.
+9 warnings generated.
+  CC [M]  aic8800_fdrv/aicwf_wext_linux.o
+4 warnings generated.
+aic8800_fdrv/aic_vendor.c:41:5: warning: no previous prototype for function 'aic_dev_start_mkeep_alive' [-Wmissing-prototypes]
+   41 | int aic_dev_start_mkeep_alive(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwnx_vif,
+      |     ^
+aic8800_fdrv/aic_vendor.c:41:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   41 | int aic_dev_start_mkeep_alive(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwnx_vif,
+      | ^
+      | static 
+aic8800_fdrv/aic_vendor.c:69:5: warning: no previous prototype for function 'aic_dev_stop_mkeep_alive' [-Wmissing-prototypes]
+   69 | int aic_dev_stop_mkeep_alive(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwnx_vif, u8 mkeep_alive_id)
+      |     ^
+aic8800_fdrv/aic_vendor.c:69:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   69 | int aic_dev_stop_mkeep_alive(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwnx_vif, u8 mkeep_alive_id)
+      | ^
+      | static 
+aic8800_fdrv/aic_vendor.c:1064:5: warning: no previous prototype for function 'aicwf_vendor_init' [-Wmissing-prototypes]
+ 1064 | int aicwf_vendor_init(struct wiphy *wiphy)
+      |     ^
+aic8800_fdrv/aic_vendor.c:1064:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 1064 | int aicwf_vendor_init(struct wiphy *wiphy)
+      | ^
+      | static 
+3 warnings generated.
+aic8800_fdrv/aic_priv_cmd.c:233:14: warning: no previous prototype for function 'command_strtoul' [-Wmissing-prototypes]
+  233 | unsigned int command_strtoul(const char *cp, char **endp, unsigned int base)
+      |              ^
+aic8800_fdrv/aic_priv_cmd.c:233:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  233 | unsigned int command_strtoul(const char *cp, char **endp, unsigned int base)
+      | ^
+      | static 
+aic8800_fdrv/aic_priv_cmd.c:266:5: warning: no previous prototype for function 'str_starts' [-Wmissing-prototypes]
+  266 | int str_starts(const char *str, const char *start)
+      |     ^
+aic8800_fdrv/aic_priv_cmd.c:266:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  266 | int str_starts(const char *str, const char *start)
+      | ^
+      | static 
+aic8800_fdrv/aic_priv_cmd.c:1612:5: warning: no previous prototype for function 'handle_private_cmd' [-Wmissing-prototypes]
+ 1612 | int handle_private_cmd(struct net_device *net, char *command, u32 cmd_len)
+      |     ^
+aic8800_fdrv/aic_priv_cmd.c:1612:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 1612 | int handle_private_cmd(struct net_device *net, char *command, u32 cmd_len)
+      | ^
+      | static 
+aic8800_fdrv/aic_priv_cmd.c:1726:6: warning: no previous prototype for function 'set_mon_chan' [-Wmissing-prototypes]
+ 1726 | void set_mon_chan(struct rwnx_vif *vif, struct net_device *dev, char *parameter)
+      |      ^
+aic8800_fdrv/aic_priv_cmd.c:1726:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 1726 | void set_mon_chan(struct rwnx_vif *vif, struct net_device *dev, char *parameter)
+      | ^
+      | static 
+aic8800_fdrv/rwnx_radar.c:903:22: warning: no previous prototype for function 'pri_detector_init' [-Wmissing-prototypes]
+  903 | struct pri_detector *pri_detector_init(struct dfs_pattern_detector *dpd,
+      |                      ^
+aic8800_fdrv/rwnx_radar.c:903:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  903 | struct pri_detector *pri_detector_init(struct dfs_pattern_detector *dpd,
+      | ^
+      | static 
+aic8800_fdrv/usb_host.c:35:30: warning: no previous prototype for function 'aicwf_usb_host_txdesc_get' [-Wmissing-prototypes]
+   35 | volatile struct txdesc_host *aicwf_usb_host_txdesc_get(struct usb_host_env_tag *env, const int queue_idx)
+      |                              ^
+aic8800_fdrv/usb_host.c:35:10: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   35 | volatile struct txdesc_host *aicwf_usb_host_txdesc_get(struct usb_host_env_tag *env, const int queue_idx)
+      |          ^
+      |          static 
+aic8800_fdrv/rwnx_radar.c:1072:6: warning: no previous prototype for function 'print_radar_detect_info' [-Wmissing-prototypes]
+ 1072 | void print_radar_detect_info(struct pri_detector *pde, struct pri_sequence *ps)
+      |      ^
+aic8800_fdrv/rwnx_radar.c:1072:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 1072 | void print_radar_detect_info(struct pri_detector *pde, struct pri_sequence *ps)
+      | ^
+      | static 
+aic8800_fdrv/aicwf_compat_8800dc.c:2633:5: warning: no previous prototype for function 'aicwf_patch_var_config_8800dc' [-Wmissing-prototypes]
+ 2633 | int aicwf_patch_var_config_8800dc(struct rwnx_hw *rwnx_hw)
+      |     ^
+aic8800_fdrv/aicwf_compat_8800dc.c:2633:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 2633 | int aicwf_patch_var_config_8800dc(struct rwnx_hw *rwnx_hw)
+      | ^
+      | static 
+aic8800_fdrv/aicwf_compat_8800d80.c:16:5: warning: no previous prototype for function 'aicwf_set_rf_config_8800d80' [-Wmissing-prototypes]
+   16 | int aicwf_set_rf_config_8800d80(struct rwnx_hw *rwnx_hw, struct mm_set_rf_calib_cfm *cfm)
+      |     ^
+aic8800_fdrv/aicwf_compat_8800d80.c:16:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   16 | int aicwf_set_rf_config_8800d80(struct rwnx_hw *rwnx_hw, struct mm_set_rf_calib_cfm *cfm)
+      | ^
+      | static 
+4 warnings generated.
+1 warning generated.
+aic8800_fdrv/aicwf_compat_8800dc.c:3553:5: warning: no previous prototype for function 'set_bbpll_config' [-Wmissing-prototypes]
+ 3553 | int set_bbpll_config(struct rwnx_hw *rwnx_hw){
+      |     ^
+aic8800_fdrv/aicwf_compat_8800dc.c:3553:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 3553 | int set_bbpll_config(struct rwnx_hw *rwnx_hw){
+      | ^
+      | static 
+aic8800_fdrv/aicwf_compat_8800d80.c:36:5: warning: no previous prototype for function 'rwnx_plat_userconfig_load_8800d80' [-Wmissing-prototypes]
+   36 | int     rwnx_plat_userconfig_load_8800d80(struct rwnx_hw *rwnx_hw){
+      |         ^
+aic8800_fdrv/aicwf_compat_8800d80.c:36:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   36 | int     rwnx_plat_userconfig_load_8800d80(struct rwnx_hw *rwnx_hw){
+      | ^
+      | static 
+2 warnings generated.
+2 warnings generated.
+2 warnings generated.
+aic8800_fdrv/aicwf_tcp_ack.c:18:6: warning: no previous prototype for function 'intf_tcp_drop_msg' [-Wmissing-prototypes]
+   18 | void intf_tcp_drop_msg(struct rwnx_hw *priv,
+      |      ^
+aic8800_fdrv/aicwf_tcp_ack.c:18:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   18 | void intf_tcp_drop_msg(struct rwnx_hw *priv,
+      | ^
+      | static 
+aic8800_fdrv/aicwf_tcp_ack.c:31:6: warning: no previous prototype for function 'tcp_ack_timeout' [-Wmissing-prototypes]
+   31 | void tcp_ack_timeout(struct timer_list *t)
+      |      ^
+aic8800_fdrv/aicwf_tcp_ack.c:31:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   31 | void tcp_ack_timeout(struct timer_list *t)
+      | ^
+      | static 
+aic8800_fdrv/aicwf_tcp_ack.c:120:5: warning: no previous prototype for function 'tcp_check_quick_ack' [-Wmissing-prototypes]
+  120 | int tcp_check_quick_ack(unsigned char *buf,
+      |     ^
+aic8800_fdrv/aicwf_tcp_ack.c:120:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  120 | int tcp_check_quick_ack(unsigned char *buf,
+      | ^
+      | static 
+aic8800_fdrv/aicwf_tcp_ack.c:213:5: warning: no previous prototype for function 'tcp_check_ack' [-Wmissing-prototypes]
+  213 | int tcp_check_ack(unsigned char *buf,
+      |     ^
+aic8800_fdrv/aicwf_tcp_ack.c:213:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  213 | int tcp_check_ack(unsigned char *buf,
+      | ^
+      | static 
+aic8800_fdrv/aicwf_tcp_ack.c:257:5: warning: no previous prototype for function 'tcp_ack_match' [-Wmissing-prototypes]
+  257 | int tcp_ack_match(struct tcp_ack_manage *ack_m,
+      |     ^
+aic8800_fdrv/aicwf_tcp_ack.c:257:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  257 | int tcp_ack_match(struct tcp_ack_manage *ack_m,
+      | ^
+      | static 
+aic8800_fdrv/aicwf_tcp_ack.c:285:6: warning: no previous prototype for function 'tcp_ack_update' [-Wmissing-prototypes]
+  285 | void tcp_ack_update(struct tcp_ack_manage *ack_m)
+      |      ^
+aic8800_fdrv/aicwf_tcp_ack.c:285:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  285 | void tcp_ack_update(struct tcp_ack_manage *ack_m)
+      | ^
+      | static 
+aic8800_fdrv/aicwf_tcp_ack.c:310:5: warning: no previous prototype for function 'tcp_ack_alloc_index' [-Wmissing-prototypes]
+  310 | int tcp_ack_alloc_index(struct tcp_ack_manage *ack_m)
+      |     ^
+aic8800_fdrv/aicwf_tcp_ack.c:310:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  310 | int tcp_ack_alloc_index(struct tcp_ack_manage *ack_m)
+      | ^
+      | static 
+aic8800_fdrv/aicwf_tcp_ack.c:349:5: warning: no previous prototype for function 'tcp_ack_handle' [-Wmissing-prototypes]
+  349 | int tcp_ack_handle(struct msg_buf *new_msgbuf,
+      |     ^
+aic8800_fdrv/aicwf_tcp_ack.c:349:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  349 | int tcp_ack_handle(struct msg_buf *new_msgbuf,
+      | ^
+      | static 
+aic8800_fdrv/aicwf_tcp_ack.c:436:5: warning: no previous prototype for function 'tcp_ack_handle_new' [-Wmissing-prototypes]
+  436 | int tcp_ack_handle_new(struct msg_buf *new_msgbuf,
+      |     ^
+aic8800_fdrv/aicwf_tcp_ack.c:436:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  436 | int tcp_ack_handle_new(struct msg_buf *new_msgbuf,
+      | ^
+      | static 
+aic8800_fdrv/aicwf_wext_linux.c:717:5: warning: no previous prototype for function 'aic_get_sec_ie' [-Wmissing-prototypes]
+  717 | int aic_get_sec_ie(u8 *in_ie, uint in_len, u8 *rsn_ie, u16 *rsn_len, u8 *wpa_ie, u16 *wpa_len)
+      |     ^
+aic8800_fdrv/aicwf_wext_linux.c:717:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  717 | int aic_get_sec_ie(u8 *in_ie, uint in_len, u8 *rsn_ie, u16 *rsn_len, u8 *wpa_ie, u16 *wpa_len)
+      | ^
+      | static 
+aic8800_fdrv/aicwf_wext_linux.c:830:4: warning: no previous prototype for function 'aicwf_get_is_wps_ie' [-Wmissing-prototypes]
+  830 | u8 aicwf_get_is_wps_ie(u8 *ie_ptr, uint *wps_ielen)
+      |    ^
+aic8800_fdrv/aicwf_wext_linux.c:830:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  830 | u8 aicwf_get_is_wps_ie(u8 *ie_ptr, uint *wps_ielen)
+      | ^
+      | static 
+aic8800_fdrv/aicwf_compat_8800d80x2.c:17:5: warning: no previous prototype for function 'aicwf_set_rf_config_8800d80x2' [-Wmissing-prototypes]
+   17 | int aicwf_set_rf_config_8800d80x2(struct rwnx_hw *rwnx_hw, struct mm_set_rf_calib_cfm *cfm)
+      |     ^
+aic8800_fdrv/aicwf_compat_8800d80x2.c:17:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   17 | int aicwf_set_rf_config_8800d80x2(struct rwnx_hw *rwnx_hw, struct mm_set_rf_calib_cfm *cfm)
+      | ^
+      | static 
+9 warnings generated.
+aic8800_fdrv/aicwf_compat_8800d80x2.c:37:5: warning: no previous prototype for function 'rwnx_plat_userconfig_load_8800d80x2' [-Wmissing-prototypes]
+   37 | int     rwnx_plat_userconfig_load_8800d80x2(struct rwnx_hw *rwnx_hw){
+      |         ^
+aic8800_fdrv/aicwf_compat_8800d80x2.c:37:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   37 | int     rwnx_plat_userconfig_load_8800d80x2(struct rwnx_hw *rwnx_hw){
+      | ^
+      | static 
+2 warnings generated.
+2 warnings generated.
+aic8800_fdrv/aicwf_txrxif.c:1300:17: warning: no previous prototype for function 'rxbuff_queue_penq' [-Wmissing-prototypes]
+ 1300 | struct rx_buff *rxbuff_queue_penq(struct rx_frame_queue *pq, struct rx_buff *p)
+      |                 ^
+aic8800_fdrv/aicwf_txrxif.c:1300:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 1300 | struct rx_buff *rxbuff_queue_penq(struct rx_frame_queue *pq, struct rx_buff *p)
+      | ^
+      | static 
+aic8800_fdrv/aicwf_usb.c:158:6: warning: no previous prototype for function 'rwnx_stop_sta_all_queues' [-Wmissing-prototypes]
+  158 | void rwnx_stop_sta_all_queues(struct rwnx_sta *sta, struct rwnx_hw *rwnx_hw)
+      |      ^
+aic8800_fdrv/aicwf_usb.c:158:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  158 | void rwnx_stop_sta_all_queues(struct rwnx_sta *sta, struct rwnx_hw *rwnx_hw)
+      | ^
+      | static 
+aic8800_fdrv/aicwf_usb.c:168:6: warning: no previous prototype for function 'rwnx_wake_sta_all_queues' [-Wmissing-prototypes]
+  168 | void rwnx_wake_sta_all_queues(struct rwnx_sta *sta, struct rwnx_hw *rwnx_hw)
+      |      ^
+aic8800_fdrv/aicwf_usb.c:168:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+  168 | void rwnx_wake_sta_all_queues(struct rwnx_sta *sta, struct rwnx_hw *rwnx_hw)
+      | ^
+      | static 
+1 warning generated.
+aic8800_fdrv/aicwf_usb.c:1843:13: warning: variable 'buf_align' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
+ 1843 |         if (usb_buf->usb_align_data) {
+      |             ^~~~~~~~~~~~~~~~~~~~~~~
+aic8800_fdrv/aicwf_usb.c:1853:17: note: uninitialized use occurs here
+ 1853 |                 buf_align, buf_len, aicwf_usb_tx_complete, usb_buf);
+      |                 ^~~~~~~~~
+aic8800_fdrv/aicwf_usb.c:1843:9: note: remove the 'if' if its condition is always true
+ 1843 |         if (usb_buf->usb_align_data) {
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+aic8800_fdrv/aicwf_usb.c:1736:18: note: initialize the variable 'buf_align' to silence this warning
+ 1736 |     u8 *buf_align;
+      |                  ^
+      |                   = NULL
+aic8800_fdrv/aicwf_usb.c:1963:6: warning: no previous prototype for function 'aicwf_usb_cancel_all_urbs' [-Wmissing-prototypes]
+ 1963 | void aicwf_usb_cancel_all_urbs(struct aic_usb_dev *usb_dev){
+      |      ^
+aic8800_fdrv/aicwf_usb.c:1963:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+ 1963 | void aicwf_usb_cancel_all_urbs(struct aic_usb_dev *usb_dev){
+      | ^
+      | static 
+4 warnings generated.
+  LD [M]  aic8800_fdrv/aic8800_fdrv.o
+  MODPOST Module.symvers
+  CC [M]  aic_load_fw/aic_load_fw.mod.o
+  CC [M]  .module-common.o
+  CC [M]  aic8800_fdrv/aic8800_fdrv.mod.o
+  LD [M]  aic_load_fw/aic_load_fw.ko
+  LD [M]  aic8800_fdrv/aic8800_fdrv.ko
+  BTF [M] aic_load_fw/aic_load_fw.ko
+  BTF [M] aic8800_fdrv/aic8800_fdrv.ko
+make[2]: Leaving directory '/home/ronny/src/AIC8800-Linux-Driver/drivers/aic8800'
+make[1]: Leaving directory '/usr/lib/modules/6.19.12-1-cachyos/build'
+make: Leaving directory '/home/ronny/src/AIC8800-Linux-Driver/drivers/aic8800'
