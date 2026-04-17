@@ -1733,7 +1733,7 @@ static int aicwf_usb_bus_txdata(struct device *dev, struct sk_buff *skb)
     u16 index = 0;
     bool need_cfm = false;
 #ifdef CONFIG_USB_ALIGN_DATA//AIDEN
-    u8 *buf_align;
+    u8 *buf_align = NULL;
     int align;
 #endif
 
