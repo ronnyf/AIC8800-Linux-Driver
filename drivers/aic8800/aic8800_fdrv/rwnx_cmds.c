@@ -34,7 +34,7 @@ void rwnx_cmd_free(struct rwnx_cmd *cmd);
 
 static void cmd_dump(const struct rwnx_cmd *cmd)
 {
-    printk(KERN_CRIT "tkn[%d]  flags:%04x  result:%3d  cmd:%4d-%-24s - reqcfm(%4d-%-s)\n",
+    AICWFDBG(LOGERROR, "tkn[%d]  flags:%04x  result:%3d  cmd:%4d-%-24s - reqcfm(%4d-%-s)\n",
            cmd->tkn, cmd->flags, cmd->result, cmd->id, RWNX_ID2STR(cmd->id),
            cmd->reqid, cmd->reqid != (lmac_msg_id_t)-1 ? RWNX_ID2STR(cmd->reqid) : "none");
 }
@@ -76,7 +76,7 @@ int cmd_mgr_queue_force_defer(struct rwnx_cmd_mgr *cmd_mgr, struct rwnx_cmd *cmd
     spin_lock_bh(&cmd_mgr->lock);
 
     if (cmd_mgr->state == RWNX_CMD_MGR_STATE_CRASHED) {
-        printk(KERN_CRIT"cmd queue crashed\n");
+        AICWFDBG(LOGERROR, "cmd queue crashed\n");
         cmd->result = -EPIPE;
         spin_unlock_bh(&cmd_mgr->lock);
         return -EPIPE;
@@ -85,7 +85,7 @@ int cmd_mgr_queue_force_defer(struct rwnx_cmd_mgr *cmd_mgr, struct rwnx_cmd *cmd
     #ifndef CONFIG_RWNX_FHOST
     if (!list_empty(&cmd_mgr->cmds)) {
         if (cmd_mgr->queue_sz == cmd_mgr->max_queue_sz) {
-            printk(KERN_CRIT"Too many cmds (%d) already queued\n",
+            AICWFDBG(LOGERROR, "Too many cmds (%d) already queued\n",
                    cmd_mgr->max_queue_sz);
             cmd->result = -ENOMEM;
             spin_unlock_bh(&cmd_mgr->lock);
@@ -161,7 +161,7 @@ static int cmd_mgr_queue(struct rwnx_cmd_mgr *cmd_mgr, struct rwnx_cmd *cmd)
     } else {
 			spin_lock_bh(&cmd_mgr->lock);
 			if (cmd_mgr->state == RWNX_CMD_MGR_STATE_CRASHED) {
-				printk(KERN_CRIT"cmd queue crashed\n");
+				AICWFDBG(LOGERROR, "cmd queue crashed\n");
 				cmd->result = -EPIPE;
 				spin_unlock_bh(&cmd_mgr->lock);
 				return -EPIPE;
@@ -173,7 +173,7 @@ static int cmd_mgr_queue(struct rwnx_cmd_mgr *cmd_mgr, struct rwnx_cmd *cmd)
         struct rwnx_cmd *last;
 
         if (cmd_mgr->queue_sz == cmd_mgr->max_queue_sz) {
-            printk(KERN_CRIT"Too many cmds (%d) already queued\n",
+            AICWFDBG(LOGERROR, "Too many cmds (%d) already queued\n",
                    cmd_mgr->max_queue_sz);
             cmd->result = -ENOMEM;
             spin_unlock_bh(&cmd_mgr->lock);
@@ -183,7 +183,7 @@ static int cmd_mgr_queue(struct rwnx_cmd_mgr *cmd_mgr, struct rwnx_cmd *cmd)
         if (last->flags & (RWNX_CMD_FLAG_WAIT_ACK | RWNX_CMD_FLAG_WAIT_PUSH | RWNX_CMD_FLAG_WAIT_CFM)) {
 #if 0 // queue even NONBLOCK command.
             if (cmd->flags & RWNX_CMD_FLAG_NONBLOCK) {
-                printk(KERN_CRIT"cmd queue busy\n");
+                AICWFDBG(LOGERROR, "cmd queue busy\n");
                 cmd->result = -EBUSY;
                 spin_unlock_bh(&cmd_mgr->lock);
                 return -EBUSY;
@@ -258,7 +258,7 @@ static int cmd_mgr_queue(struct rwnx_cmd_mgr *cmd_mgr, struct rwnx_cmd *cmd)
         #else
         unsigned long tout = msecs_to_jiffies(RWNX_80211_CMD_TIMEOUT_MS/*AIDEN workaround* cmd_mgr->queue_sz*/);
         if (!wait_for_completion_killable_timeout(&cmd->complete, tout)) {
-            printk(KERN_CRIT"%s cmd timed-out cmd_mgr->queue_sz:%d\n", __func__,cmd_mgr->queue_sz);
+            AICWFDBG(LOGERROR, "%s cmd timed-out cmd_mgr->queue_sz:%d\n", __func__,cmd_mgr->queue_sz);
         #ifdef AICWF_SDIO_SUPPORT
             ret = aicwf_sdio_writeb(sdiodev, SDIOWIFI_WAKEUP_REG, 2);
             if (ret < 0) {
@@ -322,7 +322,7 @@ static int cmd_mgr_llind(struct rwnx_cmd_mgr *cmd_mgr, struct rwnx_cmd *cmd)
         }
     }
     if (!acked) {
-        printk(KERN_CRIT "Error: acked cmd not found\n");
+        AICWFDBG(LOGERROR, "Error: acked cmd not found\n");
     } else {
         cmd->flags &= ~RWNX_CMD_FLAG_WAIT_ACK;
         if (RWNX_CMD_WAIT_COMPLETE(cmd->flags))
@@ -385,7 +385,7 @@ void cmd_mgr_task_process(struct work_struct *work)
 
             tout = msecs_to_jiffies(RWNX_80211_CMD_TIMEOUT_MS * cmd_mgr->queue_sz);
             if (!wait_for_completion_killable_timeout(&next->complete, tout)) {
-                printk(KERN_CRIT"%s cmd timed-out cmd_mgr->queue_sz:%d\n", __func__, cmd_mgr->queue_sz);
+                AICWFDBG(LOGERROR, "%s cmd timed-out cmd_mgr->queue_sz:%d\n", __func__, cmd_mgr->queue_sz);
                 cmd_dump(next);
                 spin_lock_bh(&cmd_mgr->lock);
                 //AIDEN  workaround  
@@ -572,7 +572,7 @@ void aicwf_set_cmd_tx(void *dev, struct lmac_msg *msg, uint len)
 	struct aic_usb_dev *usbdev = (struct aic_usb_dev *)dev;
 	struct aicwf_bus *bus = NULL;
     if (!usbdev->state) {
-        printk("down msg \n");
+        AICWFDBG(LOGINFO, "down msg \n");
         return;
     }
 	bus = usbdev->bus_if;

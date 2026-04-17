@@ -309,6 +309,9 @@ int system_config_8800d80(struct aic_usb_dev *usb_dev){
 			AICWFDBG(LOGERROR, "%x rd fail: %d\n", mem_addr, ret);
 			return ret;
 		}
+        if (((rd_mem_addr_cfm.memdata >> 25) & 0x01UL) == 0x00UL) {
+            chip_mcu_id = 1;
+        }
 		chip_id = (u8)(rd_mem_addr_cfm.memdata >> 16);
 		AICWFDBG(LOGINFO, "chip_id=%x, chip_mcu_id = %d\n", chip_id, chip_mcu_id);
     #if 1

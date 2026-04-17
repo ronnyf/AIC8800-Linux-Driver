@@ -1544,10 +1544,10 @@ void dhcp_flag_bcast(struct rwnx_vif *vif, struct sk_buff *skb)
 void *scdb_findEntry(struct rwnx_vif *vif, unsigned char *macAddr,
 		     unsigned char *ipAddr)
 {
-	AICWFDBG(LOGINFO, "%s()\n",__func__);
 	unsigned char networkAddr[MAX_NETWORK_ADDR_LEN];
 	struct nat25_network_db_entry *db;
 	int hash;
+	AICWFDBG(LOGINFO, "%s()\n",__func__);
 	/* _irqL irqL; */
 	/* _enter_critical_bh(&priv->br_ext_lock, &irqL); */
 

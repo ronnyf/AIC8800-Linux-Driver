@@ -4204,7 +4204,7 @@ int rwnx_send_mesh_start_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif *vif,
 
         /* Check DMA mapping result */
         if (dma_mapping_error(rwnx_hw->dev, req->ie_addr)) {
-            printk(KERN_CRIT "%s - DMA Mapping error on additional IEs\n", __func__);
+            AICWFDBG(LOGERROR, "%s - DMA Mapping error on additional IEs\n", __func__);
 
             /* Consider there is no Additional IEs */
             req->ie_len = 0;
