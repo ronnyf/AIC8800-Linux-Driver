@@ -256,7 +256,7 @@ const u32 crc_tab[256] =
     0xb3667a2e, 0xc4614ab8, 0x5d681b02, 0x2a6f2b94,
     0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d,
 };
-u32 aic_crc32(u8 *p, u32 len, u32 crc)
+static u32 aic_crc32(u8 *p, u32 len, u32 crc)
 {
     while(len--)
     {
@@ -1009,7 +1009,7 @@ void get_userconfig_txpwr_ofst(txpwr_ofst_conf_t *txpwr_ofst){
 
 EXPORT_SYMBOL(get_userconfig_txpwr_ofst);
 
-void rwnx_plat_userconfig_set_value(char *command, char *value){	
+static void rwnx_plat_userconfig_set_value(char *command, char *value){	
 	//TODO send command
 	AICWFDBG(LOGTRACE, "%s:command=%s value=%s \r\n", __func__, command, value);
 	if(!strcmp(command, "enable")){
