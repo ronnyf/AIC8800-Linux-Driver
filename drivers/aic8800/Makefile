@@ -72,9 +72,9 @@ modules:
 install_firmware:
 	@test -d $(FIRMWARE_PATH) || { echo "ERROR: Firmware directory $(FIRMWARE_PATH) not found" >&2; exit 1; }
 	@echo "Installing firmware to $(FIRMWARE_DEST)..."
-	if [ ! -d "$(FIRMWARE_DEST)" ]; then \
-		@echo "Creating $(FIRMWARE_DEST)"; \
-		mkdir -p $(FIRMWARE_DEST); \
+	@if [ ! -d "$(FIRMWARE_DEST)" ]; then \
+		echo "Creating $(FIRMWARE_DEST)"; \
+		sudo mkdir -p $(FIRMWARE_DEST); \
 	fi
 	sudo cp -rf $(FIRMWARE_PATH)/* $(FIRMWARE_DEST)
 

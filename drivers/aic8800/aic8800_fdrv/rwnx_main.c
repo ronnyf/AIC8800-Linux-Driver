@@ -82,7 +82,7 @@ static char *wifi_mac_addr = 0;
 extern char country_code[];
 
 #define RWNX_PRINT_CFM_ERR(req) \
-        printk(KERN_CRIT "%s: Status Error(%d)\n", #req, (&req##_cfm)->status)
+        AICWFDBG(LOGERROR, "%s: Status Error(%d)\n", #req, (&req##_cfm)->status)
 
 #define RWNX_HT_CAPABILITIES                                    \
 {                                                               \
@@ -700,59 +700,59 @@ static void rwnx_frame_parser(char* tag, char* data, unsigned long len){
 
 #if 0
 	if(data[0] == ASSOC_REQ){
-		printk("%s %s ASSOC_REQ \r\n", __func__, tag);
+		AICWFDBG(LOGTRACE, "%s %s ASSOC_REQ \r\n", __func__, tag);
 	}else if(data[0] == ASSOC_RSP){
-		printk("%s %s ASSOC_RSP \r\n", __func__, tag);
+		AICWFDBG(LOGTRACE, "%s %s ASSOC_RSP \r\n", __func__, tag);
 	}else if(data[0] == PROBE_REQ){
-		printk("%s %s PROBE_REQ \r\n", __func__, tag);
+		AICWFDBG(LOGTRACE, "%s %s PROBE_REQ \r\n", __func__, tag);
 	}else if(data[0] == PROBE_RSP){
-		printk("%s %s PROBE_RSP \r\n", __func__, tag);
+		AICWFDBG(LOGTRACE, "%s %s PROBE_RSP \r\n", __func__, tag);
 	}else if(data[0] == ACTION){
-		printk("%s %s ACTION ", __func__, tag);
+		AICWFDBG(LOGTRACE, "%s %s ACTION ", __func__, tag);
 		if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x00){
-			printk("GO NEG REQ \r\n");
+			AICWFDBG(LOGTRACE, "GO NEG REQ \r\n");
 		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x01){
-			printk("GO NEG RSP \r\n");
+			AICWFDBG(LOGTRACE, "GO NEG RSP \r\n");
 		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x02){
-			printk("GO NEG CFM \r\n");
+			AICWFDBG(LOGTRACE, "GO NEG CFM \r\n");
 		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x03){
-			printk("P2P INV REQ \r\n");
+			AICWFDBG(LOGTRACE, "P2P INV REQ \r\n");
 		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x04){
-			printk("P2P INV RSP \r\n");
+			AICWFDBG(LOGTRACE, "P2P INV RSP \r\n");
 		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x05){
-			printk("DD REQ \r\n");
+			AICWFDBG(LOGTRACE, "DD REQ \r\n");
 		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x06){
-			printk("DD RSP \r\n");
+			AICWFDBG(LOGTRACE, "DD RSP \r\n");
 		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x07){
-			printk("PD REQ \r\n");
+			AICWFDBG(LOGTRACE, "PD REQ \r\n");
 		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x08){
-			printk("PD RSP \r\n");
+			AICWFDBG(LOGTRACE, "PD RSP \r\n");
 		}else{
-			printk("\r\n");
+			AICWFDBG(LOGTRACE, "\r\n");
 		}
 
 	}else if(data[0] == AUTH){
-		printk("%s %s AUTH \r\n", __func__, tag);
+		AICWFDBG(LOGTRACE, "%s %s AUTH \r\n", __func__, tag);
 	}else if(data[0] == DEAUTH){
-		printk("%s %s DEAUTH \r\n", __func__, tag);
+		AICWFDBG(LOGTRACE, "%s %s DEAUTH \r\n", __func__, tag);
 	}else if(data[0] == QOS){
 		if(data[QOS_MAC_HDR_LEN + 6] == 0x88 && data[QOS_MAC_HDR_LEN + 7] == 0x8E){
-			printk("%s %s QOS 802.1X ", __func__, tag);
+			AICWFDBG(LOGTRACE, "%s %s QOS 802.1X ", __func__, tag);
 			if(data[QOS_MAC_HDR_LEN + 9] == 0x03){
-				printk("EAPOL");
+				AICWFDBG(LOGTRACE, "EAPOL");
 			}else if(data[QOS_MAC_HDR_LEN + 9] == 0x00){
-				printk("EAP PACKAGE ");
+				AICWFDBG(LOGTRACE, "EAP PACKAGE ");
 				if(data[QOS_MAC_HDR_LEN + 12] == 0x01){
-					printk("EAP REQ\r\n");
+					AICWFDBG(LOGTRACE, "EAP REQ\r\n");
 				}else if(data[QOS_MAC_HDR_LEN + 12] == 0x02){
-					printk("EAP RSP\r\n");
+					AICWFDBG(LOGTRACE, "EAP RSP\r\n");
 				}else if(data[QOS_MAC_HDR_LEN + 12] == 0x04){
-					printk("EAP FAIL\r\n");
+					AICWFDBG(LOGTRACE, "EAP FAIL\r\n");
 				}else{
-					printk("\r\n");
+					AICWFDBG(LOGTRACE, "\r\n");
 				}
 			}else if(data[QOS_MAC_HDR_LEN + 9] == 0x01){
-				printk("EAP START \r\n");
+				AICWFDBG(LOGTRACE, "EAP START \r\n");
 
 			}
 		}
@@ -8318,7 +8318,7 @@ static void rf_config(struct rwnx_hw *rwnx_hw)
     ret = rwnx_send_dbg_mem_mask_write_req(rwnx_hw,
                 rf_tbl_masked[0][0], rf_tbl_masked[0][1], rf_tbl_masked[0][2]);
     if (ret) {
-        printk("rf config %x write fail: %d\n", rf_tbl_masked[0][0], ret);
+        AICWFDBG(LOGERROR, "rf config %x write fail: %d\n", rf_tbl_masked[0][0], ret);
     }
 }
 #endif

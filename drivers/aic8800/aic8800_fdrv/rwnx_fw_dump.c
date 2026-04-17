@@ -481,7 +481,7 @@ int rwnx_um_helper(struct rwnx_debugfs *rwnx_debugfs, const char *cmd)
 
     if ((ret = call_usermodehelper(argv[0], argv, envp,
                                    UMH_WAIT_PROC | UMH_KILLABLE)))
-        printk(KERN_CRIT "Failed to call %s (%s returned %d)\n",
+        AICWFDBG(LOGERROR, "Failed to call %s (%s returned %d)\n",
                argv[0], cmd, ret);
     argv_free(argv);
 

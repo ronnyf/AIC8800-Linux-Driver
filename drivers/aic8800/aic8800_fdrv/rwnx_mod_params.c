@@ -1658,7 +1658,7 @@ static void rwnx_set_wiphy_params(struct rwnx_hw *rwnx_hw, struct wiphy *wiphy)
         // function, that needs to be called after wiphy registration
         memcpy(country_code, default_ccode, sizeof(default_ccode));
 		regdomain = getRegdomainFromRwnxDB(wiphy, default_ccode);
-        printk(KERN_CRIT
+        AICWFDBG(LOGERROR,
                "\n\n%s: CAUTION: USING PERMISSIVE CUSTOM REGULATORY RULES\n\n",
                __func__);
         wiphy->regulatory_flags |= REGULATORY_CUSTOM_REG;
@@ -1667,7 +1667,7 @@ static void rwnx_set_wiphy_params(struct rwnx_hw *rwnx_hw, struct wiphy *wiphy)
 #elif (LINUX_VERSION_CODE < KERNEL_VERSION(3, 14, 0))
         memcpy(country_code, default_ccode, sizeof(default_ccode));
 		regdomain = getRegdomainFromRwnxDB(wiphy, default_ccode);
-		printk(KERN_CRIT"%s: Registering custom regulatory\n", __func__);
+		AICWFDBG(LOGINFO, "%s: Registering custom regulatory\n", __func__);
 		wiphy->flags |= WIPHY_FLAG_CUSTOM_REGULATORY;
 		wiphy_apply_custom_regulatory(wiphy, regdomain);
 #endif

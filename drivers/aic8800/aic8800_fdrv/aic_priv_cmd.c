@@ -1602,10 +1602,10 @@ static const struct aic_priv_cmd aic_priv_commands[] = {
 static void print_help(const char *cmd)
 {
 	int n;
-	AICWFDBG(LOGERROR, "commands:\n");
+	AICWFDBG(LOGINFO, "commands:\n");
 	for (n = 0; aic_priv_commands[n].cmd; n++) {
 		if (cmd != NULL)
-			AICWFDBG(LOGERROR, "%s %s\n", aic_priv_commands[n].cmd, aic_priv_commands[n].usage);
+			AICWFDBG(LOGINFO, "%s %s\n", aic_priv_commands[n].cmd, aic_priv_commands[n].usage);
 	}
 }
 
