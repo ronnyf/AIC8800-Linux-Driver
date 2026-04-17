@@ -203,6 +203,7 @@ int usb_busrx_thread(void *data);
 
 
 extern void aicwf_hostif_ready(void);
+void aicwf_usb_cancel_all_urbs(struct aic_usb_dev *usb_dev);
 
 #endif /* AICWF_USB_SUPPORT */
 #endif /* _AICWF_USB_H_       */

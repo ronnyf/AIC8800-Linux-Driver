@@ -342,5 +342,8 @@ typedef struct wl_mkeep_alive_pkt {
 	u8  data[1];
 } wl_mkeep_alive_pkt_t;
 
+struct wiphy;
+int aicwf_vendor_init(struct wiphy *wiphy);
+
 #endif /* _AIC_VENDOR_H */
 

@@ -8361,6 +8361,7 @@ static int rwnx_ic_rf_init(struct rwnx_hw *rwnx_hw){
 #endif
 	return 0;
 }
+#ifdef CONFIG_FOR_IPCAM
 static void aic_ipc_setting(struct rwnx_vif *rwnx_vif){
     struct rwnx_hw *rwnx_hw = rwnx_vif->rwnx_hw;
 	uint32_t hw_edca = 1;
@@ -8374,6 +8375,7 @@ static void aic_ipc_setting(struct rwnx_vif *rwnx_vif){
 	rwnx_send_vendor_hwconfig_req(rwnx_hw, hw_edca, param, NULL);
 	rwnx_send_vendor_hwconfig_req(rwnx_hw, hw_cca, cca, NULL);
 }
+#endif
 extern int get_adap_test(void);
 
 extern void *aicwf_prealloc_txq_alloc(size_t size);

@@ -155,26 +155,6 @@ static void aicwf_usb_msg_rx_buf_put(struct aic_usb_dev *usb_dev, struct aicwf_u
 }
 #endif
 
-static void rwnx_stop_sta_all_queues(struct rwnx_sta *sta, struct rwnx_hw *rwnx_hw)
-{
-    u8 tid;
-    struct rwnx_txq *txq;
-    for(tid=0; tid<8; tid++) {
-        txq = rwnx_txq_sta_get(sta, tid, rwnx_hw);
-        netif_stop_subqueue(txq->ndev, txq->ndev_idx);
-    }
-}
-
-static void rwnx_wake_sta_all_queues(struct rwnx_sta *sta, struct rwnx_hw *rwnx_hw)
-{
-    u8 tid;
-    struct rwnx_txq *txq;
-    for(tid=0; tid<8; tid++) {
-        txq = rwnx_txq_sta_get(sta, tid, rwnx_hw);
-        netif_wake_subqueue(txq->ndev, txq->ndev_idx);
-    }
-}
-
 static void usb_txc_sta_flowctrl(struct aicwf_usb_buf *usb_buf, struct aic_usb_dev *usb_dev)
 {
 #ifdef CONFIG_PER_STA_FC

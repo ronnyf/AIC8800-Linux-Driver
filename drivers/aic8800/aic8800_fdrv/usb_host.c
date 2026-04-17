@@ -32,29 +32,6 @@ void aicwf_usb_host_init(struct usb_host_env_tag *env,
 /**
  ****************************************************************************************
  */
-static volatile struct txdesc_host *aicwf_usb_host_txdesc_get(struct usb_host_env_tag *env, const int queue_idx)
-{
- //   struct ipc_shared_env_tag *shared_env_ptr = env->shared;
-    volatile struct txdesc_host *txdesc_free = NULL;
-    uint32_t used_idx = env->txdesc_used_idx[queue_idx];
-    uint32_t free_idx = env->txdesc_free_idx[queue_idx];
-
-   // ASSERT_ERR(queue_idx < SDIO_TXQUEUE_CNT);
-   // ASSERT_ERR((free_idx - used_idx) <= USB_TXDESC_CNT);
-
-    // Check if a free descriptor is available
-    if (free_idx != (used_idx + USB_TXDESC_CNT))
-    {
-        // Get the pointer to the first free descriptor
-    //    txdesc_free = shared_env_ptr->txdesc[queue_idx] + (free_idx % IPC_TXDESC_CNT);
-    }
-    else
-    {
-        //txdesc_free = NULL;
-    }
-
-    return txdesc_free;
-}
 
 /**
  ****************************************************************************************

@@ -7,9 +7,9 @@ struct aic_usb_dev;
 
 typedef struct
 {
-    u8 enable;
-    u8 xtal_cap;
-    u8 xtal_cap_fine;
+    int8_t enable;
+    int8_t xtal_cap;
+    int8_t xtal_cap_fine;
 } xtal_cap_conf_t;
 
 typedef struct

@@ -7,9 +7,6 @@
 #include "aicbluetooth.h"
 #include "aicwf_debug.h"
 
-extern txpwr_idx_conf_t userconfig_txpwr_idx;
-extern txpwr_ofst_conf_t userconfig_txpwr_ofst;
-extern xtal_cap_conf_t userconfig_xtal_cap;
 #ifdef CONFIG_USE_FW_REQUEST
 #include <linux/firmware.h>
 #endif
@@ -28,7 +25,6 @@ txpwr_idx_conf_t userconfig_txpwr_idx = {
 	.enable 		  = 1,
 	.dsss			  = 9,
 	.ofdmlowrate_2g4  = 8,
-	.ofdm64qam_2g4	  = 8,
 	.ofdm64qam_2g4	  = 8,
 	.ofdm256qam_2g4   = 8,
 	.ofdm1024qam_2g4  = 8,
