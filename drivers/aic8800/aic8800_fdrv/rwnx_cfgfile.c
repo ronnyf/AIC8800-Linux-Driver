@@ -60,7 +60,7 @@ int rwnx_parse_configfile(struct rwnx_hw *rwnx_hw, const char *filename,
     RWNX_DBG(RWNX_FN_ENTRY_STR);
 
     if ((ret = request_firmware(&config_fw, filename, rwnx_hw->dev))) {
-        printk(KERN_CRIT "%s: Failed to get %s (%d)\n", __func__, filename, ret);
+        AICWFDBG(LOGERROR, "%s: Failed to get %s (%d)\n", __func__, filename, ret);
         return ret;
     }
 
@@ -98,7 +98,7 @@ int rwnx_parse_phy_configfile(struct rwnx_hw *rwnx_hw, const char *filename,
     RWNX_DBG(RWNX_FN_ENTRY_STR);
 
     if ((ret = request_firmware(&config_fw, filename, rwnx_hw->dev))) {
-        printk(KERN_CRIT "%s: Failed to get %s (%d)\n", __func__, filename, ret);
+        AICWFDBG(LOGERROR, "%s: Failed to get %s (%d)\n", __func__, filename, ret);
         return ret;
     }
 
