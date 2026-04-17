@@ -553,7 +553,7 @@ module_param(dynamic_pwr, int, 0660);
 int testmode = 0;
 char aic_fw_path[200];
 
-static void rwnx_skb_align_8bytes(struct sk_buff *skb){
+void rwnx_skb_align_8bytes(struct sk_buff *skb){
 #ifdef CONFIG_ALIGN_8BYTES
 	int align __maybe_unused;
 	u8 *data;
