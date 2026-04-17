@@ -230,7 +230,7 @@ static int parse_line (char *line, char *argv[])
 	return nargs;
 }
 
-unsigned int command_strtoul(const char *cp, char **endp, unsigned int base)
+static unsigned int command_strtoul(const char *cp, char **endp, unsigned int base)
 {
 	unsigned int result = 0, value, is_neg = 0;
 
@@ -263,7 +263,7 @@ unsigned int command_strtoul(const char *cp, char **endp, unsigned int base)
 	return result;
 }
 
-int str_starts(const char *str, const char *start)
+static int str_starts(const char *str, const char *start)
 {
 	return strncmp(str, start, strlen(start)) == 0;
 }
@@ -1609,7 +1609,7 @@ static void print_help(const char *cmd)
 	}
 }
 
-int handle_private_cmd(struct net_device *net, char *command, u32 cmd_len)
+static int handle_private_cmd(struct net_device *net, char *command, u32 cmd_len)
 {
 	const struct aic_priv_cmd *cmd, *match = NULL;
 	int count;
@@ -1723,9 +1723,9 @@ int rwnx_cfg80211_set_monitor_channel_(struct wiphy *wiphy,
 #endif
 int rwnx_atoi2(char *value, int c_len);
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0))
-void set_mon_chan(struct rwnx_vif *vif, struct net_device *dev, char *parameter)
+static void set_mon_chan(struct rwnx_vif *vif, struct net_device *dev, char *parameter)
 #else
-void set_mon_chan(struct rwnx_vif *vif, char *parameter)
+static void set_mon_chan(struct rwnx_vif *vif, char *parameter)
 #endif
 {
     struct cfg80211_chan_def *chandef = NULL;

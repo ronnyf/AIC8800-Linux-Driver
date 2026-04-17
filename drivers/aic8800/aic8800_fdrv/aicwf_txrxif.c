@@ -1297,7 +1297,7 @@ void rxbuff_free(struct rx_buff *rxbuff)
    kfree(rxbuff);
 }
 
-struct rx_buff *rxbuff_queue_penq(struct rx_frame_queue *pq, struct rx_buff *p)
+static struct rx_buff *rxbuff_queue_penq(struct rx_frame_queue *pq, struct rx_buff *p)
 {
 
     struct list_head *q;
