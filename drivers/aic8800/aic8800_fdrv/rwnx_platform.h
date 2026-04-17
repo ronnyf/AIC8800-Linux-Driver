@@ -177,7 +177,15 @@ int rwnx_platform_register_drv(void);
 void rwnx_platform_unregister_drv(void);
 
 extern struct device *rwnx_platform_get_dev(struct rwnx_plat *rwnx_plat);
+int rwnx_plat_bin_fw_upload_2(struct rwnx_hw *rwnx_hw, u32 fw_addr,
+                              char *filename);
+int rwnx_atoi(char *value);
+int rwnx_atoi2(char *value, int c_len);
+void get_userconfig_xtal_cap(xtal_cap_conf_t *xtal_cap);
 
+int rwnx_request_firmware_common(struct rwnx_hw *rwnx_hw, u32** buffer, const char *filename);
+void rwnx_release_firmware_common(u32** buffer);
+void rwnx_plat_userconfig_parsing_8800d80x2(char *buffer, int size);
 static inline unsigned int rwnx_platform_get_irq(struct rwnx_plat *rwnx_plat)
 {
     return rwnx_plat->pci_dev->irq;
