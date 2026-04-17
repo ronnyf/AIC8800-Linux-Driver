@@ -1,3 +1,0 @@
-savedcmd_aic8800_fdrv/aic8800_fdrv.o := ld.lld -m elf_x86_64 -mllvm -import-instr-limit=5 --mllvm=-enable-fs-discriminator=true --mllvm=-improved-fs-discriminator=true -plugin-opt=thinlto -plugin-opt=-split-machine-functions -z noexecstack   -r -o aic8800_fdrv/aic8800_fdrv.o @aic8800_fdrv/aic8800_fdrv.mod  ; /usr/lib/modules/6.19.10-1-cachyos/build/tools/objtool/objtool --hacks=jump_label --hacks=noinstr --hacks=skylake --ibt --mcount --mnop --orc --retpoline --rethunk --sls --static-call --uaccess --prefix=16  --link  --module aic8800_fdrv/aic8800_fdrv.o
-
-aic8800_fdrv/aic8800_fdrv.o: $(wildcard /usr/lib/modules/6.19.10-1-cachyos/build/tools/objtool/objtool)
