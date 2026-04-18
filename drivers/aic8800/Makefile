@@ -57,6 +57,14 @@ endif
 
 ###########################################
 
+# Auto-detect clang/LLVM — use if available, override with LLVM=0 to force GCC
+ifeq ($(origin LLVM), undefined)
+  ifneq ($(shell which clang 2>/dev/null),)
+    export LLVM := 1
+    export LLVM_IAS := 1
+  endif
+endif
+
 MAKEFLAGS +=-j$(shell nproc)
 
 MAKEFILE_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
@@ -67,7 +75,7 @@ UDEV_RULES_DEST ?= /etc/udev/rules.d
 
 all: modules
 modules:
-	make -C $(KDIR) M=$(PWD) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) modules
+	make -C $(KDIR) M=$(PWD) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(if $(LLVM),LLVM=$(LLVM)) $(if $(LLVM_IAS),LLVM_IAS=$(LLVM_IAS)) modules
 
 install_firmware:
 	@test -d $(FIRMWARE_PATH) || { echo "ERROR: Firmware directory $(FIRMWARE_PATH) not found" >&2; exit 1; }
