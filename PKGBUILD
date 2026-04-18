@@ -3,16 +3,19 @@
 _pkgname=AIC8800-Linux-Driver
 pkgname=aic8800-fdrv-dkms
 pkgver=6.4.3.0
-pkgrel=3
+pkgrel=4
 pkgdesc="AIC8800 Linux Driver (DKMS)"
 arch=('x86_64' 'armv7h' 'aarch64')
 url="https://github.com/ronnyf/AIC8800-Linux-Driver"
 license=('GPL2')
-depends=('dkms' 'linux-headers')
+depends=('linux-headers')
 makedepends=()
-optdepends=('clang: for LLVM-based builds with fewer warnings')
+optdepends=('dkms: auto-rebuild on kernel updates'
+            'clang: for LLVM-based builds with fewer warnings')
 provides=("${pkgname}")
 conflicts=("${pkgname}")
+backup=('etc/udev/rules.d/aic.rules')
+install=aic8800.install
 
 source=("$pkgname-$pkgver.tar.gz::https://github.com/ronnyf/AIC8800-Linux-Driver/archive/refs/heads/main.tar.gz"
         "dkms.conf")

@@ -1,0 +1,37 @@
+pre_install() {
+    # Clean up files from prior manual installs (make install) to avoid conflicts
+    [ -d /lib/firmware/aic8800D80 ] && rm -rf /lib/firmware/aic8800D80
+    [ -f /etc/udev/rules.d/aic.rules ] && rm -f /etc/udev/rules.d/aic.rules
+
+    # Remove manually installed kernel modules
+    local kver
+    for kver in /lib/modules/*/kernel/drivers/net/wireless/aic8800; do
+        [ -d "$kver" ] && rm -rf "$kver"
+    done
+}
+
+post_install() {
+    echo ">>> Reloading udev rules..."
+    udevadm control --reload 2>/dev/null || true
+    udevadm trigger 2>/dev/null || true
+
+    if command -v dkms >/dev/null 2>&1; then
+        echo ">>> DKMS is installed — modules will auto-rebuild on kernel updates."
+    else
+        echo ">>> Install dkms for automatic module rebuild on kernel updates:"
+        echo ">>>   sudo pacman -S dkms"
+    fi
+}
+
+pre_upgrade() {
+    pre_install
+}
+
+post_upgrade() {
+    post_install
+}
+
+post_remove() {
+    echo ">>> Reloading udev rules..."
+    udevadm control --reload 2>/dev/null || true
+}
