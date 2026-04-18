@@ -2,8 +2,18 @@
 
 ## Build System
 
-**Compile**: `make LLVM=1 -C drivers/aic8800`  
-**Install/Clean/Uninstall**: `make -C drivers/aic8800 {install,install_firmware,install_rules,install_modules,clean,uninstall,uninstall_firmware,uninstall_rules,uninstall_modules}`
+**Compile**: `make -C drivers/aic8800` (auto-detects clang, uses LLVM if available)  
+**Force GCC**: `make LLVM=0 -C drivers/aic8800` (only works if kernel was built with GCC)  
+**Force clang**: `make LLVM=1 -C drivers/aic8800`  
+**Clean**: `make -C drivers/aic8800 clean`  
+**Install/Uninstall**: `make -C drivers/aic8800 {install,install_firmware,install_rules,install_modules,uninstall,uninstall_firmware,uninstall_rules,uninstall_modules}`
+
+**IMPORTANT**: Out-of-tree modules must use the same compiler as the kernel. If the kernel was built with clang (e.g. CachyOS, Arch), GCC builds will fail with unrecognized flag errors (`-mstack-alignment`, `-mllvm`, `-fsplit-lto-unit`). The auto-detection handles this correctly.
+
+**LLVM auto-detection** (in `drivers/aic8800/Makefile`):
+- `LLVM` undefined + clang available → uses clang
+- `LLVM=1` → forces clang
+- `LLVM=0` → forces GCC (stripped from MAKEOVERRIDES to prevent leaking to kbuild via MAKEFLAGS, since kbuild's `ifdef LLVM` treats any non-empty value as true)
 
 **Platform configs**: `CONFIG_PLATFORM_ROCKCHIP` (arm64), `CONFIG_PLATFORM_ALLWINNER` (arm64), `CONFIG_PLATFORM_AMLOGIC` (arm), `CONFIG_PLATFORM_HI` (arm), `CONFIG_PLATFORM_UBUNTU` (default)
 
@@ -11,7 +21,8 @@
 
 - Linux kernel style (8-space tabs, 80-char lines)
 - `.h` files: declarations; `.c` files: implementations
-- License: `Copyright (C) RivieraWaves 2012-2019`
+- License: GPL-2.0 (`MODULE_LICENSE("GPL")` in both modules, `LICENSE` file at repo root)
+- Original copyright: `Copyright (C) RivieraWaves 2012-2019` and `Copyright (C) AICSemi 2018-2020`
 - Kernel-doc: `/** ... */`
 - Names: `rwnx_*` (core), `aicwf_*` (wifi)
 - Include order: `<linux/.>`, `<net/.>`, `"rwnx_*.h"`, `"aicwf_*.h"`, `"reg_*.h"`
@@ -73,7 +84,7 @@ Key files: `rwnx_main.c`, `rwnx_tx.c/rwnx_rx.c`, `rwnx_msg_tx.c/rwnx_msg_rx.c`, 
 
 ## Kernel Compatibility
 
-- Tested: Arch Linux kernel 6.17.1-arch1-1  
+- Tested: CachyOS kernel 6.19.12-1-cachyos (clang 22.1.x), Arch Linux kernel 6.17.1-arch1-1  
 - Compatibility macros in `rwnx_compat.h`/`rwnx_defs.h`  
   `HIGH_KERNEL_VERSION=KERNEL_VERSION(6,0,0)`  
   `HIGH_KERNEL_VERSION2=KERNEL_VERSION(6,1,0)`  
@@ -137,7 +148,37 @@ dmesg | tail -20
 
 **USB**: `CONFIG_USB_SUPPORT=y`, interfaces: `usb_host.c`, `aicwf_usb.c`  
 **SDIO**: `CONFIG_SDIO_SUPPORT=n`, interfaces: `sdio_host.c`, `aicwf_sdio.c`  
-**Firmware**: `/vendor/etc/firmware` (Android) or `/lib/firmware/`, files: `aic_userconfig_8800d80.txt`, `aic_powerlimit_8800d80.txt`
+**Firmware**: `/lib/firmware/aic8800D80/` (Linux) or `/vendor/etc/firmware` (Android), source files in `fw/aic8800D80/`
+
+## DKMS & Packaging
+
+**DKMS**: Automatically rebuilds modules on kernel updates.  
+**Config**: `dkms.conf` at repo root — defines `MAKE`, `CLEAN`, `BUILT_MODULE_LOCATION`, `DEST_MODULE_LOCATION` for both `aic_load_fw` and `aic8800_fdrv`.  
+**PKGBUILD**: Arch Linux package (`aic8800-fdrv-dkms`) — installs source to `/usr/src/`, firmware to `/lib/firmware/aic8800D80/`, udev rules to `/etc/udev/rules.d/`.
+
+```bash
+# Build package (maintainer only)
+makepkg -f
+
+# Install (users)
+sudo pacman -U aic8800-fdrv-dkms-6.4.3.0-3-x86_64.pkg.tar.zst
+
+# Manual DKMS
+sudo dkms add ./
+sudo dkms build aic8800-fdrv-dkms/6.4.3.0
+sudo dkms install aic8800-fdrv-dkms/6.4.3.0
+```
+
+**User dependencies**: `dkms`, `linux-headers`, `clang` (for clang-built kernels)
+
+## Warning-Free Build
+
+The codebase builds with **0 warnings** under clang `-Wmissing-prototypes`. Rules:
+- Functions only used within their `.c` file → must be `static`
+- Functions called from other `.c` files → must have a prototype in the appropriate `.h` header
+- The `.c` file defining a function must `#include` the header declaring it
+- No `printk()` — use `AICWFDBG(level, ...)` or `RWNX_DBG(...)` (see Debugging section)
+- `printk(KERN_CRIT ...)` is reserved for critical errors only
 
 ## Special Considerations
 
