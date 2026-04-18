@@ -3,7 +3,7 @@
 _pkgname=AIC8800-Linux-Driver
 pkgname=aic8800-fdrv-dkms
 pkgver=6.4.3.0
-pkgrel=1
+pkgrel=2
 pkgdesc="AIC8800 Linux Driver (DKMS)"
 arch=('x86_64' 'armv7h' 'aarch64')
 url="https://github.com/ronnyf/AIC8800-Linux-Driver"
@@ -17,7 +17,7 @@ conflicts=("${pkgname}")
 source=("$pkgname-$pkgver.tar.gz::https://github.com/ronnyf/AIC8800-Linux-Driver/archive/refs/heads/main.tar.gz"
         "dkms.conf")
 md5sums=('SKIP'
-         'd0c6f8e4b3a2c1d0e5f7a9b8c6d5e4f3')
+         'SKIP')
 
 prepare() {
     cd "$srcdir/$_pkgname-main"
@@ -26,6 +26,10 @@ prepare() {
 
 build() {
     echo "Build phase: DKMS will compile during installation"
+}
+
+post_build() {
+    echo "Post-build: Copy firmware files if needed"
 }
 
 package() {

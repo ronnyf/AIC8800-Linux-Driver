@@ -116,3 +116,25 @@ clean:
 	cd aic_load_fw/;make clean;cd ..
 	cd aic8800_fdrv/;make clean;cd ..
 	rm -rf modules.order Module.symvers .modules.order.cmd ..module-common.o.cmd .Module.symvers.cmd .module-common.o .tmp_versions/
+
+check_deps:
+	@echo "Checking dependencies..."
+	@if ! command -v clang >/dev/null 2>&1; then echo "ERROR: clang not found. Install with: sudo pacman -S clang" >&2; exit 1; fi
+	@if ! command -v makepkg >/dev/null 2>&1; then echo "ERROR: makepkg not found. Install with: sudo pacman -S devtools" >&2; exit 1; fi
+	@if [ ! -f "../../PKGBUILD" ]; then echo "ERROR: PKGBUILD not found" >&2; exit 1; fi
+	@if [ ! -f "../../dkms.conf" ]; then echo "ERROR: dkms.conf not found" >&2; exit 1; fi
+	@echo "All dependencies available."
+
+dkms: all check_deps
+	@echo "=== DKMS Deployment ==="
+	@mkdir -p build
+	@cp -r aic_load_fw/*.ko aic8800_fdrv/*.ko build/
+	@echo "Build artifacts ready in build/"
+	@ls -lh build/*.ko
+	@echo ""
+	@echo "Building DKMS package with makepkg..."
+	@cd ../../ && makepkg -f
+	@echo ""
+	@echo "DKMS package created!"
+
+.PHONY: dkms check_deps install_modules uninstall_modules

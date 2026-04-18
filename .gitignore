@@ -1,4 +1,8 @@
 **/.DS_Store
 
+# Build artifacts
+build/
+drivers/aic8800/build/
+
 .worktrees/
 worktrees/
