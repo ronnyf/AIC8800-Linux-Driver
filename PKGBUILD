@@ -1,4 +1,4 @@
-# Maintainer: Ronny F. <ronny@iMacPro.local>
+# Maintainer: Ronny F. <ronnyf@icloud.com>
 
 _pkgname=AIC8800-Linux-Driver
 pkgname=aic8800-fdrv-dkms
