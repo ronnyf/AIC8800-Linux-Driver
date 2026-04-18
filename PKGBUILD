@@ -42,8 +42,8 @@ package() {
 
     # Firmware
     if [ -d "fw/aic8800D80" ]; then
-        install -dm 755 "$pkgdir/lib/firmware/aic8800D80"
-        cp -r fw/aic8800D80/* "$pkgdir/lib/firmware/aic8800D80/"
+        install -dm 755 "$pkgdir/usr/lib/firmware/aic8800D80"
+        cp -r fw/aic8800D80/* "$pkgdir/usr/lib/firmware/aic8800D80/"
     fi
 
     # Udev rules
