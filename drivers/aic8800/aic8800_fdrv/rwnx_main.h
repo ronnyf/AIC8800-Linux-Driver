@@ -64,4 +64,9 @@ void set_txpwrloss_ctrl(struct rwnx_hw *rwnx_hw, s8 value);
 void aicwf_pwrloss_worker(struct work_struct *work);
 #endif
 
+irqreturn_t rwnx_irq_hdlr(int irq, void *dev_id);
+void rwnx_task(unsigned long data);
+int rwnx_init_aic(struct rwnx_hw *rwnx_hw);
+void rwnx_skb_align_8bytes(struct sk_buff *skb);
+
 #endif /* _RWNX_MAIN_H_ */

@@ -20,9 +20,9 @@
 #include "rwnx_cmds.h"
 
 static struct rwnx_cmd *rwnx_cmd_malloc(void);
-static void rwnx_cmd_free(struct rwnx_cmd *cmd);
-static int rwnx_init_cmd_array(void);
-static void rwnx_free_cmd_array(void);
+void rwnx_cmd_free(struct rwnx_cmd *cmd);
+int rwnx_init_cmd_array(void);
+void rwnx_free_cmd_array(void);
 #include "rwnx_main.h"
 #include "aicwf_txrxif.h"
 #include "rwnx_strs.h"
@@ -205,7 +205,7 @@ static struct rwnx_cmd *rwnx_cmd_malloc(void){
 	return cmd;
 }
 
-static void rwnx_cmd_free(struct rwnx_cmd *cmd){
+void rwnx_cmd_free(struct rwnx_cmd *cmd){
 	unsigned long flags = 0;
 
 	spin_lock_irqsave(&cmd_array_lock, flags);
@@ -215,7 +215,7 @@ static void rwnx_cmd_free(struct rwnx_cmd *cmd){
 }
 
 
-static int rwnx_init_cmd_array(void){
+int rwnx_init_cmd_array(void){
 
 	AICWFDBG(LOGTRACE, "%s Enter \r\n", __func__);
 	spin_lock_init(&cmd_array_lock);
@@ -230,7 +230,7 @@ static int rwnx_init_cmd_array(void){
 	return 0;
 }
 
-static void rwnx_free_cmd_array(void){
+void rwnx_free_cmd_array(void){
 
 	AICWFDBG(LOGTRACE, "%s Enter \r\n", __func__);
 

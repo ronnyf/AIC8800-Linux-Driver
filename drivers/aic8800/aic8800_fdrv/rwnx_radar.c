@@ -900,8 +900,8 @@ static struct pri_detector_ops pri_detector_long = {
  * @radar_type: index of radar pattern
  * @freq: Frequency of the pri detector
  */
-struct pri_detector *pri_detector_init(struct dfs_pattern_detector *dpd,
-                                       u16 radar_type, u16 freq)
+static struct pri_detector *pri_detector_init(struct dfs_pattern_detector *dpd,
+                                        u16 radar_type, u16 freq)
 {
     struct pri_detector *pde;
 
@@ -1069,7 +1069,7 @@ static void dfs_pattern_detector_pri_overflow(struct dfs_pattern_detector *dpd)
     }
 }
 
-void print_radar_detect_info(struct pri_detector *pde, struct pri_sequence *ps)
+static void print_radar_detect_info(struct pri_detector *pde, struct pri_sequence *ps)
 {
     struct radar_detector_specs *rs = (struct radar_detector_specs *)pde->rs;
     struct pulse_elem *p;

@@ -343,6 +343,7 @@ ccflags-$(CONFIG_TEMP_COMP) += -DCONFIG_TEMP_COMP
 ccflags-$(CONFIG_POWER_LIMIT) += -DCONFIG_POWER_LIMIT
 ccflags-$(CONFIG_EXT_FEM_8800DCDW) += -DCONFIG_EXT_FEM_8800DCDW
 ccflags-$(CONFIG_WOWLAN) += -DCONFIG_WOWLAN
+MAKEOVERRIDES := $(filter-out LLVM=% LLVM_IAS=%,$(MAKEOVERRIDES))
 MAKEFLAGS +=-j$(shell nproc)
 
 # Platform support list
@@ -396,7 +397,7 @@ endif
 
 all: modules
 modules:
-	make -C $(KDIR) M=$(PWD) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) LLVM=1 LLVM_IAS=1 modules
+	make -C $(KDIR) M=$(PWD) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(if $(filter 1,$(LLVM)),LLVM=1 LLVM_IAS=1,LLVM= LLVM_IAS=) modules
 install:
 	mkdir -p $(MODDESTDIR)
 	install -p -m 644 $(MODULE_NAME).ko  $(MODDESTDIR)

@@ -553,7 +553,7 @@ module_param(dynamic_pwr, int, 0660);
 int testmode = 0;
 char aic_fw_path[200];
 
-static void rwnx_skb_align_8bytes(struct sk_buff *skb){
+void rwnx_skb_align_8bytes(struct sk_buff *skb){
 #ifdef CONFIG_ALIGN_8BYTES
 	int align __maybe_unused;
 	u8 *data;
@@ -620,145 +620,6 @@ void rwnx_data_dump(char* tag, void* data, unsigned long len){
 #define ACTION_MAC_HDR_LEN 24
 #define QOS_MAC_HDR_LEN 26
 
-static void rwnx_frame_parser(char* tag, char* data, unsigned long len){
-	char print_data[100];
-	int print_index = 0;
-
-	memset(print_data, 0, 100);
-
-	if(data[0] == ASSOC_REQ){
-		sprintf(&print_data[print_index], "%s", "ASSOC_REQ \r\n");
-		print_index = strlen(print_data);
-	}else if(data[0] == ASSOC_RSP){
-		sprintf(&print_data[print_index], "%s", "ASSOC_RSP \r\n");
-		print_index = strlen(print_data);
-	}else if(data[0] == PROBE_REQ){
-		sprintf(&print_data[print_index], "%s", "PROBE_REQ \r\n");
-		print_index = strlen(print_data);
-	}else if(data[0] == PROBE_RSP){
-		sprintf(&print_data[print_index], "%s", "PROBE_RSP \r\n");
-		print_index = strlen(print_data);
-	}else if(data[0] == ACTION){
-		sprintf(&print_data[print_index], "%s", "ACTION ");
-		print_index = strlen(print_data);
-		if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x00){
-			sprintf(&print_data[print_index], "%s", "GO_NEG_REQ \r\n");
-		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x01){
-			sprintf(&print_data[print_index], "%s", "GO_NEG_RSP \r\n");
-		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x02){
-			sprintf(&print_data[print_index], "%s", "GO_NEG_CFM \r\n");
-		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x03){
-			sprintf(&print_data[print_index], "%s", "P2P_INV_REQ \r\n");
-		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x04){
-			sprintf(&print_data[print_index], "%s", "P2P_INV_RSP \r\n");
-		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x05){
-			sprintf(&print_data[print_index], "%s", "DD_REQ \r\n");
-		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x06){
-			sprintf(&print_data[print_index], "%s", "DD_RSP \r\n");
-		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x07){
-			sprintf(&print_data[print_index], "%s", "PD_REQ \r\n");
-		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x08){
-			sprintf(&print_data[print_index], "%s", "PD_RSP \r\n");
-		}else{
-			sprintf(&print_data[print_index], "%s(0x%x 0x%x) \r\n", "UNKNOW",
-				data[ACTION_MAC_HDR_LEN], data[ACTION_MAC_HDR_LEN + 6]);
-		}
-		print_index = strlen(print_data);
-	}else if(data[0] == AUTH){
-		sprintf(&print_data[print_index], "%s", "AUTH \r\n");
-		print_index = strlen(print_data);
-	}else if(data[0] == DEAUTH){
-		sprintf(&print_data[print_index], "%s", "DEAUTH \r\n");
-		print_index = strlen(print_data);
-	}else if(data[0] == QOS){
-		if(data[QOS_MAC_HDR_LEN + 6] == 0x88 && data[QOS_MAC_HDR_LEN + 7] == 0x8E){
-			sprintf(&print_data[print_index], "%s", "QOS_802.1X ");
-			if(data[QOS_MAC_HDR_LEN + 9] == 0x03){
-				sprintf(&print_data[print_index], "%s", "EAPOL \r\n");
-			}else if(data[QOS_MAC_HDR_LEN + 9] == 0x00){
-				sprintf(&print_data[print_index], "%s", "EAP_PACKAGE ");
-				print_index = strlen(print_data);
-				if(data[QOS_MAC_HDR_LEN + 12] == 0x01){
-					sprintf(&print_data[print_index], "%s", "EAP_REQ \r\n");
-				}else if(data[QOS_MAC_HDR_LEN + 12] == 0x02){
-					sprintf(&print_data[print_index], "%s", "EAP_RSP \r\n");
-				}else if(data[QOS_MAC_HDR_LEN + 12] == 0x04){
-					sprintf(&print_data[print_index], "%s", "EAP_FAIL \r\n");
-				}else{
-					sprintf(&print_data[print_index], "%s", "UNKNOW \r\n");
-				}
-			}else if(data[QOS_MAC_HDR_LEN + 9] == 0x01){
-				sprintf(&print_data[print_index], "%s","EAP_START \r\n");
-			}
-			print_index = strlen(print_data);
-		}
-	}
-
-	if(print_index > 0){
-		AICWFDBG(LOGDATA, "%s %s", tag, print_data);
-	}
-
-#if 0
-	if(data[0] == ASSOC_REQ){
-		AICWFDBG(LOGTRACE, "%s %s ASSOC_REQ \r\n", __func__, tag);
-	}else if(data[0] == ASSOC_RSP){
-		AICWFDBG(LOGTRACE, "%s %s ASSOC_RSP \r\n", __func__, tag);
-	}else if(data[0] == PROBE_REQ){
-		AICWFDBG(LOGTRACE, "%s %s PROBE_REQ \r\n", __func__, tag);
-	}else if(data[0] == PROBE_RSP){
-		AICWFDBG(LOGTRACE, "%s %s PROBE_RSP \r\n", __func__, tag);
-	}else if(data[0] == ACTION){
-		AICWFDBG(LOGTRACE, "%s %s ACTION ", __func__, tag);
-		if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x00){
-			AICWFDBG(LOGTRACE, "GO NEG REQ \r\n");
-		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x01){
-			AICWFDBG(LOGTRACE, "GO NEG RSP \r\n");
-		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x02){
-			AICWFDBG(LOGTRACE, "GO NEG CFM \r\n");
-		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x03){
-			AICWFDBG(LOGTRACE, "P2P INV REQ \r\n");
-		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x04){
-			AICWFDBG(LOGTRACE, "P2P INV RSP \r\n");
-		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x05){
-			AICWFDBG(LOGTRACE, "DD REQ \r\n");
-		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x06){
-			AICWFDBG(LOGTRACE, "DD RSP \r\n");
-		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x07){
-			AICWFDBG(LOGTRACE, "PD REQ \r\n");
-		}else if(data[ACTION_MAC_HDR_LEN] == 0x04 && data[ACTION_MAC_HDR_LEN + 6] == 0x08){
-			AICWFDBG(LOGTRACE, "PD RSP \r\n");
-		}else{
-			AICWFDBG(LOGTRACE, "\r\n");
-		}
-
-	}else if(data[0] == AUTH){
-		AICWFDBG(LOGTRACE, "%s %s AUTH \r\n", __func__, tag);
-	}else if(data[0] == DEAUTH){
-		AICWFDBG(LOGTRACE, "%s %s DEAUTH \r\n", __func__, tag);
-	}else if(data[0] == QOS){
-		if(data[QOS_MAC_HDR_LEN + 6] == 0x88 && data[QOS_MAC_HDR_LEN + 7] == 0x8E){
-			AICWFDBG(LOGTRACE, "%s %s QOS 802.1X ", __func__, tag);
-			if(data[QOS_MAC_HDR_LEN + 9] == 0x03){
-				AICWFDBG(LOGTRACE, "EAPOL");
-			}else if(data[QOS_MAC_HDR_LEN + 9] == 0x00){
-				AICWFDBG(LOGTRACE, "EAP PACKAGE ");
-				if(data[QOS_MAC_HDR_LEN + 12] == 0x01){
-					AICWFDBG(LOGTRACE, "EAP REQ\r\n");
-				}else if(data[QOS_MAC_HDR_LEN + 12] == 0x02){
-					AICWFDBG(LOGTRACE, "EAP RSP\r\n");
-				}else if(data[QOS_MAC_HDR_LEN + 12] == 0x04){
-					AICWFDBG(LOGTRACE, "EAP FAIL\r\n");
-				}else{
-					AICWFDBG(LOGTRACE, "\r\n");
-				}
-			}else if(data[QOS_MAC_HDR_LEN + 9] == 0x01){
-				AICWFDBG(LOGTRACE, "EAP START \r\n");
-
-			}
-		}
-	}
-#endif
-}
 
 /*********************************************************************
  * helper
@@ -4253,15 +4114,7 @@ static int rwnx_cfg80211_probe_client(struct wiphy *wiphy, struct net_device *de
  *	registered. Note that this callback may not sleep, and cannot run
  *	concurrently with itself.
  */
-static void rwnx_cfg80211_mgmt_frame_register(struct wiphy *wiphy,
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,6,0))
-                   struct net_device *dev,
-#else
-                   struct wireless_dev *wdev,
-#endif
-                   u16 frame_type, bool reg)
-{
-}
+
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0)
 /**
@@ -8508,6 +8361,7 @@ static int rwnx_ic_rf_init(struct rwnx_hw *rwnx_hw){
 #endif
 	return 0;
 }
+#ifdef CONFIG_FOR_IPCAM
 static void aic_ipc_setting(struct rwnx_vif *rwnx_vif){
     struct rwnx_hw *rwnx_hw = rwnx_vif->rwnx_hw;
 	uint32_t hw_edca = 1;
@@ -8521,6 +8375,7 @@ static void aic_ipc_setting(struct rwnx_vif *rwnx_vif){
 	rwnx_send_vendor_hwconfig_req(rwnx_hw, hw_edca, param, NULL);
 	rwnx_send_vendor_hwconfig_req(rwnx_hw, hw_cca, cca, NULL);
 }
+#endif
 extern int get_adap_test(void);
 
 extern void *aicwf_prealloc_txq_alloc(size_t size);

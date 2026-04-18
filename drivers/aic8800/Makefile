@@ -57,6 +57,22 @@ endif
 
 ###########################################
 
+# Auto-detect clang/LLVM
+# Usage: make (auto-detect) | make LLVM=1 (force clang) | make LLVM=0 (force gcc)
+#
+# Strip LLVM from MAKEOVERRIDES so command-line LLVM=0 doesn't leak
+# to kbuild via MAKEFLAGS (kbuild's ifdef LLVM treats any value as true)
+MAKEOVERRIDES := $(filter-out LLVM=% LLVM_IAS=%,$(MAKEOVERRIDES))
+
+_USE_LLVM :=
+ifeq ($(origin LLVM), undefined)
+  ifneq ($(shell which clang 2>/dev/null),)
+    _USE_LLVM := 1
+  endif
+else ifeq ($(LLVM),1)
+  _USE_LLVM := 1
+endif
+
 MAKEFLAGS +=-j$(shell nproc)
 
 MAKEFILE_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
@@ -67,7 +83,7 @@ UDEV_RULES_DEST ?= /etc/udev/rules.d
 
 all: modules
 modules:
-	make -C $(KDIR) M=$(PWD) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) modules
+	make -C $(KDIR) M=$(PWD) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(if $(_USE_LLVM),LLVM=1 LLVM_IAS=1,LLVM= LLVM_IAS=) modules
 
 install_firmware:
 	@test -d $(FIRMWARE_PATH) || { echo "ERROR: Firmware directory $(FIRMWARE_PATH) not found" >&2; exit 1; }
@@ -116,3 +132,25 @@ clean:
 	cd aic_load_fw/;make clean;cd ..
 	cd aic8800_fdrv/;make clean;cd ..
 	rm -rf modules.order Module.symvers .modules.order.cmd ..module-common.o.cmd .Module.symvers.cmd .module-common.o .tmp_versions/
+
+check_deps:
+	@echo "Checking dependencies..."
+	@if ! command -v clang >/dev/null 2>&1; then echo "ERROR: clang not found. Install with: sudo pacman -S clang" >&2; exit 1; fi
+	@if ! command -v makepkg >/dev/null 2>&1; then echo "ERROR: makepkg not found. Install with: sudo pacman -S devtools" >&2; exit 1; fi
+	@if [ ! -f "../../PKGBUILD" ]; then echo "ERROR: PKGBUILD not found" >&2; exit 1; fi
+	@if [ ! -f "../../dkms.conf" ]; then echo "ERROR: dkms.conf not found" >&2; exit 1; fi
+	@echo "All dependencies available."
+
+dkms: all check_deps
+	@echo "=== DKMS Deployment ==="
+	@mkdir -p build
+	@cp -r aic_load_fw/*.ko aic8800_fdrv/*.ko build/
+	@echo "Build artifacts ready in build/"
+	@ls -lh build/*.ko
+	@echo ""
+	@echo "Building DKMS package with makepkg..."
+	@cd ../../ && makepkg -f
+	@echo ""
+	@echo "DKMS package created!"
+
+.PHONY: dkms check_deps install_modules uninstall_modules

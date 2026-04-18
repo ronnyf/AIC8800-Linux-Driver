@@ -1,6 +1,43 @@
 #ifndef _AICBLUETOOTH_H
 #define _AICBLUETOOTH_H
 
+#include "aicbluetooth_cmds.h"
+
+struct aic_usb_dev;
+
+typedef struct
+{
+    int8_t enable;
+    int8_t xtal_cap;
+    int8_t xtal_cap_fine;
+} xtal_cap_conf_t;
+
+typedef struct
+{
+    int8_t enable;
+    int8_t dsss;
+    int8_t ofdmlowrate_2g4;
+    int8_t ofdm64qam_2g4;
+    int8_t ofdm256qam_2g4;
+    int8_t ofdm1024qam_2g4;
+    int8_t ofdmlowrate_5g;
+    int8_t ofdm64qam_5g;
+    int8_t ofdm256qam_5g;
+    int8_t ofdm1024qam_5g;
+} txpwr_idx_conf_t;
+
+typedef struct
+{
+    int8_t enable;
+    int8_t chan_1_4;
+    int8_t chan_5_9;
+    int8_t chan_10_13;
+    int8_t chan_36_64;
+    int8_t chan_100_120;
+    int8_t chan_122_140;
+    int8_t chan_142_165;
+} txpwr_ofst_conf_t;
+
 struct aicbt_patch_table {
 	char     *name;
 	uint32_t type;
@@ -35,5 +72,17 @@ void aicbt_parse_config(struct aic_usb_dev *usbdev, const char *filename);
 #endif
 int aicbt_patch_info_unpack(struct aicbt_patch_info_t *patch_info, struct aicbt_patch_table *head_t);
 int aicbt_patch_table_load(struct aic_usb_dev *usbdev, struct aicbt_patch_table *_head);
+
+void get_fw_path(char* fw_path);
+void set_testmode(int val);
+int get_testmode(void);
+int get_hardware_info(void);
+int get_adap_test(void);
+int get_flash_bin_size(void);
+u32 get_flash_bin_crc(void);
+void get_userconfig_xtal_cap(xtal_cap_conf_t *xtal_cap);
+void get_userconfig_txpwr_idx(txpwr_idx_conf_t *txpwr_idx);
+void get_userconfig_txpwr_ofst(txpwr_ofst_conf_t *txpwr_ofst);
+void rwnx_plat_userconfig_parsing(char *buffer, int size);
 
 #endif

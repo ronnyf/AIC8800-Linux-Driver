@@ -1,6 +1,7 @@
 #include "rwnx_main.h"
 #include "rwnx_msg_tx.h"
 #include "reg_access.h"
+#include "aicwf_compat_8800d80.h"
 
 #define FW_USERCONFIG_NAME_8800D80         "aic_userconfig_8800d80.txt"
 #define FW_POWERLIMIT_NAME_8800D80         "aic_powerlimit_8800d80.txt"

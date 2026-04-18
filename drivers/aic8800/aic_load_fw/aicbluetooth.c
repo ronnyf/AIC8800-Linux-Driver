@@ -6,6 +6,7 @@
 #include "md5.h"
 #include "aicbluetooth.h"
 #include "aicwf_debug.h"
+
 #ifdef CONFIG_USE_FW_REQUEST
 #include <linux/firmware.h>
 #endif
@@ -19,21 +20,6 @@
 extern int flash_erase_len;
 int flash_write_size = 0;
 u32 flash_write_bin_crc = 0;
-
-typedef struct
-{
-    int8_t enable;
-    int8_t dsss;
-    int8_t ofdmlowrate_2g4;
-    int8_t ofdm64qam_2g4;
-    int8_t ofdm256qam_2g4;
-    int8_t ofdm1024qam_2g4;
-    int8_t ofdmlowrate_5g;
-    int8_t ofdm64qam_5g;
-    int8_t ofdm256qam_5g;
-    int8_t ofdm1024qam_5g;
-} txpwr_idx_conf_t;
-
 
 txpwr_idx_conf_t userconfig_txpwr_idx = {
 	.enable 		  = 1,
@@ -49,18 +35,6 @@ txpwr_idx_conf_t userconfig_txpwr_idx = {
 
 };
 
-typedef struct
-{
-    int8_t enable;
-    int8_t chan_1_4;
-    int8_t chan_5_9;
-    int8_t chan_10_13;
-    int8_t chan_36_64;
-    int8_t chan_100_120;
-    int8_t chan_122_140;
-    int8_t chan_142_165;
-} txpwr_ofst_conf_t;
-
 txpwr_ofst_conf_t userconfig_txpwr_ofst = {
 	.enable = 1,
 	.chan_1_4 = 0,
@@ -71,15 +45,6 @@ txpwr_ofst_conf_t userconfig_txpwr_ofst = {
 	.chan_122_140 = 0,
 	.chan_142_165 = 0
 };
-
-typedef struct
-{
-    int8_t enable;
-    int8_t xtal_cap;
-    int8_t xtal_cap_fine;
-} xtal_cap_conf_t;
-
-
 xtal_cap_conf_t userconfig_xtal_cap = {
 	.enable = 0,
 	.xtal_cap = 24,
@@ -256,7 +221,7 @@ const u32 crc_tab[256] =
     0xb3667a2e, 0xc4614ab8, 0x5d681b02, 0x2a6f2b94,
     0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d,
 };
-u32 aic_crc32(u8 *p, u32 len, u32 crc)
+static u32 aic_crc32(u8 *p, u32 len, u32 crc)
 {
     while(len--)
     {
@@ -1009,7 +974,7 @@ void get_userconfig_txpwr_ofst(txpwr_ofst_conf_t *txpwr_ofst){
 
 EXPORT_SYMBOL(get_userconfig_txpwr_ofst);
 
-void rwnx_plat_userconfig_set_value(char *command, char *value){	
+static void rwnx_plat_userconfig_set_value(char *command, char *value){	
 	//TODO send command
 	AICWFDBG(LOGTRACE, "%s:command=%s value=%s \r\n", __func__, command, value);
 	if(!strcmp(command, "enable")){
