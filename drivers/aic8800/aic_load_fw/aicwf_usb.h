@@ -234,6 +234,8 @@ extern void aicwf_usb_tx_flowctrl(struct aic_usb_dev *usb_dev, bool state);
 int usb_bustx_thread(void *data);
 int usb_busrx_thread(void *data);
 int aicwf_process_rxframes(struct aicwf_rx_priv *rx_priv);
+int aicfw_download_fw_8800(struct aic_usb_dev *usb_dev);
+int aicfw_download_fw(struct aic_usb_dev *usb_dev);
 
 #endif /* AICWF_USB_SUPPORT */
 #endif /* _AICWF_USB_H_       */

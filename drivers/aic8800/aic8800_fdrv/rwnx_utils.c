@@ -7,6 +7,7 @@
  */
 #include "rwnx_utils.h"
 #include "rwnx_defs.h"
+#include "rwnx_main.h"
 #include "rwnx_rx.h"
 #include "rwnx_tx.h"
 #include "rwnx_msg_rx.h"

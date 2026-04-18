@@ -714,7 +714,7 @@ static inline char *aicwf_get_iwe_stream_rate(struct rwnx_hw* rwnx_hw,
 
 
 
-int aic_get_sec_ie(u8 *in_ie, uint in_len, u8 *rsn_ie, u16 *rsn_len, u8 *wpa_ie, u16 *wpa_len)
+static int aic_get_sec_ie(u8 *in_ie, uint in_len, u8 *rsn_ie, u16 *rsn_len, u8 *wpa_ie, u16 *wpa_len)
 {
 
 	u8 authmode;
@@ -827,7 +827,7 @@ static inline char *aicwf_get_iwe_stream_wpa_wpa2(struct rwnx_hw* rwnx_hw,
 }
 
 
-u8 aicwf_get_is_wps_ie(u8 *ie_ptr, uint *wps_ielen)
+static u8 aicwf_get_is_wps_ie(u8 *ie_ptr, uint *wps_ielen)
 {
 	u8 match = false;
 	u8 eid, wps_oui[4] = {0x0, 0x50, 0xf2, 0x04};

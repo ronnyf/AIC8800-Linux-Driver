@@ -2630,7 +2630,7 @@ int aicwf_patch_table_load(struct rwnx_hw *rwnx_hw, char *filename)
 #define PATCH_VARGRP_MAGIC_NUM          0x47564150
 #define USER_CHAN_MAX_TXPWR_EN_FLAG     (0x01U << 1)
 
-int aicwf_patch_var_config_8800dc(struct rwnx_hw *rwnx_hw)
+static int aicwf_patch_var_config_8800dc(struct rwnx_hw *rwnx_hw)
 {
     int ret = 0;
     uint32_t rd_patch_addr, rd_var_magic_addr, rd_ext_flags_addr;
@@ -3550,7 +3550,7 @@ int rwnx_plat_powerlimit_load_8800dcdw(struct rwnx_hw *rwnx_hw, uint16_t chip_id
 #endif
 
 //Crystal provided by CPU (start)
-int set_bbpll_config(struct rwnx_hw *rwnx_hw){
+static int set_bbpll_config(struct rwnx_hw *rwnx_hw){
 //    {0x40505010, 0x7C301010},//bbpll
 	int ret = 0;
 	struct dbg_mem_read_cfm rd_mem_addr_cfm;

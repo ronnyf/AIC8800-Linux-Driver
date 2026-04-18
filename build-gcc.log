@@ -1,0 +1,181 @@
+make: Entering directory '/home/ronny/src/AIC8800-Linux-Driver/drivers/aic8800'
+make -C /lib/modules/6.19.12-1-cachyos/build M=/home/ronny/src/AIC8800-Linux-Driver/drivers/aic8800 ARCH=x86_64 CROSS_COMPILE= LLVM= LLVM_IAS= modules
+make[1]: Entering directory '/usr/lib/modules/6.19.12-1-cachyos/build'
+make[2]: Entering directory '/home/ronny/src/AIC8800-Linux-Driver/drivers/aic8800'
+warning: the compiler differs from the one used to build the kernel
+  The kernel was built by: clang version 22.1.3
+  You are using:           gcc (GCC) 15.2.1 20260209
+  CC [M]  aic_load_fw/aic_bluetooth_main.o
+  CC [M]  aic_load_fw/aicwf_usb.o
+  CC [M]  aic_load_fw/aicbluetooth.o
+  CC [M]  aic8800_fdrv/rwnx_wakelock.o
+  CC [M]  aic8800_fdrv/rwnx_msg_tx.o
+  CC [M]  aic8800_fdrv/rwnx_msg_rx.o
+  CC [M]  aic_load_fw/aic_txrxif.o
+  CC [M]  aic8800_fdrv/rwnx_utils.o
+  CC [M]  aic_load_fw/aicbluetooth_cmds.o
+  CC [M]  aic8800_fdrv/rwnx_cmds.o
+  CC [M]  aic8800_fdrv/rwnx_irqs.o
+  CC [M]  aic_load_fw/aic_compat_8800d80.o
+  CC [M]  aic8800_fdrv/rwnx_cfgfile.o
+  CC [M]  aic8800_fdrv/rwnx_strs.o
+  CC [M]  aic_load_fw/aic_compat_8800d80x2.o
+  CC [M]  aic8800_fdrv/rwnx_rx.o
+gcc: error: unrecognized command-line option ‘-mstack-alignment=8’
+gcc: error: unrecognized command-line option ‘-mstack-alignment=8’
+gcc: error: unrecognized command-line option ‘-mstack-alignment=8’
+gcc: error: unrecognized command-line option ‘-mstack-alignment=8’
+gcc: error: unrecognized command-line option ‘-mstack-alignment=8’
+gcc: error: unrecognized command-line option ‘-mstack-alignment=8’
+gcc: error: unrecognized command-line option ‘-mstack-alignment=8’
+gcc: error: unrecognized command-line option ‘-mstack-alignment=8’
+gcc: error: unrecognized command-line option ‘-mstack-alignment=8’
+gcc: error: unrecognized command-line option ‘-mstack-alignment=8’
+gcc: error: unrecognized command-line option ‘-mstack-alignment=8’
+gcc: error: unrecognized command-line option ‘-mstack-alignment=8’
+gcc: error: unrecognized command-line option ‘-mstack-alignment=8’
+gcc: error: unrecognized command-line option ‘-mstack-alignment=8’
+gcc: error: unrecognized command-line option ‘-mstack-alignment=8’
+gcc: error: unrecognized command-line option ‘-mretpoline-external-thunk’
+gcc: error: unrecognized command-line option ‘-mretpoline-external-thunk’
+gcc: error: unrecognized command-line option ‘-mstack-alignment=8’
+gcc: error: unrecognized command-line option ‘-mretpoline-external-thunk’
+gcc: error: unrecognized command-line option ‘-mretpoline-external-thunk’
+gcc: error: unrecognized command-line option ‘-mretpoline-external-thunk’
+gcc: error: unrecognized command-line option ‘-fsplit-lto-unit’
+gcc: error: unrecognized command-line option ‘-mretpoline-external-thunk’
+gcc: error: unrecognized command-line option ‘-mretpoline-external-thunk’
+gcc: error: unrecognized command-line option ‘-mretpoline-external-thunk’
+gcc: error: unrecognized command-line option ‘-mretpoline-external-thunk’
+gcc: error: unrecognized command-line option ‘-mretpoline-external-thunk’
+gcc: error: unrecognized command-line option ‘-mretpoline-external-thunk’
+gcc: error: unrecognized command-line option ‘-mretpoline-external-thunk’
+gcc: error: unrecognized command-line option ‘-mretpoline-external-thunk’
+gcc: error: unrecognized command-line option ‘-fsplit-lto-unit’
+gcc: error: unrecognized command-line option ‘-mretpoline-external-thunk’
+gcc: error: unrecognized command-line option ‘-mretpoline-external-thunk’
+gcc: error: unrecognized command-line option ‘-fsplit-lto-unit’
+gcc: error: unrecognized command-line option ‘-fsplit-lto-unit’
+gcc: error: unrecognized command-line option ‘-fsplit-lto-unit’
+gcc: error: unrecognized command-line option ‘-fsplit-lto-unit’
+gcc: error: unrecognized command-line option ‘-fsplit-lto-unit’
+gcc: error: unrecognized command-line option ‘-fsplit-lto-unit’
+gcc: error: unrecognized command-line option ‘-fsplit-lto-unit’
+gcc: error: unrecognized command-line option ‘-fsplit-lto-unit’
+gcc: error: unrecognized command-line option ‘-fsplit-lto-unit’
+gcc: error: unrecognized command-line option ‘-fsplit-lto-unit’
+gcc: error: unrecognized command-line option ‘-fsplit-lto-unit’
+gcc: error: unrecognized command-line option ‘-fsplit-lto-unit’
+gcc: error: unrecognized command-line option ‘-fsplit-lto-unit’
+gcc: error: unrecognized command-line option ‘-fdebug-info-for-profiling’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-fdebug-info-for-profiling’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-fdebug-info-for-profiling’
+gcc: error: unrecognized command-line option ‘-fdebug-info-for-profiling’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-fdebug-info-for-profiling’
+gcc: error: unrecognized command-line option ‘-fdebug-info-for-profiling’
+gcc: error: unrecognized command-line option ‘-fdebug-info-for-profiling’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-fdebug-info-for-profiling’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-fdebug-info-for-profiling’
+gcc: error: unrecognized command-line option ‘-fdebug-info-for-profiling’
+gcc: error: unrecognized command-line option ‘-fdebug-info-for-profiling’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-fdebug-info-for-profiling’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-fdebug-info-for-profiling’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mretpoline-external-thunk’
+gcc: error: unrecognized command-line option ‘-fdebug-info-for-profiling’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-fdebug-info-for-profiling’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-improved-fs-discriminator=true’
+make[5]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:289: aic_load_fw/aicbluetooth.o] Error 1
+make[5]: *** Waiting for unfinished jobs....
+  CC [M]  aic8800_fdrv/rwnx_tx.o
+gcc: error: unrecognized command-line option ‘-fsplit-lto-unit’
+gcc: error: unrecognized command-line option ‘-improved-fs-discriminator=true’
+make[5]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:289: aic_load_fw/aic_bluetooth_main.o] Error 1
+gcc: error: unrecognized command-line option ‘-improved-fs-discriminator=true’
+gcc: error: unrecognized command-line option ‘-improved-fs-discriminator=true’
+make[5]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:289: aic8800_fdrv/rwnx_wakelock.o] Error 1
+make[5]: *** Waiting for unfinished jobs....
+gcc: error: unrecognized command-line option ‘-improved-fs-discriminator=true’
+make[5]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:289: aic_load_fw/aic_txrxif.o] Error 1
+make[5]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:289: aic_load_fw/aicbluetooth_cmds.o] Error 1
+gcc: error: unrecognized command-line option ‘-improved-fs-discriminator=true’
+  CC [M]  aic8800_fdrv/rwnx_txq.o
+gcc: error: unrecognized command-line option ‘-improved-fs-discriminator=true’
+make[5]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:289: aic8800_fdrv/rwnx_msg_tx.o] Error 1
+gcc: error: unrecognized command-line option ‘-improved-fs-discriminator=true’
+make[5]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:289: aic_load_fw/aicwf_usb.o] Error 1
+make[5]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:289: aic8800_fdrv/rwnx_msg_rx.o] Error 1
+gcc: error: unrecognized command-line option ‘-improved-fs-discriminator=true’
+make[5]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:289: aic8800_fdrv/rwnx_cfgfile.o] Error 1
+gcc: error: unrecognized command-line option ‘-improved-fs-discriminator=true’
+gcc: error: unrecognized command-line option ‘-improved-fs-discriminator=true’
+make[5]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:289: aic8800_fdrv/rwnx_utils.o] Error 1
+make[5]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:289: aic8800_fdrv/rwnx_cmds.o] Error 1
+gcc: error: unrecognized command-line option ‘-improved-fs-discriminator=true’
+gcc: error: unrecognized command-line option ‘-improved-fs-discriminator=true’
+make[5]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:289: aic8800_fdrv/rwnx_irqs.o] Error 1
+make[5]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:289: aic_load_fw/aic_compat_8800d80.o] Error 1
+gcc: error: unrecognized command-line option ‘-improved-fs-discriminator=true’
+make[5]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:289: aic_load_fw/aic_compat_8800d80x2.o] Error 1
+make[4]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:546: aic_load_fw] Error 2
+make[4]: *** Waiting for unfinished jobs....
+gcc: error: unrecognized command-line option ‘-fdebug-info-for-profiling’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-improved-fs-discriminator=true’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mstack-alignment=8’
+gcc: error: unrecognized command-line option ‘-mstack-alignment=8’
+make[5]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:289: aic8800_fdrv/rwnx_strs.o] Error 1
+gcc: error: unrecognized command-line option ‘-mretpoline-external-thunk’
+gcc: error: unrecognized command-line option ‘-mretpoline-external-thunk’
+gcc: error: unrecognized command-line option ‘-improved-fs-discriminator=true’
+make[5]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:289: aic8800_fdrv/rwnx_rx.o] Error 1
+gcc: error: unrecognized command-line option ‘-fsplit-lto-unit’
+gcc: error: unrecognized command-line option ‘-fsplit-lto-unit’
+gcc: error: unrecognized command-line option ‘-fdebug-info-for-profiling’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-fdebug-info-for-profiling’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-mllvm’
+gcc: error: unrecognized command-line option ‘-improved-fs-discriminator=true’
+make[5]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:289: aic8800_fdrv/rwnx_txq.o] Error 1
+gcc: error: unrecognized command-line option ‘-improved-fs-discriminator=true’
+make[5]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:289: aic8800_fdrv/rwnx_tx.o] Error 1
+make[4]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/scripts/Makefile.build:546: aic8800_fdrv] Error 2
+make[3]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/Makefile:2070: .] Error 2
+make[2]: *** [/usr/lib/modules/6.19.12-1-cachyos/build/Makefile:248: __sub-make] Error 2
+make[2]: Leaving directory '/home/ronny/src/AIC8800-Linux-Driver/drivers/aic8800'
+make[1]: *** [Makefile:248: __sub-make] Error 2
+make[1]: Leaving directory '/usr/lib/modules/6.19.12-1-cachyos/build'
+make: *** [Makefile:86: modules] Error 2
+make: Leaving directory '/home/ronny/src/AIC8800-Linux-Driver/drivers/aic8800'

@@ -230,7 +230,7 @@ static int parse_line (char *line, char *argv[])
 	return nargs;
 }
 
-unsigned int command_strtoul(const char *cp, char **endp, unsigned int base)
+static unsigned int command_strtoul(const char *cp, char **endp, unsigned int base)
 {
 	unsigned int result = 0, value, is_neg = 0;
 
@@ -263,10 +263,6 @@ unsigned int command_strtoul(const char *cp, char **endp, unsigned int base)
 	return result;
 }
 
-int str_starts(const char *str, const char *start)
-{
-	return strncmp(str, start, strlen(start)) == 0;
-}
 
 /*
  * aic_priv_cmd handers.
@@ -1609,7 +1605,7 @@ static void print_help(const char *cmd)
 	}
 }
 
-int handle_private_cmd(struct net_device *net, char *command, u32 cmd_len)
+static int handle_private_cmd(struct net_device *net, char *command, u32 cmd_len)
 {
 	const struct aic_priv_cmd *cmd, *match = NULL;
 	int count;
@@ -1722,43 +1718,6 @@ int rwnx_cfg80211_set_monitor_channel_(struct wiphy *wiphy,
                                              struct cfg80211_chan_def *chandef);
 #endif
 int rwnx_atoi2(char *value, int c_len);
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0))
-void set_mon_chan(struct rwnx_vif *vif, struct net_device *dev, char *parameter)
-#else
-void set_mon_chan(struct rwnx_vif *vif, char *parameter)
-#endif
-{
-    struct cfg80211_chan_def *chandef = NULL;
-    int freq = 0;
-    
-    
-    chandef = (struct cfg80211_chan_def *)vmalloc(sizeof(struct cfg80211_chan_def));
-    memset(chandef, 0, sizeof(struct cfg80211_chan_def));
-    chandef->chan = (struct ieee80211_channel *)vmalloc(sizeof(struct ieee80211_channel));
-    memset(chandef->chan, 0, sizeof(struct ieee80211_channel));
-    
-    freq = rwnx_atoi2(parameter, 4);
-
-    if(freq <= 2484){
-        chandef->chan->band = NL80211_BAND_2GHZ;
-    }else{
-        chandef->chan->band = NL80211_BAND_5GHZ;
-    }
-    chandef->chan->center_freq = freq;
-    chandef->width = NL80211_CHAN_WIDTH_20;
-    chandef->center_freq1 = chandef->chan->center_freq;
-    chandef->center_freq2 = 0;
-
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0))
-    rwnx_cfg80211_set_monitor_channel_(vif->rwnx_hw->wiphy, dev, chandef);
-#else
-    rwnx_cfg80211_set_monitor_channel_(vif->rwnx_hw->wiphy, chandef);
-#endif
-
-    vfree(chandef->chan);
-    vfree(chandef);
-
-}
 
 int get_cs_info(struct rwnx_vif *vif, u8 *mac_addr, u8 *val)
 {
