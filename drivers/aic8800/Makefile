@@ -83,7 +83,7 @@ UDEV_RULES_DEST ?= /etc/udev/rules.d
 
 all: modules
 modules:
-	make -C $(KDIR) M=$(PWD) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(if $(_USE_LLVM),LLVM=1 LLVM_IAS=1) modules
+	make -C $(KDIR) M=$(PWD) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(if $(_USE_LLVM),LLVM=1 LLVM_IAS=1,LLVM= LLVM_IAS=) modules
 
 install_firmware:
 	@test -d $(FIRMWARE_PATH) || { echo "ERROR: Firmware directory $(FIRMWARE_PATH) not found" >&2; exit 1; }
