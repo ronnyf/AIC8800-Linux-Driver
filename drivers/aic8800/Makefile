@@ -57,12 +57,20 @@ endif
 
 ###########################################
 
-# Auto-detect clang/LLVM — use if available, override with LLVM=0 to force GCC
+# Auto-detect clang/LLVM
+# Usage: make (auto-detect) | make LLVM=1 (force clang) | make LLVM=0 (force gcc)
+#
+# Strip LLVM from MAKEOVERRIDES so command-line LLVM=0 doesn't leak
+# to kbuild via MAKEFLAGS (kbuild's ifdef LLVM treats any value as true)
+MAKEOVERRIDES := $(filter-out LLVM=% LLVM_IAS=%,$(MAKEOVERRIDES))
+
+_USE_LLVM :=
 ifeq ($(origin LLVM), undefined)
   ifneq ($(shell which clang 2>/dev/null),)
-    export LLVM := 1
-    export LLVM_IAS := 1
+    _USE_LLVM := 1
   endif
+else ifeq ($(LLVM),1)
+  _USE_LLVM := 1
 endif
 
 MAKEFLAGS +=-j$(shell nproc)
@@ -75,7 +83,7 @@ UDEV_RULES_DEST ?= /etc/udev/rules.d
 
 all: modules
 modules:
-	make -C $(KDIR) M=$(PWD) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(if $(filter 1,$(LLVM)),LLVM=1 LLVM_IAS=1) modules
+	make -C $(KDIR) M=$(PWD) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(if $(_USE_LLVM),LLVM=1 LLVM_IAS=1) modules
 
 install_firmware:
 	@test -d $(FIRMWARE_PATH) || { echo "ERROR: Firmware directory $(FIRMWARE_PATH) not found" >&2; exit 1; }
