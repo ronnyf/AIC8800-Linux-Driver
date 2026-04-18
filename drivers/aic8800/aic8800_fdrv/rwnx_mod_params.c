@@ -1853,10 +1853,9 @@ void rwnx_custregd(struct rwnx_hw *rwnx_hw, struct wiphy *wiphy)
     }
 #endif
     else{
-        wiphy_err(wiphy,"\n"
-                  "*******************************************************\n"
-                  "** CAUTION: USING PERMISSIVE CUSTOM REGULATORY RULES **\n"
-                  "*******************************************************\n");
+        wiphy_info(wiphy,"\n"
+                  "Using custom regulatory rules (country: %s)\n",
+                  default_ccode);
     }
      rtnl_unlock();
 #endif
