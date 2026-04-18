@@ -1,14 +1,11 @@
 pre_install() {
     # Clean up files from prior manual installs (make install) to avoid conflicts
-    [ -d /usr/lib/firmware/aic8800D80 ] && rm -rf /usr/lib/firmware/aic8800D80
-    [ -d /lib/firmware/aic8800D80 ] && rm -rf /lib/firmware/aic8800D80
-    [ -f /etc/udev/rules.d/aic.rules ] && rm -f /etc/udev/rules.d/aic.rules
+    rm -rf /usr/lib/firmware/aic8800D80 2>/dev/null || true
+    rm -rf /lib/firmware/aic8800D80 2>/dev/null || true
+    rm -f /etc/udev/rules.d/aic.rules 2>/dev/null || true
 
     # Remove manually installed kernel modules
-    local kver
-    for kver in /lib/modules/*/kernel/drivers/net/wireless/aic8800; do
-        [ -d "$kver" ] && rm -rf "$kver"
-    done
+    rm -rf /lib/modules/*/kernel/drivers/net/wireless/aic8800 2>/dev/null || true
 }
 
 post_install() {
