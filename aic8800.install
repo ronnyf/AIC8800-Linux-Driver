@@ -1,5 +1,6 @@
 pre_install() {
     # Clean up files from prior manual installs (make install) to avoid conflicts
+    [ -d /usr/lib/firmware/aic8800D80 ] && rm -rf /usr/lib/firmware/aic8800D80
     [ -d /lib/firmware/aic8800D80 ] && rm -rf /lib/firmware/aic8800D80
     [ -f /etc/udev/rules.d/aic.rules ] && rm -f /etc/udev/rules.d/aic.rules
 
