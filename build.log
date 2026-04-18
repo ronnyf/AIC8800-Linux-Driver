@@ -4,43 +4,28 @@ make[1]: Entering directory '/usr/lib/modules/6.19.12-1-cachyos/build'
 make[2]: Entering directory '/home/ronny/src/AIC8800-Linux-Driver/drivers/aic8800'
   CC [M]  aic_load_fw/aic_bluetooth_main.o
   CC [M]  aic_load_fw/aicbluetooth.o
-  CC [M]  aic_load_fw/aicwf_usb.o
   CC [M]  aic8800_fdrv/rwnx_wakelock.o
   CC [M]  aic8800_fdrv/rwnx_msg_tx.o
+  CC [M]  aic_load_fw/aicwf_usb.o
   CC [M]  aic_load_fw/aic_txrxif.o
   CC [M]  aic8800_fdrv/rwnx_msg_rx.o
-  CC [M]  aic8800_fdrv/rwnx_utils.o
-  CC [M]  aic_load_fw/aicbluetooth_cmds.o
-  CC [M]  aic8800_fdrv/rwnx_cmds.o
-  CC [M]  aic_load_fw/aic_compat_8800d80.o
-  CC [M]  aic8800_fdrv/rwnx_irqs.o
   CC [M]  aic_load_fw/aic_compat_8800d80x2.o
-  CC [M]  aic8800_fdrv/rwnx_cfgfile.o
-  CC [M]  aic8800_fdrv/rwnx_strs.o
+  CC [M]  aic_load_fw/aicbluetooth_cmds.o
+  CC [M]  aic_load_fw/aic_compat_8800d80.o
+  CC [M]  aic8800_fdrv/rwnx_utils.o
   CC [M]  aic_load_fw/md5.o
   CC [M]  aic_load_fw/aicwf_rx_prealloc.o
+  CC [M]  aic8800_fdrv/rwnx_cmds.o
   CC [M]  aic_load_fw/aicwf_txq_prealloc.o
+  CC [M]  aic8800_fdrv/rwnx_irqs.o
+  CC [M]  aic8800_fdrv/rwnx_cfgfile.o
+  CC [M]  aic8800_fdrv/rwnx_strs.o
   CC [M]  aic8800_fdrv/rwnx_rx.o
   CC [M]  aic8800_fdrv/rwnx_tx.o
   CC [M]  aic8800_fdrv/rwnx_txq.o
   CC [M]  aic8800_fdrv/rwnx_main.o
   CC [M]  aic8800_fdrv/rwnx_mod_params.o
   CC [M]  aic8800_fdrv/rwnx_mesh.o
-aic_load_fw/aicwf_txq_prealloc.c:13:7: warning: no previous prototype for function 'aicwf_prealloc_txq_alloc' [-Wmissing-prototypes]
-   13 | void *aicwf_prealloc_txq_alloc(size_t size)
-      |       ^
-aic_load_fw/aicwf_txq_prealloc.c:13:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
-   13 | void *aicwf_prealloc_txq_alloc(size_t size)
-      | ^
-      | static 
-aic_load_fw/aicwf_txq_prealloc.c:50:6: warning: no previous prototype for function 'aicwf_prealloc_txq_free' [-Wmissing-prototypes]
-   50 | void aicwf_prealloc_txq_free(void)
-      |      ^
-aic_load_fw/aicwf_txq_prealloc.c:50:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
-   50 | void aicwf_prealloc_txq_free(void)
-      | ^
-      | static 
-2 warnings generated.
   CC [M]  aic8800_fdrv/rwnx_platform.o
   CC [M]  aic8800_fdrv/rwnx_pci.o
   LD [M]  aic_load_fw/aic_load_fw.o
