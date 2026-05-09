@@ -27,7 +27,7 @@ jobs:
         run: |
           cp dkms.conf drivers/aic8800/dkms.conf
 
-      - name: Create tarball
+      - name: Create source tarball
         id: tarball
         run: |
           VERSION="${{ steps.version.outputs.version }}"
@@ -39,7 +39,7 @@ jobs:
           cp drivers/aic8800/Makefile "${PKGDIR}/"
           cp dkms.conf "${PKGDIR}/"
           cp -r fw/aic8800D80 "${PKGDIR}/"
-          cp tools/aic.rules "${PKGDIR}/"
+          cp -r tools "${PKGDIR}/"
           cp LICENSE "${PKGDIR}/"
           cp README.md "${PKGDIR}/"
           TARBALL="AIC8800-Linux-Driver-${VERSION}.tar.zst"
@@ -47,11 +47,28 @@ jobs:
           rm -rf "${PKGDIR}"
           echo "tarball=${TARBALL}" >> $GITHUB_OUTPUT
 
+      - name: Build pacman package
+        id: pacman
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          PKGDIR="AIC8800-Linux-Driver-main"
+          tar --zstd -xf "AIC8800-Linux-Driver-${VERSION}.tar.zst"
+          cp "AIC8800-Linux-Driver-${VERSION}.tar.zst" "${PKGDIR}/"
+          cd "${PKGDIR}"
+          makepkg --noconfirm --skipinteg
+          PKGFILE=$(ls aic8800-fdrv-dkms-*.pkg.tar.zst 2>/dev/null)
+          mv "${PKGFILE}" ../
+          cd ..
+          rm -rf "${PKGDIR}"
+          echo "pkg=${PKGFILE}" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: "Release ${{ steps.version.outputs.version }}"
           generate_release_notes: true
-          files: ${{ steps.tarball.outputs.tarball }}
+          files: |
+            ${{ steps.tarball.outputs.tarball }}
+            ${{ steps.pacman.outputs.pkg }}
 
