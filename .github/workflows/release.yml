@@ -31,8 +31,8 @@ jobs:
         id: tarball
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          TARBALL="AIC8800-Linux-Driver-${VERSION}.tar.gz"
-          tar -czf "${TARBALL}" \
+          TARBALL="AIC8800-Linux-Driver-${VERSION}.tar.zst"
+          tar --zstd -cf "${TARBALL}" \
             drivers/aic8800/dkms.conf \
             drivers/aic8800/aic_load_fw/ \
             drivers/aic8800/aic8800_fdrv/ \
