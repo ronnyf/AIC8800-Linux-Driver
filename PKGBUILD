@@ -2,8 +2,15 @@
 
 _pkgname=AIC8800-Linux-Driver
 pkgname=aic8800-fdrv-dkms
-pkgver=6.4.3.0
-pkgrel=4
+
+_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0-0")
+_tag="${_tag#v}"
+pkgver=${_tag%-*}
+pkgrel=${_tag##*-}
+
+pkgver() {
+    echo "${pkgver}"
+}
 pkgdesc="AIC8800 Linux Driver (DKMS)"
 arch=('x86_64' 'armv7h' 'aarch64')
 url="https://github.com/ronnyf/AIC8800-Linux-Driver"
@@ -17,10 +24,10 @@ conflicts=("${pkgname}")
 backup=('etc/udev/rules.d/aic.rules')
 install=aic8800.install
 
-source=("$pkgname-$pkgver.tar.gz::https://github.com/ronnyf/AIC8800-Linux-Driver/archive/refs/heads/main.tar.gz"
+source=("AIC8800-Linux-Driver-${pkgver}-${pkgrel}.tar.zst::https://github.com/ronnyf/AIC8800-Linux-Driver/releases/download/v${pkgver}-${pkgrel}/AIC8800-Linux-Driver-${pkgver}-${pkgrel}.tar.zst"
         "dkms.conf")
-md5sums=('SKIP'
-         'SKIP')
+sha256sums=('SKIP'
+            'SKIP')
 
 prepare() {
     cd "$srcdir/$_pkgname-main"
