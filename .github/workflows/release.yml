@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Tag: ${TAG}, Version: ${VERSION}"
+
+      - name: Prepare source tree
+        run: |
+          cp dkms.conf drivers/aic8800/dkms.conf
+
+      - name: Create tarball
+        id: tarball
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TARBALL="AIC8800-Linux-Driver-${VERSION}.tar.gz"
+          tar -czf "${TARBALL}" \
+            drivers/aic8800/dkms.conf \
+            drivers/aic8800/aic_load_fw/ \
+            drivers/aic8800/aic8800_fdrv/ \
+            drivers/aic8800/Kconfig \
+            drivers/aic8800/Makefile \
+            fw/aic8800D80/ \
+            tools/aic.rules \
+            dkms.conf \
+            LICENSE \
+            README.md
+          echo "tarball=${TARBALL}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "Release ${{ steps.version.outputs.version }}"
+          generate_release_notes: true
+          files: ${{ steps.tarball.outputs.tarball }}
+
