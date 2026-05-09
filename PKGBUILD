@@ -22,7 +22,6 @@ optdepends=('dkms: auto-rebuild on kernel updates'
 provides=("${pkgname}")
 conflicts=("${pkgname}")
 backup=('etc/udev/rules.d/aic.rules')
-install=aic8800.install
 
 source=("AIC8800-Linux-Driver-${pkgver}-${pkgrel}.tar.zst::https://github.com/ronnyf/AIC8800-Linux-Driver/releases/download/v${pkgver}-${pkgrel}/AIC8800-Linux-Driver-${pkgver}-${pkgrel}.tar.zst"
         "dkms.conf")
@@ -30,8 +29,12 @@ sha256sums=('SKIP'
             'SKIP')
 
 prepare() {
-    cd "$srcdir/$_pkgname-main"
-    cp "$srcdir/dkms.conf" .
+    if [ -d "$srcdir/$_pkgname-main" ]; then
+        cd "$srcdir/$_pkgname-main"
+    else
+        cd "$srcdir"
+    fi
+    [ -f "$srcdir/dkms.conf" ] && cp "$srcdir/dkms.conf" .
 }
 
 build() {
@@ -39,7 +42,11 @@ build() {
 }
 
 package() {
-    cd "$srcdir/$_pkgname-main"
+    if [ -d "$srcdir/$_pkgname-main" ]; then
+        cd "$srcdir/$_pkgname-main"
+    else
+        cd "$srcdir"
+    fi
 
     local dkms_dest="$pkgdir/usr/src/$pkgname-$pkgver"
 
