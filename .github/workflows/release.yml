@@ -31,18 +31,20 @@ jobs:
         id: tarball
         run: |
           VERSION="${{ steps.version.outputs.version }}"
+          PKGDIR="AIC8800-Linux-Driver-main"
+          mkdir -p "${PKGDIR}"
+          cp -r drivers/aic8800/aic_load_fw "${PKGDIR}/"
+          cp -r drivers/aic8800/aic8800_fdrv "${PKGDIR}/"
+          cp drivers/aic8800/Kconfig "${PKGDIR}/"
+          cp drivers/aic8800/Makefile "${PKGDIR}/"
+          cp dkms.conf "${PKGDIR}/"
+          cp -r fw/aic8800D80 "${PKGDIR}/"
+          cp tools/aic.rules "${PKGDIR}/"
+          cp LICENSE "${PKGDIR}/"
+          cp README.md "${PKGDIR}/"
           TARBALL="AIC8800-Linux-Driver-${VERSION}.tar.zst"
-          tar --zstd -cf "${TARBALL}" \
-            drivers/aic8800/dkms.conf \
-            drivers/aic8800/aic_load_fw/ \
-            drivers/aic8800/aic8800_fdrv/ \
-            drivers/aic8800/Kconfig \
-            drivers/aic8800/Makefile \
-            fw/aic8800D80/ \
-            tools/aic.rules \
-            dkms.conf \
-            LICENSE \
-            README.md
+          tar --zstd -cf "${TARBALL}" "${PKGDIR}/"
+          rm -rf "${PKGDIR}"
           echo "tarball=${TARBALL}" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
