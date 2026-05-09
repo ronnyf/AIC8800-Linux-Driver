@@ -10,42 +10,6 @@ export CONFIG_PREALLOC_RX_SKB = y
 export CONFIG_PREALLOC_TXQ = y
 ###################################
 
-########## platform support list ##########
-export CONFIG_PLATFORM_ROCKCHIP = n
-export CONFIG_PLATFORM_ALLWINNER = n
-export CONFIG_PLATFORM_AMLOGIC = n
-export CONFIG_PLATFORM_HI = n
-export CONFIG_PLATFORM_UBUNTU = y
-
-ifeq ($(CONFIG_PLATFORM_ROCKCHIP), y)
-ARCH = arm64
-KDIR = /home/yaya/E/Rockchip/3566/firefly/Android11.0/Firefly-RK356X_Android11.0_git_20210824/RK356X_Android11.0/kernel
-CROSS_COMPILE = /home/yaya/E/Rockchip/3566/firefly/Android11.0/Firefly-RK356X_Android11.0_git_20210824/RK356X_Android11.0/prebuilts/gcc/linux-x86/aarch64/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-
-ccflags-y += -DANDROID_PLATFORM
-endif
-
-ifeq ($(CONFIG_PLATFORM_ALLWINNER), y)
-KDIR  = /home/yaya/E/Allwinner/R818/R818/AndroidQ/lichee/kernel/linux-4.9
-ARCH = arm64
-CROSS_COMPILE = /home/yaya/E/Allwinner/R818/R818/AndroidQ/lichee/out/gcc-linaro-5.3.1-2016.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-
-ccflags-y += -DANDROID_PLATFORM
-endif
-
-ifeq ($(CONFIG_PLATFORM_AMLOGIC), y)
-ccflags-y += -DANDROID_PLATFORM
-ARCH = arm
-CROSS_COMPILE = /home/yaya/D/Workspace/CyberQuantum/JinHaoYue/amls905x3/SDK/20191101-0tt-asop/android9.0/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androidkernel-
-KDIR = /home/yaya/D/Workspace/CyberQuantum/JinHaoYue/amls905x3/SDK/20191101-0tt-asop/android9.0/out/target/product/u202/obj/KERNEL_OBJ/
-endif
-
-ifeq ($(CONFIG_PLATFORM_HI), y)
-ccflags-y += -DANDROID_PLATFORM
-ARCH = arm
-CROSS_COMPILE = /home/yaya/D/Workspace/CyberQuantum/JinHaoYue/amls905x3/SDK/20191101-0tt-asop/android9.0/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androidkernel-
-KDIR = /home/yaya/D/Workspace/CyberQuantum/JinHaoYue/amls905x3/SDK/20191101-0tt-asop/android9.0/out/target/product/u202/obj/KERNEL_OBJ/
-endif
-
-ifeq ($(CONFIG_PLATFORM_UBUNTU), y)
 KDIR  = /lib/modules/$(shell uname -r)/build
 PWD   = $(shell pwd)
 KVER = $(shell uname -r)
@@ -53,27 +17,16 @@ MODDESTDIR = /lib/modules/$(KVER)/kernel/drivers/net/wireless/aic8800
 SUBARCH = $(shell uname -m | sed -e s/i.86/i386/ -e s/armv.l/arm/ -e s/aarch64/arm64/ -e s/loongarch64/loongarch/ -e s/loong64/loongarch/)
 ARCH ?= $(SUBARCH)
 CROSS_COMPILE ?=
-endif
 
-###########################################
-
-# Auto-detect clang/LLVM
-# Usage: make (auto-detect) | make LLVM=1 (force clang) | make LLVM=0 (force gcc)
-#
-# Strip LLVM from MAKEOVERRIDES so command-line LLVM=0 doesn't leak
-# to kbuild via MAKEFLAGS (kbuild's ifdef LLVM treats any value as true)
+# Match the compiler/toolchain used to build the running kernel
 MAKEOVERRIDES := $(filter-out LLVM=% LLVM_IAS=%,$(MAKEOVERRIDES))
-
-_USE_LLVM :=
-ifeq ($(origin LLVM), undefined)
-  ifneq ($(shell which clang 2>/dev/null),)
-    _USE_LLVM := 1
-  endif
-else ifeq ($(LLVM),1)
-  _USE_LLVM := 1
+_KERN_CLANG := $(shell grep -q CONFIG_CC_IS_CLANG $(KDIR)/.config 2>/dev/null && echo 1)
+_KERN_LLD := $(shell grep -q CONFIG_LLD_VERSION $(KDIR)/.config 2>/dev/null && echo 1)
+_KERN_FLAGS :=
+ifeq ($(_KERN_CLANG),1)
+  _KERN_FLAGS += LLVM=1 LLVM_IAS=1
 endif
 
-MAKEFLAGS +=-j$(shell nproc)
 
 MAKEFILE_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 FIRMWARE_PATH ?= $(MAKEFILE_DIR)../../fw/aic8800D80
@@ -83,7 +36,7 @@ UDEV_RULES_DEST ?= /etc/udev/rules.d
 
 all: modules
 modules:
-	make -C $(KDIR) M=$(PWD) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(if $(_USE_LLVM),LLVM=1 LLVM_IAS=1,LLVM= LLVM_IAS=) modules
+	$(MAKE) -C $(KDIR) M=$(PWD) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(_KERN_FLAGS) modules
 
 install_firmware:
 	@test -d $(FIRMWARE_PATH) || { echo "ERROR: Firmware directory $(FIRMWARE_PATH) not found" >&2; exit 1; }
@@ -133,24 +86,4 @@ clean:
 	cd aic8800_fdrv/;make clean;cd ..
 	rm -rf modules.order Module.symvers .modules.order.cmd ..module-common.o.cmd .Module.symvers.cmd .module-common.o .tmp_versions/
 
-check_deps:
-	@echo "Checking dependencies..."
-	@if ! command -v clang >/dev/null 2>&1; then echo "ERROR: clang not found. Install with: sudo pacman -S clang" >&2; exit 1; fi
-	@if ! command -v makepkg >/dev/null 2>&1; then echo "ERROR: makepkg not found. Install with: sudo pacman -S devtools" >&2; exit 1; fi
-	@if [ ! -f "../../PKGBUILD" ]; then echo "ERROR: PKGBUILD not found" >&2; exit 1; fi
-	@if [ ! -f "../../dkms.conf" ]; then echo "ERROR: dkms.conf not found" >&2; exit 1; fi
-	@echo "All dependencies available."
-
-dkms: all check_deps
-	@echo "=== DKMS Deployment ==="
-	@mkdir -p build
-	@cp -r aic_load_fw/*.ko aic8800_fdrv/*.ko build/
-	@echo "Build artifacts ready in build/"
-	@ls -lh build/*.ko
-	@echo ""
-	@echo "Building DKMS package with makepkg..."
-	@cd ../../ && makepkg -f
-	@echo ""
-	@echo "DKMS package created!"
-
-.PHONY: dkms check_deps install_modules uninstall_modules
+.PHONY: modules install_modules uninstall_modules
