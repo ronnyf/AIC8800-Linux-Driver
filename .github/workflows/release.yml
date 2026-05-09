@@ -53,12 +53,21 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           PKGDIR="AIC8800-Linux-Driver-main"
           tar --zstd -xf "AIC8800-Linux-Driver-${VERSION}.tar.zst"
-          cp "AIC8800-Linux-Driver-${VERSION}.tar.zst" "${PKGDIR}/"
-          cd "${PKGDIR}"
-          makepkg --noconfirm --skipinteg
-          PKGFILE=$(ls aic8800-fdrv-dkms-*.pkg.tar.zst 2>/dev/null)
+          PKGFILE="aic8800-fdrv-dkms-${{ steps.version.outputs.version }}-1-any.pkg.tar.zst"
+          mkdir -p "${PKGDIR}/usr/src/aic8800-fdrv-dkms-${{ steps.version.outputs.version }}"
+          cp -r "${PKGDIR}/drivers/aic_load_fw" "${PKGDIR}/usr/src/aic8800-fdrv-dkms-${{ steps.version.outputs.version }}/"
+          cp -r "${PKGDIR}/drivers/aic8800_fdrv" "${PKGDIR}/usr/src/aic8800-fdrv-dkms-${{ steps.version.outputs.version }}/"
+          cp "${PKGDIR}/drivers/aic8800/Kconfig" "${PKGDIR}/usr/src/aic8800-fdrv-dkms-${{ steps.version.outputs.version }}/"
+          cp "${PKGDIR}/drivers/aic8800/Makefile" "${PKGDIR}/usr/src/aic8800-fdrv-dkms-${{ steps.version.outputs.version }}/"
+          cp "${PKGDIR}/dkms.conf" "${PKGDIR}/usr/src/aic8800-fdrv-dkms-${{ steps.version.outputs.version }}/"
+          mkdir -p "${PKGDIR}/usr/lib/firmware/aic8800D80"
+          cp -r "${PKGDIR}/fw/aic8800D80/"* "${PKGDIR}/usr/lib/firmware/aic8800D80/"
+          mkdir -p "${PKGDIR}/etc/udev/rules.d"
+          cp "${PKGDIR}/tools/aic.rules" "${PKGDIR}/etc/udev/rules.d/aic.rules"
+          mkdir -p "${PKGDIR}/usr/share/doc/aic8800-fdrv-dkms"
+          cp "${PKGDIR}/README.md" "${PKGDIR}/usr/share/doc/aic8800-fdrv-dkms/"
+          tar --zstd -cf "${PKGFILE}" -C "${PKGDIR}" .
           mv "${PKGFILE}" ../
-          cd ..
           rm -rf "${PKGDIR}"
           echo "pkg=${PKGFILE}" >> $GITHUB_OUTPUT
 
