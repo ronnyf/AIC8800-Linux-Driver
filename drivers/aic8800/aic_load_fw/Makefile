@@ -27,6 +27,7 @@ MODULE_NAME = aic_load_fw
 ifeq ($(CONFIG_USB_SUPPORT), y)
 ccflags-y += -DAICWF_USB_SUPPORT
 endif
+ccflags-y += -DCONFIG_PLATFORM_UBUNTU
 ccflags-$(CONFIG_RFTEST) += -DCONFIG_RFTEST
 ccflags-$(CONFIG_USB_BT) += -DCONFIG_USB_BT
 ccflags-$(CONFIG_USB_MSG_EP) += -DCONFIG_USB_MSG_EP
