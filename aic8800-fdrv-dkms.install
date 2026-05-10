@@ -1,0 +1,14 @@
+post_install() {
+    echo "==> Installing aic8800-fdrv-dkms module..."
+    dkms install -m aic8800-fdrv-dkms -v "${1%-*}"
+}
+
+post_upgrade() {
+    pre_remove "${2}"
+    post_install "${1}"
+}
+
+pre_remove() {
+    echo "==> Removing aic8800-fdrv-dkms module..."
+    dkms remove -m aic8800-fdrv-dkms -v "${1%-*}" --all
+}
