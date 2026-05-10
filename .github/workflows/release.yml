@@ -49,6 +49,9 @@ jobs:
           rm -rf "${PKGDIR}"
           echo "tarball=${TARBALL}" >> $GITHUB_OUTPUT
 
+      - name: Install bsdtar
+        run: sudo apt-get update && sudo apt-get install -y libarchive-tools
+
       - name: Build pacman package
         id: pacman
         run: |
@@ -69,7 +72,18 @@ jobs:
           cp "${PKGDIR}/tools/aic.rules" "${PKGDIR}/etc/udev/rules.d/aic.rules"
           mkdir -p "${PKGDIR}/usr/share/doc/aic8800-fdrv-dkms"
           cp "${PKGDIR}/README.md" "${PKGDIR}/usr/share/doc/aic8800-fdrv-dkms/"
-          tar --zstd -cf "${PKGFILE}" -C "${PKGDIR}" .
+          cat > "${PKGDIR}/.PKGINFO" <<EOF
+pkgname = aic8800-fdrv-dkms
+pkgver = ${VERSION}
+pkgrel = 1
+arch = any
+license = GPL2
+url = https://github.com/ronnyf/AIC8800-Linux-Driver
+depends = linux-headers
+description = AIC8800 Linux Driver (DKMS)
+EOF
+          bsdtar -c --format=mtree --options=all=filetype,mode --file "${PKGDIR}/.MTREE" -C "${PKGDIR}" -- .
+          bsdtar -c -f "${PKGFILE}" --format=ustar --options=all=filetype,mode -C "${PKGDIR}" -- .
           mv "${PKGFILE}" ../
           rm -rf "${PKGDIR}"
           echo "pkg=${PKGFILE}" >> $GITHUB_OUTPUT
