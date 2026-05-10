@@ -1,70 +1,46 @@
 # Maintainer: Ronny F. <ronnyf@icloud.com>
 
-_pkgname=AIC8800-Linux-Driver
 pkgname=aic8800-fdrv-dkms
-
-_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0-0")
-_tag="${_tag#v}"
-pkgver=${_tag%-*}
-pkgrel=${_tag##*-}
-
-pkgver() {
-    echo "${pkgver}"
-}
-pkgdesc="AIC8800 Linux Driver (DKMS)"
-arch=('x86_64' 'armv7h' 'aarch64')
+pkgver=6.4.3.0
+pkgrel=5
+pkgdesc="AIC8800 (D80/DC/DW) USB WiFi driver - DKMS source package"
+arch=('any')
 url="https://github.com/ronnyf/AIC8800-Linux-Driver"
 license=('GPL2')
-depends=('linux-headers')
-makedepends=()
-optdepends=('dkms: auto-rebuild on kernel updates'
-            'clang: for LLVM-based builds with fewer warnings')
+depends=('dkms')
+optdepends=('linux-headers: stock Arch kernel headers'
+            'linux-cachyos-headers: CachyOS kernel headers'
+            'linux-lts-headers: Arch LTS kernel headers'
+            'linux-zen-headers: Arch Zen kernel headers'
+            'clang: required when the running kernel was built with clang (CachyOS, etc.)')
 provides=("${pkgname}")
 conflicts=("${pkgname}")
 backup=('etc/udev/rules.d/aic.rules')
+install="${pkgname}.install"
 
-source=("AIC8800-Linux-Driver-${pkgver}-${pkgrel}.tar.zst::https://github.com/ronnyf/AIC8800-Linux-Driver/releases/download/v${pkgver}-${pkgrel}/AIC8800-Linux-Driver-${pkgver}-${pkgrel}.tar.zst"
-        "dkms.conf")
-sha256sums=('SKIP'
-            'SKIP')
-
-prepare() {
-    if [ -d "$srcdir/$_pkgname-main" ]; then
-        cd "$srcdir/$_pkgname-main"
-    else
-        cd "$srcdir"
-    fi
-    [ -f "$srcdir/dkms.conf" ] && cp "$srcdir/dkms.conf" .
-}
-
-build() {
-    echo "Build phase: DKMS will compile during installation"
-}
+_srcname="AIC8800-Linux-Driver-${pkgver}-${pkgrel}"
+source=("${_srcname}.tar.gz::${url}/releases/download/v${pkgver}-${pkgrel}/${_srcname}.tar.gz")
+sha256sums=('SKIP')
 
 package() {
-    if [ -d "$srcdir/$_pkgname-main" ]; then
-        cd "$srcdir/$_pkgname-main"
-    else
-        cd "$srcdir"
-    fi
+    cd "${srcdir}/${_srcname}"
 
-    local dkms_dest="$pkgdir/usr/src/$pkgname-$pkgver"
+    local dkms_dest="${pkgdir}/usr/src/${pkgname}-${pkgver}"
 
-    install -dm 755 "$dkms_dest"
-    cp -r drivers/* "$dkms_dest/"
-    install -Dm 644 dkms.conf "$dkms_dest/dkms.conf"
+    install -dm 755 "${dkms_dest}"
+    cp -r drivers/aic8800/aic_load_fw   "${dkms_dest}/"
+    cp -r drivers/aic8800/aic8800_fdrv  "${dkms_dest}/"
+    install -Dm 644 drivers/aic8800/Makefile "${dkms_dest}/Makefile"
+    install -Dm 644 drivers/aic8800/Kconfig  "${dkms_dest}/Kconfig"
 
-    # Firmware
-    if [ -d "fw/aic8800D80" ]; then
-        install -dm 755 "$pkgdir/usr/lib/firmware/aic8800D80"
-        cp -r fw/aic8800D80/* "$pkgdir/usr/lib/firmware/aic8800D80/"
-    fi
+    install -Dm 644 dkms.conf "${dkms_dest}/dkms.conf"
+    sed -i "s/^PACKAGE_VERSION=.*/PACKAGE_VERSION=\"${pkgver}\"/" "${dkms_dest}/dkms.conf"
 
-    # Udev rules
-    if [ -f "tools/aic.rules" ]; then
-        install -Dm 644 tools/aic.rules "$pkgdir/etc/udev/rules.d/aic.rules"
-    fi
+    install -dm 755 "${pkgdir}/usr/lib/firmware/aic8800D80"
+    cp -r fw/aic8800D80/* "${pkgdir}/usr/lib/firmware/aic8800D80/"
 
-    # Documentation
-    install -Dm 644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md" 2>/dev/null || true
+    install -Dm 644 tools/aic.rules "${pkgdir}/etc/udev/rules.d/aic.rules"
+
+    install -Dm 644 LICENSE   "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+    install -Dm 644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
 }

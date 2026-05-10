@@ -11,82 +11,91 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel
     steps:
+      - name: Install build tools
+        run: |
+          pacman -Syu --noconfirm --needed git sudo
+
+      - name: Create builder user
+        run: |
+          useradd -m builder
+          echo 'builder ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Extract version
+      - name: Extract version from tag
         id: version
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
           VERSION="${TAG#v}"
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "Tag: ${TAG}, Version: ${VERSION}"
-
-      - name: Prepare source tree
-        run: |
-          cp dkms.conf drivers/aic8800/dkms.conf
+          if [[ "$VERSION" == *-* ]]; then
+            PKGVER="${VERSION%-*}"
+            PKGREL="${VERSION##*-}"
+          else
+            PKGVER="$VERSION"
+            PKGREL="1"
+          fi
+          {
+            echo "tag=${TAG}"
+            echo "version=${VERSION}"
+            echo "pkgver=${PKGVER}"
+            echo "pkgrel=${PKGREL}"
+          } >> "$GITHUB_OUTPUT"
+          echo "Tag=${TAG} pkgver=${PKGVER} pkgrel=${PKGREL}"
 
       - name: Create source tarball
         id: tarball
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          PKGDIR="AIC8800-Linux-Driver-main"
-          mkdir -p "${PKGDIR}/drivers"
-          mkdir -p "${PKGDIR}/fw"
-          mkdir -p "${PKGDIR}/tools"
-          cp -r drivers/aic8800/aic_load_fw "${PKGDIR}/drivers/"
-          cp -r drivers/aic8800/aic8800_fdrv "${PKGDIR}/drivers/"
-          cp drivers/aic8800/Kconfig "${PKGDIR}/drivers/"
-          cp drivers/aic8800/Makefile "${PKGDIR}/drivers/"
-          cp dkms.conf "${PKGDIR}/"
-          cp -r fw/aic8800D80 "${PKGDIR}/fw/"
-          cp tools/aic.rules "${PKGDIR}/tools/"
-          cp LICENSE "${PKGDIR}/"
-          cp README.md "${PKGDIR}/"
-          TARBALL="AIC8800-Linux-Driver-${VERSION}.tar.zst"
-          tar --zstd -cf "${TARBALL}" "${PKGDIR}/"
-          rm -rf "${PKGDIR}"
-          echo "tarball=${TARBALL}" >> $GITHUB_OUTPUT
+          PKGVER="${{ steps.version.outputs.pkgver }}"
+          PKGREL="${{ steps.version.outputs.pkgrel }}"
+          PKGDIR="AIC8800-Linux-Driver-${PKGVER}-${PKGREL}"
+          TARBALL="${PKGDIR}.tar.gz"
 
-      - name: Install bsdtar
-        run: sudo apt-get update && sudo apt-get install -y libarchive-tools
+          mkdir -p "_stage/${PKGDIR}/drivers/aic8800"
+          mkdir -p "_stage/${PKGDIR}/fw"
+          mkdir -p "_stage/${PKGDIR}/tools"
+
+          cp -r drivers/aic8800/aic_load_fw  "_stage/${PKGDIR}/drivers/aic8800/"
+          cp -r drivers/aic8800/aic8800_fdrv "_stage/${PKGDIR}/drivers/aic8800/"
+          cp    drivers/aic8800/Makefile     "_stage/${PKGDIR}/drivers/aic8800/"
+          cp    drivers/aic8800/Kconfig      "_stage/${PKGDIR}/drivers/aic8800/"
+          cp -r fw/aic8800D80                "_stage/${PKGDIR}/fw/"
+          cp    tools/aic.rules              "_stage/${PKGDIR}/tools/"
+          cp    dkms.conf                    "_stage/${PKGDIR}/"
+          cp    LICENSE                      "_stage/${PKGDIR}/"
+          cp    README.md                    "_stage/${PKGDIR}/"
+
+          tar -czf "${TARBALL}" -C _stage "${PKGDIR}"
+          rm -rf _stage
+
+          echo "tarball=${TARBALL}" >> "$GITHUB_OUTPUT"
+          ls -lh "${TARBALL}"
+
+      - name: Patch PKGBUILD with tag version
+        run: |
+          sed -i "s/^pkgver=.*/pkgver=${{ steps.version.outputs.pkgver }}/" PKGBUILD
+          sed -i "s/^pkgrel=.*/pkgrel=${{ steps.version.outputs.pkgrel }}/" PKGBUILD
+          grep -E '^(pkgname|pkgver|pkgrel)=' PKGBUILD
 
       - name: Build pacman package
         id: pacman
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          PKGDIR="AIC8800-Linux-Driver-main"
-          tar --zstd -xf "AIC8800-Linux-Driver-${VERSION}.tar.zst"
-          PKGFILE="aic8800-fdrv-dkms-${{ steps.version.outputs.version }}-1-any.pkg.tar.zst"
-          mkdir -p "${PKGDIR}/usr/src/aic8800-fdrv-dkms-${{ steps.version.outputs.version }}/aic_load_fw"
-          mkdir -p "${PKGDIR}/usr/src/aic8800-fdrv-dkms-${{ steps.version.outputs.version }}/aic8800_fdrv"
-          cp -r "${PKGDIR}/drivers/aic_load_fw"/* "${PKGDIR}/usr/src/aic8800-fdrv-dkms-${{ steps.version.outputs.version }}/aic_load_fw/"
-          cp -r "${PKGDIR}/drivers/aic8800_fdrv"/* "${PKGDIR}/usr/src/aic8800-fdrv-dkms-${{ steps.version.outputs.version }}/aic8800_fdrv/"
-          cp "${PKGDIR}/drivers/Kconfig" "${PKGDIR}/usr/src/aic8800-fdrv-dkms-${{ steps.version.outputs.version }}/"
-          cp "${PKGDIR}/drivers/Makefile" "${PKGDIR}/usr/src/aic8800-fdrv-dkms-${{ steps.version.outputs.version }}/"
-          cp "${PKGDIR}/dkms.conf" "${PKGDIR}/usr/src/aic8800-fdrv-dkms-${{ steps.version.outputs.version }}/"
-          mkdir -p "${PKGDIR}/usr/lib/firmware/aic8800D80"
-          cp -r "${PKGDIR}/fw/aic8800D80/"* "${PKGDIR}/usr/lib/firmware/aic8800D80/"
-          mkdir -p "${PKGDIR}/etc/udev/rules.d"
-          cp "${PKGDIR}/tools/aic.rules" "${PKGDIR}/etc/udev/rules.d/aic.rules"
-          mkdir -p "${PKGDIR}/usr/share/doc/aic8800-fdrv-dkms"
-          cp "${PKGDIR}/README.md" "${PKGDIR}/usr/share/doc/aic8800-fdrv-dkms/"
-          cat > "${PKGDIR}/.PKGINFO" <<EOF
-pkgname = aic8800-fdrv-dkms
-pkgver = ${VERSION}
-pkgrel = 1
-arch = any
-license = GPL2
-url = https://github.com/ronnyf/AIC8800-Linux-Driver
-depends = linux-headers
-description = AIC8800 Linux Driver (DKMS)
-EOF
-          bsdtar -c --format=mtree --options=all=filetype,mode --file "${PKGDIR}/.MTREE" -C "${PKGDIR}" -- .
-          bsdtar -c -f "${PKGFILE}" --format=ustar --options=all=filetype,mode -C "${PKGDIR}" -- .
-          mv "${PKGFILE}" ../
-          rm -rf "${PKGDIR}"
-          echo "pkg=${PKGFILE}" >> $GITHUB_OUTPUT
+          chown -R builder:builder .
+          sudo -u builder makepkg --noconfirm --skipchecksums --nodeps -f
+          PKGFILE=$(ls aic8800-fdrv-dkms-*.pkg.tar.zst | head -1)
+          [ -n "$PKGFILE" ] || { echo "ERROR: no .pkg.tar.zst produced"; exit 1; }
+          echo "pkg=${PKGFILE}" >> "$GITHUB_OUTPUT"
+          ls -lh "${PKGFILE}"
+          echo "--- package contents ---"
+          bsdtar -tf "${PKGFILE}" | head -40
+
+      - name: Generate .SRCINFO
+        run: |
+          sudo -u builder makepkg --printsrcinfo > .SRCINFO
+          cat .SRCINFO
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -94,7 +103,28 @@ EOF
           tag_name: ${{ github.ref_name }}
           name: "Release ${{ steps.version.outputs.version }}"
           generate_release_notes: true
+          body: |
+            ## Install on Arch Linux / CachyOS
+
+            **Option 1 — install the prebuilt package:**
+            ```bash
+            curl -LO https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/${{ steps.pacman.outputs.pkg }}
+            sudo pacman -U ${{ steps.pacman.outputs.pkg }}
+            ```
+
+            **Option 2 — build from PKGBUILD with `makepkg`:**
+            ```bash
+            curl -LO https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/PKGBUILD
+            curl -LO https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/aic8800-fdrv-dkms.install
+            makepkg -si
+            ```
+
+            DKMS rebuilds the modules automatically on each kernel update.
+            Make sure the matching headers are installed for your kernel
+            (`linux-headers`, `linux-cachyos-headers`, etc.).
           files: |
             ${{ steps.tarball.outputs.tarball }}
             ${{ steps.pacman.outputs.pkg }}
-
+            PKGBUILD
+            .SRCINFO
+            aic8800-fdrv-dkms.install
