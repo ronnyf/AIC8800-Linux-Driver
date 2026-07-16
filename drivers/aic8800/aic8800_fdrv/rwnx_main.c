@@ -2934,7 +2934,12 @@ static int rwnx_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
         key_params.key_len = sme->key_len;
         key_params.seq_len = 0;
         key_params.cipher = sme->crypto.cipher_group;
-        rwnx_cfg80211_add_key(wiphy, dev,
+        rwnx_cfg80211_add_key(wiphy,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0))
+                                &rwnx_vif->wdev,
+#else
+                                dev,
+#endif
 #if (LINUX_VERSION_CODE >= HIGH_KERNEL_VERSION2)
                                 0,
 #endif
@@ -3996,7 +4001,13 @@ static int rwnx_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
 
     /* delete any remaining STA*/
     while (!list_empty(&rwnx_vif->ap.sta_list)) {
-        rwnx_cfg80211_del_station_compat(wiphy, dev, NULL);
+        rwnx_cfg80211_del_station_compat(wiphy,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0))
+                                          &rwnx_vif->wdev,
+#else
+                                          dev,
+#endif
+                                          NULL);
     }
 
 #ifdef CONFIG_BAND_STEERING
