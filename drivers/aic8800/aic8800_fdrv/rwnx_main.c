@@ -2821,7 +2821,11 @@ static int rwnx_cfg80211_del_key(struct wiphy *wiphy,
  * @set_default_key: set the default key on an interface
  */
 static int rwnx_cfg80211_set_default_key(struct wiphy *wiphy,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0))
+                                         struct wireless_dev *wdev,
+#else
                                          struct net_device *netdev,
+#endif
 #if (LINUX_VERSION_CODE >= HIGH_KERNEL_VERSION2)
                                                                  int link_id,
 #endif
@@ -3163,7 +3167,7 @@ static int rwnx_cfg80211_add_station(struct wiphy *wiphy,
 	struct net_device *dev,
 #endif
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 16, 0))
-	const u8 *mac,
+	u8 *mac,
 #else
 	const u8 *mac,
 #endif
@@ -3265,7 +3269,7 @@ static int rwnx_cfg80211_add_station(struct wiphy *wiphy,
                 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 0, 0)
                 sinfo.filled |= STATION_INFO_ASSOC_REQ_IES;
                 #endif
-			cfg80211_new_sta_call(rwnx_vif->ndev, sta->mac_addr, &sinfo, GFP_KERNEL);
+			cfg80211_new_sta_call(rwnx_vif, sta->mac_addr, &sinfo, GFP_KERNEL);
             }
 
 #ifdef CONFIG_BAND_STEERING
@@ -3290,7 +3294,7 @@ static int rwnx_cfg80211_add_station(struct wiphy *wiphy,
             #define PRINT_STA_FLAG(f)                               \
                 (params->sta_flags_set & BIT(NL80211_STA_FLAG_##f) ? "["#f"]" : "")
 
-            netdev_info(dev, "Add sta %d (%pM) flags=%s%s%s%s%s%s%s",
+            netdev_info(rwnx_vif->ndev, "Add sta %d (%pM) flags=%s%s%s%s%s%s%s",
                         sta->sta_idx, mac,
                         PRINT_STA_FLAG(AUTHORIZED),
                         PRINT_STA_FLAG(SHORT_PREAMBLE),
@@ -3375,7 +3379,7 @@ static int rwnx_cfg80211_del_station_compat(struct wiphy *wiphy,
 		spin_unlock_bh(&rwnx_hw->cb_lock);
 
 		if(found) {
-			netdev_info(dev, "Del sta %d (%pM)", cur->sta_idx, cur->mac_addr);
+			netdev_info(rwnx_vif->ndev, "Del sta %d (%pM)", cur->sta_idx, cur->mac_addr);
 			if (cur->vif_idx != cur->vlan_idx) {
 				struct rwnx_vif *vlan_vif;
 				vlan_vif = rwnx_hw->vif_table[cur->vlan_idx];
@@ -3389,7 +3393,7 @@ static int rwnx_cfg80211_del_station_compat(struct wiphy *wiphy,
 				}
 			}
             		if (rwnx_vif->wdev.iftype == NL80211_IFTYPE_AP || rwnx_vif->wdev.iftype == NL80211_IFTYPE_P2P_GO) {
-                 		cfg80211_del_sta_call(rwnx_vif->ndev, cur->mac_addr, GFP_KERNEL);
+                 		cfg80211_del_sta_call(rwnx_vif, cur->mac_addr, GFP_KERNEL);
             		}
 
 #ifdef AICWF_RX_REORDER
@@ -3621,7 +3625,7 @@ static int rwnx_cfg80211_change_station(struct wiphy *wiphy,
 	struct net_device *dev,
 #endif
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 16, 0))
-	const u8 *mac,
+	u8 *mac,
 #else
 	const u8 *mac,
 #endif
@@ -3641,7 +3645,7 @@ static int rwnx_cfg80211_change_station(struct wiphy *wiphy,
         /* Add the TDLS station */
         if (params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
         {
-            struct rwnx_vif *rwnx_vif = netdev_priv(dev);
+            struct rwnx_vif *rwnx_vif = vif;
             struct me_sta_add_cfm me_sta_add_cfm;
             int error = 0;
 
@@ -3712,7 +3716,7 @@ static int rwnx_cfg80211_change_station(struct wiphy *wiphy,
                     #define PRINT_STA_FLAG(f)                               \
                         (params->sta_flags_set & BIT(NL80211_STA_FLAG_##f) ? "["#f"]" : "")
 
-                    netdev_info(dev, "Add %s TDLS sta %d (%pM) flags=%s%s%s%s%s%s%s",
+                    netdev_info(rwnx_vif->ndev, "Add %s TDLS sta %d (%pM) flags=%s%s%s%s%s%s%s",
                                 sta->tdls.initiator ? "initiator" : "responder",
                                 sta->sta_idx, mac,
                                 PRINT_STA_FLAG(AUTHORIZED),
@@ -5583,7 +5587,7 @@ static int rwnx_cfg80211_get_station(struct wiphy *wiphy,
 	struct net_device *dev,
 #endif
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 16, 0))
-	const u8 *mac,
+	u8 *mac,
 #else
 	const u8 *mac,
 #endif

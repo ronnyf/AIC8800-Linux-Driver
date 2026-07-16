@@ -462,21 +462,21 @@ typedef __s64 time64_t;
 /* KERNEL 7.1+ cfg80211 API changes */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
 
-#define cfg80211_new_sta_call(wdev, mac_addr, sinfo, gfp) \
-    cfg80211_new_sta(wdev, mac_addr, sinfo, gfp)
+#define cfg80211_new_sta_call(vif, mac_addr, sinfo, gfp) \
+    cfg80211_new_sta(&(vif)->wdev, mac_addr, sinfo, gfp)
 
-#define cfg80211_del_sta_call(wdev, mac_addr, gfp) \
-    cfg80211_del_sta(wdev, mac_addr, gfp)
+#define cfg80211_del_sta_call(vif, mac_addr, gfp) \
+    cfg80211_del_sta(&(vif)->wdev, mac_addr, gfp)
 
 #define mgmt_action_field(mgmt, field) ((mgmt)->u.action.field)
 
 #else
 
-#define cfg80211_new_sta_call(ndev, mac_addr, sinfo, gfp) \
-    cfg80211_new_sta(ndev, mac_addr, sinfo, gfp)
+#define cfg80211_new_sta_call(vif, mac_addr, sinfo, gfp) \
+    cfg80211_new_sta((vif)->ndev, mac_addr, sinfo, gfp)
 
-#define cfg80211_del_sta_call(ndev, mac_addr, gfp) \
-    cfg80211_del_sta(ndev, mac_addr, gfp)
+#define cfg80211_del_sta_call(vif, mac_addr, gfp) \
+    cfg80211_del_sta((vif)->ndev, mac_addr, gfp)
 
 #define mgmt_action_field(mgmt, field) ((mgmt)->u.action.u.field)
 
