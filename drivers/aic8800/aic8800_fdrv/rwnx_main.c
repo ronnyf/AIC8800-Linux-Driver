@@ -552,7 +552,8 @@ module_param(dynamic_pwr, int, 0660);
 
 int testmode = 0;
 char aic_fw_path[200];
-module_param_string(aic_fw_path, aic_fw_path, sizeof(aic_fw_path), 0660);
+char aic_fw_path_override[200];
+module_param_string(aic_fw_path, aic_fw_path_override, sizeof(aic_fw_path_override), 0660);
 
 void rwnx_skb_align_8bytes(struct sk_buff *skb){
 #ifdef CONFIG_ALIGN_8BYTES
