@@ -2767,7 +2767,9 @@ static int rwnx_cfg80211_get_key(struct wiphy *wiphy,
 #else
     (void)netdev;
 #endif
+#if (LINUX_VERSION_CODE >= HIGH_KERNEL_VERSION2)
     (void)link_id;
+#endif
     (void)key_index;
     (void)pairwise;
     (void)mac_addr;
@@ -2847,6 +2849,12 @@ static int rwnx_cfg80211_set_default_key(struct wiphy *wiphy,
 #else
     (void)netdev;
 #endif
+#if (LINUX_VERSION_CODE >= HIGH_KERNEL_VERSION2)
+    (void)link_id;
+#endif
+    (void)key_index;
+    (void)unicast;
+    (void)multicast;
     RWNX_DBG(RWNX_FN_ENTRY_STR);
 
     return 0;
@@ -2871,6 +2879,10 @@ static int rwnx_cfg80211_set_default_mgmt_key(struct wiphy *wiphy,
 #else
     (void)netdev;
 #endif
+#if (LINUX_VERSION_CODE >= HIGH_KERNEL_VERSION2)
+    (void)link_id;
+#endif
+    (void)key_index;
     return 0;
 }
 
