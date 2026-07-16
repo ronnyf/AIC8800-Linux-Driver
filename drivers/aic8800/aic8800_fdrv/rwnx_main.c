@@ -2833,22 +2833,14 @@ static int rwnx_cfg80211_del_key(struct wiphy *wiphy,
 /**
  * @set_default_key: set the default key on an interface
  */
-static int rwnx_cfg80211_set_default_key(struct wiphy *wiphy,
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0))
-                                         struct wireless_dev *wdev,
-#else
-                                         struct net_device *netdev,
-#endif
+ static int rwnx_cfg80211_set_default_key(struct wiphy *wiphy,
+                                          struct net_device *netdev,
 #if (LINUX_VERSION_CODE >= HIGH_KERNEL_VERSION2)
-                                                                 int link_id,
+                                          int link_id,
 #endif
-                                         u8 key_index, bool unicast, bool multicast)
+                                          u8 key_index, bool unicast, bool multicast)
 {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0))
-    (void)wdev;
-#else
     (void)netdev;
-#endif
 #if (LINUX_VERSION_CODE >= HIGH_KERNEL_VERSION2)
     (void)link_id;
 #endif
