@@ -470,6 +470,8 @@ typedef __s64 time64_t;
 
 #define mgmt_action_field(mgmt, field) ((mgmt)->u.action.field)
 
+#define mgmt_action_code(mgmt, field) ((mgmt)->u.action.action_code)
+
 #else
 
 #define cfg80211_new_sta_call(vif, mac_addr, sinfo, gfp) \
@@ -479,6 +481,8 @@ typedef __s64 time64_t;
     cfg80211_del_sta((vif)->ndev, mac_addr, gfp)
 
 #define mgmt_action_field(mgmt, field) ((mgmt)->u.action.u.field)
+
+#define mgmt_action_code(mgmt, field) ((mgmt)->u.action.u.field.action_code)
 
 #endif
 

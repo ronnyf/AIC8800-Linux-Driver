@@ -115,9 +115,15 @@ rwnx_prep_tdls_direct(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwnx_vif,
 
     switch (action_code) {
     case WLAN_PUB_ACTION_TDLS_DISCOVER_RES:
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0))
+        /* action_code moved out of the per-category union on 7.1+, so the
+         * fixed action-frame header is category + action_code + variant. */
+        skb_put(skb, 2 + sizeof(mgmt_action_field(mgmt, tdls_discover_resp)));
+#else
         skb_put(skb, 1 + sizeof(mgmt_action_field(mgmt, tdls_discover_resp)));
+#endif
         mgmt->u.action.category = WLAN_CATEGORY_PUBLIC;
-        mgmt_action_field(mgmt, tdls_discover_resp).action_code = WLAN_PUB_ACTION_TDLS_DISCOVER_RES;
+        mgmt_action_code(mgmt, tdls_discover_resp) = WLAN_PUB_ACTION_TDLS_DISCOVER_RES;
         mgmt_action_field(mgmt, tdls_discover_resp).dialog_token = dialog_token;
         mgmt_action_field(mgmt, tdls_discover_resp).capability =
             cpu_to_le16(rwnx_get_tdls_sta_capab(rwnx_vif, status_code));

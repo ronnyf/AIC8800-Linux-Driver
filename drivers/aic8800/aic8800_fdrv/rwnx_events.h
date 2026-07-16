@@ -189,7 +189,7 @@ DECLARE_EVENT_CLASS(
         __entry->sta_idx = sta_idx;
         __entry->frame_control = mgmt->frame_control;
         __entry->action_cat = mgmt->u.action.category;
-        __entry->action_type = mgmt_action_field(mgmt, wme_action).action_code;
+        __entry->action_type = mgmt_action_code(mgmt, wme_action);
         __entry->action_p2p = *((u8 *)&mgmt->u.action.category
                                  + MGMT_ACTION_OUI_SUBTYPE_OFFSET);
                    ),
