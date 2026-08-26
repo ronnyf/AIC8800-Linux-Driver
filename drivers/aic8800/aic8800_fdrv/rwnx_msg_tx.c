@@ -16,6 +16,7 @@
 #ifdef CONFIG_RWNX_BFMER
 #include "rwnx_bfmer.h"
 #endif //(CONFIG_RWNX_BFMER)
+#include <linux/string.h>
 #include "rwnx_compat.h"
 #include "rwnx_cmds.h"
 
