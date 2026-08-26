@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build against ${{ matrix.headers }}
+    name: Build against ${{ matrix.label }}
     runs-on: ubuntu-latest
     container:
       image: archlinux:base-devel
@@ -17,13 +17,31 @@ jobs:
       # hide the result for the other.
       fail-fast: false
       matrix:
-        headers:
-          - linux-headers
-          - linux-lts-headers
+        include:
+          - label: linux-headers
+            package: linux-headers
+            testing: false
+          - label: linux-lts-headers
+            package: linux-lts-headers
+            testing: false
+          # Arch stable trails the newest kernel, so the stable jobs above cannot
+          # exercise the newest version-guarded code paths. The testing repos
+          # carry the next kernel; "Report kernel coverage" below states which
+          # version each job actually compiled against.
+          - label: linux-headers (testing)
+            package: linux-headers
+            testing: true
     steps:
+      - name: Enable Arch testing repositories
+        if: matrix.testing
+        run: |
+          # Must precede [core]/[extra] in pacman.conf to take precedence.
+          sed -i '/^\[core\]/i [core-testing]\nInclude = /etc/pacman.d/mirrorlist\n\n[extra-testing]\nInclude = /etc/pacman.d/mirrorlist\n' /etc/pacman.conf
+
       - name: Install toolchain and kernel headers
         run: |
-          pacman -Syu --noconfirm --needed git bc cpio ${{ matrix.headers }}
+          pacman -Sy --noconfirm
+          pacman -S --noconfirm --needed git bc cpio ${{ matrix.package }}
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,7 +53,7 @@ jobs:
           # the headers we just installed, so KDIR has to be resolved explicitly.
           KDIR=$(ls -d /usr/lib/modules/*/build 2>/dev/null | head -1)
           if [ -z "$KDIR" ]; then
-            echo "ERROR: no kernel build directory found for ${{ matrix.headers }}"
+            echo "ERROR: no kernel build directory found for ${{ matrix.package }}"
             exit 1
           fi
           KVER=$(basename "$(dirname "$KDIR")")
@@ -66,7 +84,7 @@ jobs:
           REST=${KVER#*.}
           MIN=${REST%%.*}
           if [ "$MAJ" -gt 7 ] || { [ "$MAJ" -eq 7 ] && [ "$MIN" -ge 2 ]; }; then
-            echo "::notice title=Kernel coverage::${{ matrix.headers }} = ${KVER}: exercises the >= 7.2 code path"
+            echo "::notice title=Kernel coverage::${{ matrix.label }} = ${KVER}: exercises the >= 7.2 code path"
           else
-            echo "::warning title=Kernel coverage::${{ matrix.headers }} = ${KVER}: below 7.2, so the >= 7.2 code path was NOT compiled by this job"
+            echo "::warning title=Kernel coverage::${{ matrix.label }} = ${KVER}: below 7.2, so the >= 7.2 code path was NOT compiled by this job"
           fi
