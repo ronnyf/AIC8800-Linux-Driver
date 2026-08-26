@@ -88,3 +88,65 @@ jobs:
           else
             echo "::warning title=Kernel coverage::${{ matrix.label }} = ${KVER}: below 7.2, so the >= 7.2 code path was NOT compiled by this job"
           fi
+
+  # Arch does not package kernel 7.2 yet, not even in the testing repositories,
+  # so the jobs above cannot compile the >= 7.2 code paths at all. Prepare an
+  # upstream tree instead - that is the only way to prove the 7.2 claim.
+  build-upstream:
+    name: Build against upstream ${{ matrix.tag }}
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel
+    strategy:
+      fail-fast: false
+      matrix:
+        tag:
+          - v7.2
+    steps:
+      - name: Install toolchain
+        run: |
+          pacman -Syu --noconfirm --needed git bc cpio elfutils flex bison openssl perl python
+
+      - name: Checkout driver
+        uses: actions/checkout@v4
+        with:
+          path: driver
+
+      - name: Prepare upstream kernel ${{ matrix.tag }}
+        id: kernel
+        run: |
+          git clone --depth 1 --branch '${{ matrix.tag }}' \
+            https://github.com/torvalds/linux.git linux
+          cd linux
+          make -s -j"$(nproc)" defconfig
+          # modules_prepare only builds scripts and headers, so there is no
+          # Module.symvers; MODVERSIONS would then reject the out-of-tree build.
+          scripts/config --disable MODVERSIONS \
+                         --disable MODULE_SIG \
+                         --disable DEBUG_INFO_BTF \
+                         --enable MODULES \
+                         --module CFG80211 \
+                         --module MAC80211
+          make -s -j"$(nproc)" olddefconfig
+          make -s -j"$(nproc)" modules_prepare
+          KVER=$(make -s kernelrelease)
+          echo "kdir=${PWD}" >> "$GITHUB_OUTPUT"
+          echo "kver=${KVER}" >> "$GITHUB_OUTPUT"
+          echo "Prepared kernel ${KVER}"
+
+      - name: Build modules
+        run: |
+          make -C driver/drivers/aic8800 KDIR='${{ steps.kernel.outputs.kdir }}' modules
+
+      - name: Verify modules were produced
+        run: |
+          FOUND=$(find driver/drivers/aic8800 -name '*.ko' -printf '%p\n' | sort)
+          if [ -z "$FOUND" ]; then
+            echo "ERROR: build reported success but produced no .ko files"
+            exit 1
+          fi
+          echo "$FOUND"
+
+      - name: Report kernel coverage
+        run: |
+          echo "::notice title=Kernel coverage::upstream ${{ matrix.tag }} = ${{ steps.kernel.outputs.kver }}: exercises the >= 7.2 code path"
