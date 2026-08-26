@@ -3034,7 +3034,10 @@ int ParseQualifiedString(char *In, u32 *Start, char *Out, char LeftQualifier, ch
     if (c == '\0')
         return 0;
     j = (*Start) - 2;
-    strncpy((char *)Out, (const char *)(In + i), j - i + 1);
+    /* memcpy(), not strscpy(): the source is a longer line and the caller
+     * pre-zeroes Out, so this is byte-identical to the strncpy() it replaces
+     * (strncpy() was removed from the kernel in 7.2.0) */
+    memcpy((char *)Out, (const char *)(In + i), j - i + 1);
     return 1;
 }
 
@@ -3247,7 +3250,7 @@ void rwnx_plat_powerlimit_parsing(char *buffer, int size, char *cc)
 					goto exit;
 				}
 
-				strncpy(reg_name[forCnt], szLine + i_cc, i - i_cc);
+				memcpy(reg_name[forCnt], szLine + i_cc, i - i_cc);
 				reg_name[forCnt][i - i_cc] = '\0';
 				AICWFDBG(LOGINFO, "reg_name: %s\n", reg_name[forCnt]);
 

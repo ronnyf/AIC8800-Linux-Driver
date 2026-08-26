@@ -10,13 +10,13 @@
  ******************************************************************************
  */
 
+#include <linux/string.h>
 #include "rwnx_msg_tx.h"
 #include "rwnx_mod_params.h"
 #include "reg_access.h"
 #ifdef CONFIG_RWNX_BFMER
 #include "rwnx_bfmer.h"
 #endif //(CONFIG_RWNX_BFMER)
-#include <linux/string.h>
 #include "rwnx_compat.h"
 #include "rwnx_cmds.h"
 
@@ -4707,7 +4707,9 @@ int rwnx_send_dbg_trigger_req(struct rwnx_hw *rwnx_hw, char *msg)
         return -ENOMEM;
 
     /* Set parameters for the MM_DBG_TRIGGER_REQ message */
-    strncpy(req->error, msg, sizeof(req->error));
+    /* strscpy() always NUL-terminates; strncpy() did not, and was removed from
+     * the kernel in 7.2.0 (last declared in 7.1 include/linux/string.h) */
+    strscpy(req->error, msg, sizeof(req->error));
 
     /* Send the MM_DBG_TRIGGER_REQ message to LMAC FW */
     return rwnx_send_msg(rwnx_hw, req, 0, -1, NULL);

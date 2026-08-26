@@ -4343,31 +4343,22 @@ static int rwnx_cfg80211_set_txq_params(struct wiphy *wiphy, struct net_device *
  */
 
 static int
-rwnx_cfg80211_remain_on_channel_(struct wiphy *wiphy,
-                            #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
-                                struct wireless_dev *wdev,
-                            #else
-                                struct net_device *dev,
-                            #endif
+rwnx_cfg80211_remain_on_channel_(struct wiphy *wiphy, struct wireless_dev *wdev,
                                 struct ieee80211_channel *chan,
-                            #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
-                                enum nl80211_channel_type channel_type,
-                            #endif
                                 unsigned int duration, u64 *cookie, bool mgmt_roc_flag)
 {
     struct rwnx_hw *rwnx_hw = wiphy_priv(wiphy);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
     struct rwnx_vif *rwnx_vif = container_of(wdev, struct rwnx_vif, wdev);
-#else
-    struct rwnx_vif *rwnx_vif = netdev_priv(dev);
-    struct wireless_dev *wdev = &rwnx_vif->wdev;
-#endif
     struct rwnx_roc_elem *roc_elem;
     struct mm_add_if_cfm add_if_cfm;
     struct mm_remain_on_channel_cfm roc_cfm;
     int error;
 
     RWNX_DBG(RWNX_FN_ENTRY_STR);
+
+    /* cfg80211 dereferences *cookie for its return tracepoint without checking
+     * our return value, so it must never be left holding uninitialised stack */
+    *cookie = 0;
 
     /* For debug purpose (use ftrace kernel option) */
 #ifdef CREATE_TRACE_POINTS
@@ -4481,34 +4472,29 @@ rwnx_cfg80211_remain_on_channel_(struct wiphy *wiphy,
 }
 
 
+/*
+ * Kernel 7.2 added the @rx_addr MAC-address filter to .remain_on_channel.
+ * Ignoring it is safe here: cfg80211 rejects a non-NULL rx_addr with -EOPNOTSUPP
+ * unless the driver advertises NL80211_EXT_FEATURE_ROC_ADDR_FILTER, and this
+ * driver advertises no ext features at all, so rx_addr is always NULL. If that
+ * ever changes, RoC address filtering must be implemented here or it becomes a
+ * silent no-op.
+ *
+ * The guard is deliberately bounded at 7.3: upstream has since converted the
+ * cookie from an output to a pre-assigned input parameter (u64 cookie), which
+ * is a behaviour change, not just a signature change, and affects .mgmt_tx and
+ * .probe_client as well.
+ */
 static int
-rwnx_cfg80211_remain_on_channel(struct wiphy *wiphy,
-                            #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
-                                struct wireless_dev *wdev,
-                            #else
-                                struct net_device *dev,
-                            #endif
+rwnx_cfg80211_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
                                 struct ieee80211_channel *chan,
-                            #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
-                                enum nl80211_channel_type channel_type,
-                            #endif
                                 unsigned int duration, u64 *cookie
                             #if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 2, 0)
-                                , const u8 *rx_addr
+                                , const u8 *rx_addr __always_unused
                             #endif
-                            )
+                                )
 {
-	return rwnx_cfg80211_remain_on_channel_(wiphy,
-                            #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
-                                wdev,
-                            #else
-                                dev,
-                            #endif
-                                chan,
-                            #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
-                                channel_type,
-                            #endif
-                                duration, cookie, false);
+	return rwnx_cfg80211_remain_on_channel_(wiphy, wdev, chan, duration, cookie, false);
 }
 
 /**
@@ -4795,16 +4781,8 @@ static int rwnx_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
 		AICWFDBG(LOGINFO, "mgmt rx remain on chan\n");
 
         /* Start a ROC procedure for 30ms */
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
         error = rwnx_cfg80211_remain_on_channel_(wiphy, wdev, channel,
                                                 30, &cookie, true);
-#elif (LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)) && (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0))
-        error = rwnx_cfg80211_remain_on_channel_(wiphy, wdev, channel, NL80211_CHAN_NO_HT,
-                                                30, &cookie, true);
-#else
-        error = rwnx_cfg80211_remain_on_channel_(wiphy, dev, channel, NL80211_CHAN_NO_HT,
-                                                30, &cookie, true);
-#endif
 
         if (error) {
 			AICWFDBG(LOGERROR, "mgmt rx chan err\n");
