@@ -138,8 +138,14 @@ jobs:
       - name: Build modules
         run: |
           set -o pipefail
+          # modules_prepare does not build the kernel, so there is no kernel
+          # Module.symvers and modpost cannot resolve external symbols.
+          # KBUILD_MODPOST_WARN downgrades that to warnings. Compilation is what
+          # proves API compatibility here: a cfg80211_ops signature mismatch is
+          # a hard compile error long before modpost runs.
           if ! make -C driver/drivers/aic8800 \
-                 KDIR='${{ steps.kernel.outputs.kdir }}' modules 2>&1 | tee /tmp/build.log; then
+                 KDIR='${{ steps.kernel.outputs.kdir }}' \
+                 KBUILD_MODPOST_WARN=1 modules 2>&1 | tee /tmp/build.log; then
             # Promote compiler diagnostics to annotations so a failure is
             # diagnosable from the checks API without opening the raw log.
             grep -E 'error:|Error [0-9]+' /tmp/build.log | head -n 25 | while IFS= read -r line; do
