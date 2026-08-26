@@ -146,6 +146,12 @@ jobs:
                          --module CFG80211 \
                          --module MAC80211
           make -s -j"$(nproc)" olddefconfig
+          # Assert the strictness this job depends on, so a future defconfig
+          # change cannot silently turn the strict build into a permissive one.
+          if ! grep -q '^CONFIG_WERROR=y' .config; then
+            echo "ERROR: CONFIG_WERROR is not enabled - a green build here would prove nothing"
+            exit 1
+          fi
           make -s -j"$(nproc)" modules_prepare
           KVER=$(make -s kernelrelease)
           echo "kdir=${PWD}" >> "$GITHUB_OUTPUT"
