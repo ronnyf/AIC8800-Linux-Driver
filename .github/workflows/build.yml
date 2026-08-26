@@ -136,7 +136,16 @@ jobs:
 
       - name: Build modules
         run: |
-          make -C driver/drivers/aic8800 KDIR='${{ steps.kernel.outputs.kdir }}' modules
+          set -o pipefail
+          if ! make -C driver/drivers/aic8800 \
+                 KDIR='${{ steps.kernel.outputs.kdir }}' modules 2>&1 | tee /tmp/build.log; then
+            # Promote compiler diagnostics to annotations so a failure is
+            # diagnosable from the checks API without opening the raw log.
+            grep -E 'error:|Error [0-9]+' /tmp/build.log | head -n 25 | while IFS= read -r line; do
+              echo "::error title=Build error::${line}"
+            done
+            exit 1
+          fi
 
       - name: Verify modules were produced
         run: |
