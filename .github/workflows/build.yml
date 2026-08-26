@@ -124,6 +124,7 @@ jobs:
           scripts/config --disable MODVERSIONS \
                          --disable MODULE_SIG \
                          --disable DEBUG_INFO_BTF \
+                         --disable WERROR \
                          --enable MODULES \
                          --module CFG80211 \
                          --module MAC80211
