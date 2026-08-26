@@ -56,3 +56,17 @@ jobs:
           fi
           echo "Built against kernel ${{ steps.kernel.outputs.kver }}:"
           echo "$FOUND"
+
+      - name: Report kernel coverage
+        run: |
+          # Surfaced as an annotation, not just log output, so which kernel was
+          # actually compiled against is visible without digging into the logs.
+          KVER='${{ steps.kernel.outputs.kver }}'
+          MAJ=${KVER%%.*}
+          REST=${KVER#*.}
+          MIN=${REST%%.*}
+          if [ "$MAJ" -gt 7 ] || { [ "$MAJ" -eq 7 ] && [ "$MIN" -ge 2 ]; }; then
+            echo "::notice title=Kernel coverage::${{ matrix.headers }} = ${KVER}: exercises the >= 7.2 code path"
+          else
+            echo "::warning title=Kernel coverage::${{ matrix.headers }} = ${KVER}: below 7.2, so the >= 7.2 code path was NOT compiled by this job"
+          fi
