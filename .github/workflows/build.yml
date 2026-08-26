@@ -188,6 +188,36 @@ jobs:
             echo "::notice title=Unused label::upstream ${{ matrix.tag }}: no -Wunused-label warnings"
           fi
 
+      # Survey only: reports whether the driver could be built with upstream's
+      # default CONFIG_WERROR=y. Never fails the job.
+      - name: Probe whether CONFIG_WERROR would pass
+        continue-on-error: true
+        run: |
+          cd linux
+          scripts/config --enable WERROR
+          make -s -j"$(nproc)" olddefconfig
+          make -s -j"$(nproc)" modules_prepare
+          cd ..
+          make -C driver/drivers/aic8800 \
+            KDIR='${{ steps.kernel.outputs.kdir }}' clean >/dev/null 2>&1 || true
+          # -k keeps going so every -Werror site is enumerated, not just the first.
+          if make -k -C driver/drivers/aic8800 \
+               KDIR='${{ steps.kernel.outputs.kdir }}' \
+               KBUILD_MODPOST_WARN=1 modules > /tmp/werror.log 2>&1; then
+            echo "::notice title=CONFIG_WERROR probe::clean - CONFIG_WERROR could be enabled for upstream ${{ matrix.tag }}"
+            exit 0
+          fi
+          TOTAL=$(grep -c 'error:' /tmp/werror.log || true)
+          echo "::warning title=CONFIG_WERROR probe::not clean - ${TOTAL} error line(s) with CONFIG_WERROR=y"
+          grep -oE '\[-Werror=[A-Za-z0-9=-]+\]' /tmp/werror.log | sort | uniq -c | sort -rn \
+            | while read -r count flag; do
+                echo "::warning title=Werror flag::${count}x ${flag}"
+              done
+          grep 'error:' /tmp/werror.log | sed 's|^.*/drivers/|drivers/|' | sort -u | head -n 20 \
+            | while IFS= read -r line; do
+                echo "::warning title=Werror site::${line}"
+              done
+
       - name: Report kernel coverage
         run: |
           echo "::notice title=Kernel coverage::upstream ${{ matrix.tag }} = ${{ steps.kernel.outputs.kver }}: exercises the >= 7.2 code path"
