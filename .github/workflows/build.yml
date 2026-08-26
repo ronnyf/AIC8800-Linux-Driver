@@ -63,7 +63,22 @@ jobs:
 
       - name: Build modules
         run: |
-          make -C drivers/aic8800 KDIR='${{ steps.kernel.outputs.kdir }}' modules
+          set -o pipefail
+          make -C drivers/aic8800 KDIR='${{ steps.kernel.outputs.kdir }}' modules 2>&1 \
+            | tee /tmp/build.log
+
+      - name: Check for unused-label warnings
+        run: |
+          # Kernel builds enable -Wall, so -Wunused-label shows up here without
+          # CONFIG_WERROR. Reported as an annotation rather than failing the
+          # build, so pre-existing vendor warnings cannot block unrelated PRs.
+          N=$(grep -c 'unused-label' /tmp/build.log || true)
+          if [ "$N" -gt 0 ]; then
+            echo "::warning title=Unused label::${{ matrix.label }}: ${N} -Wunused-label warning(s)"
+            grep 'unused-label' /tmp/build.log | head -n 5
+          else
+            echo "::notice title=Unused label::${{ matrix.label }}: no -Wunused-label warnings"
+          fi
 
       - name: Verify modules were produced
         run: |
@@ -162,6 +177,16 @@ jobs:
             exit 1
           fi
           echo "$FOUND"
+
+      - name: Check for unused-label warnings
+        run: |
+          N=$(grep -c 'unused-label' /tmp/build.log || true)
+          if [ "$N" -gt 0 ]; then
+            echo "::warning title=Unused label::upstream ${{ matrix.tag }}: ${N} -Wunused-label warning(s)"
+            grep 'unused-label' /tmp/build.log | head -n 5
+          else
+            echo "::notice title=Unused label::upstream ${{ matrix.tag }}: no -Wunused-label warnings"
+          fi
 
       - name: Report kernel coverage
         run: |
