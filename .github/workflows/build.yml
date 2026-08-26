@@ -1,0 +1,58 @@
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build against ${{ matrix.headers }}
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel
+    strategy:
+      # Report every kernel independently - a break on one is not a reason to
+      # hide the result for the other.
+      fail-fast: false
+      matrix:
+        headers:
+          - linux-headers
+          - linux-lts-headers
+    steps:
+      - name: Install toolchain and kernel headers
+        run: |
+          pacman -Syu --noconfirm --needed git bc cpio ${{ matrix.headers }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve kernel build directory
+        id: kernel
+        run: |
+          # uname -r inside the container reports the runner's host kernel, not
+          # the headers we just installed, so KDIR has to be resolved explicitly.
+          KDIR=$(ls -d /usr/lib/modules/*/build 2>/dev/null | head -1)
+          if [ -z "$KDIR" ]; then
+            echo "ERROR: no kernel build directory found for ${{ matrix.headers }}"
+            exit 1
+          fi
+          KVER=$(basename "$(dirname "$KDIR")")
+          echo "kdir=${KDIR}" >> "$GITHUB_OUTPUT"
+          echo "kver=${KVER}" >> "$GITHUB_OUTPUT"
+          echo "Building against kernel ${KVER} (${KDIR})"
+
+      - name: Build modules
+        run: |
+          make -C drivers/aic8800 KDIR='${{ steps.kernel.outputs.kdir }}' modules
+
+      - name: Verify modules were produced
+        run: |
+          FOUND=$(find drivers/aic8800 -name '*.ko' -printf '%p\n' | sort)
+          if [ -z "$FOUND" ]; then
+            echo "ERROR: build reported success but produced no .ko files"
+            exit 1
+          fi
+          echo "Built against kernel ${{ steps.kernel.outputs.kver }}:"
+          echo "$FOUND"
