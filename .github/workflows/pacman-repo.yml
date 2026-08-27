@@ -174,14 +174,21 @@ jobs:
           # Resolve and download through the real URL, not a local path: this is
           # what catches anything Pages serves differently from the filesystem,
           # such as the symlinks repo-add creates.
-          docker run --rm archlinux:base bash -euo pipefail -c '
+          set -o pipefail
+          if ! docker run --rm archlinux:base bash -euo pipefail -c '
             printf "[%s]\nSigLevel = Optional TrustAll\nServer = %s\n" \
               "'"${REPO_NAME}"'" "'"${BASE}"'x86_64" >> /etc/pacman.conf
-            pacman -Sy --noconfirm >/dev/null
+            pacman -Sy --noconfirm
             pacman -Si "'"${REPO_NAME}"'/aic8800-fdrv-dkms" | head -n 8
+            mkdir -p /tmp/cache
             pacman -Sw --noconfirm --cachedir /tmp/cache "'"${REPO_NAME}"'/aic8800-fdrv-dkms"
             ls -l /tmp/cache/*.pkg.tar.zst
-          '
+          ' 2>&1 | tee /tmp/smoke.log; then
+            tail -n 15 /tmp/smoke.log | while IFS= read -r line; do
+              echo "::error title=Smoke test::${line}"
+            done
+            exit 1
+          fi
           echo "::notice title=Smoke test::pacman resolved and downloaded the package from ${BASE}x86_64"
 
       - name: Report published repository
