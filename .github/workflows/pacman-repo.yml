@@ -1,0 +1,190 @@
+name: Pacman repository
+
+on:
+  # Called by release.yml once a release exists.
+  workflow_call:
+  # Manual re-publish, e.g. after deleting a release or changing the layout.
+  # Rebuilds from whatever releases currently exist, so it is always safe to run.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two Pages deployments race; queue instead of cancelling, so a
+# release publish is not dropped by a manual re-run.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  REPO_NAME: aic8800
+
+jobs:
+  publish:
+    name: Publish pacman repository to Pages
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Collect packages from releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p repo/x86_64
+          # Rebuild from the releases rather than from a single build, so the
+          # repository is reproducible and older versions stay installable.
+          mapfile -t TAGS < <(gh release list --repo "$GITHUB_REPOSITORY" \
+            --limit 10 --json tagName --jq '.[].tagName')
+          if [ "${#TAGS[@]}" -eq 0 ]; then
+            echo "ERROR: no releases found, nothing to publish"
+            exit 1
+          fi
+          echo "Considering ${#TAGS[@]} release(s): ${TAGS[*]}"
+          for t in "${TAGS[@]}"; do
+            gh release download "$t" --repo "$GITHUB_REPOSITORY" \
+              --pattern '*.pkg.tar.zst' --dir repo/x86_64 --clobber \
+              || echo "note: ${t} has no pacman package asset, skipping"
+          done
+          COUNT=$(find repo/x86_64 -name '*.pkg.tar.zst' | wc -l)
+          if [ "$COUNT" -eq 0 ]; then
+            echo "ERROR: none of the ${#TAGS[@]} release(s) carry a .pkg.tar.zst asset"
+            exit 1
+          fi
+          echo "::notice title=Packages::collected ${COUNT} package(s) from ${#TAGS[@]} release(s)"
+          ls -1 repo/x86_64
+
+      - name: Build repository database
+        run: |
+          docker run --rm -v "${PWD}/repo/x86_64:/repo" -w /repo archlinux:base \
+            bash -euo pipefail -c '
+              # Version-sort so the newest package is added last: a pacman db
+              # holds one entry per pkgname, and the last one added wins.
+              mapfile -t PKGS < <(ls -1 *.pkg.tar.zst | sort -V)
+              printf "adding: %s\n" "${PKGS[@]}"
+              repo-add "'"${REPO_NAME}"'.db.tar.zst" "${PKGS[@]}"
+              # Pages does not serve symlinks, and pacman fetches the bare
+              # .db/.files names, so replace repo-adds symlinks with real files.
+              for l in "'"${REPO_NAME}"'.db" "'"${REPO_NAME}"'.files"; do
+                if [ -L "$l" ]; then t=$(readlink "$l"); rm "$l"; cp "$t" "$l"; fi
+              done
+            '
+          echo "--- repository contents ---"
+          ls -l repo/x86_64
+
+      - name: Verify the database is readable by pacman
+        run: |
+          # A served db that pacman cannot parse would fail silently on users'
+          # machines, so assert the package is actually resolvable from it.
+          docker run --rm -v "${PWD}/repo/x86_64:/repo:ro" archlinux:base \
+            bash -euo pipefail -c '
+              printf "[%s]\nSigLevel = Optional TrustAll\nServer = file:///repo\n" "'"${REPO_NAME}"'" \
+                >> /etc/pacman.conf
+              pacman -Sy --noconfirm >/dev/null
+              pacman -Si "'"${REPO_NAME}"'/aic8800-fdrv-dkms" | head -n 12
+            '
+
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Write landing page
+        run: |
+          BASE='${{ steps.pages.outputs.base_url }}'
+          cat > repo/index.html <<HTML
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>AIC8800 pacman repository</title>
+            <style>
+              body { font-family: system-ui, sans-serif; max-width: 46rem;
+                     margin: 3rem auto; padding: 0 1rem; line-height: 1.6; }
+              pre { background: #f4f4f5; padding: 1rem; border-radius: 6px;
+                    overflow-x: auto; }
+              code { font-family: ui-monospace, monospace; }
+            </style>
+          </head>
+          <body>
+            <h1>AIC8800 pacman repository</h1>
+            <p>DKMS packages of the
+              <a href="https://github.com/${GITHUB_REPOSITORY}">AIC8800 Linux driver</a>
+              for Arch Linux and CachyOS.</p>
+
+            <h2>Add the repository</h2>
+            <p>Append to <code>/etc/pacman.conf</code>:</p>
+          <pre>[${REPO_NAME}]
+          SigLevel = Optional TrustAll
+          Server = ${BASE}/x86_64</pre>
+
+            <h2>Install</h2>
+          <pre>sudo pacman -Sy ${REPO_NAME}/aic8800-fdrv-dkms</pre>
+            <p>Install the headers matching your kernel as well, e.g.
+              <code>linux-headers</code>, <code>linux-cachyos-headers</code>,
+              <code>linux-lts-headers</code> or <code>linux-zen-headers</code>.
+              DKMS then rebuilds the modules on every kernel update.</p>
+
+            <h2>A note on signing</h2>
+            <p>These packages are <strong>not</strong> PGP signed, which is why
+              <code>SigLevel = Optional TrustAll</code> is required. You are
+              trusting GitHub Pages and this repository's release pipeline. If
+              that is not acceptable, build from the
+              <a href="https://github.com/${GITHUB_REPOSITORY}/releases">PKGBUILD</a>
+              instead.</p>
+          </body>
+          </html>
+          HTML
+          # Keep Jekyll from reinterpreting the repository files.
+          touch repo/.nojekyll
+          echo "landing page written for base_url=${BASE}"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: repo
+
+      - name: Deploy to Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
+
+      - name: Smoke-test the published repository over HTTPS
+        run: |
+          BASE='${{ steps.deploy.outputs.page_url }}'
+          DB="${BASE}x86_64/${REPO_NAME}.db"
+          # A fresh deployment can take a moment to be served.
+          for i in $(seq 1 20); do
+            CODE=$(curl -sS -o /dev/null -w '%{http_code}' "$DB" || true)
+            [ "$CODE" = "200" ] && break
+            echo "attempt ${i}: ${DB} -> ${CODE}, retrying"
+            sleep 15
+          done
+          if [ "$CODE" != "200" ]; then
+            echo "::error title=Repo unreachable::${DB} returned ${CODE}"
+            exit 1
+          fi
+          # Resolve and download through the real URL, not a local path: this is
+          # what catches anything Pages serves differently from the filesystem,
+          # such as the symlinks repo-add creates.
+          set -o pipefail
+          if ! docker run --rm archlinux:base bash -euo pipefail -c '
+            printf "[%s]\nSigLevel = Optional TrustAll\nServer = %s\n" \
+              "'"${REPO_NAME}"'" "'"${BASE}"'x86_64" >> /etc/pacman.conf
+            pacman -Sy --noconfirm
+            pacman -Si "'"${REPO_NAME}"'/aic8800-fdrv-dkms" | head -n 8
+            mkdir -p /tmp/cache
+            pacman -Sw --noconfirm --cachedir /tmp/cache "'"${REPO_NAME}"'/aic8800-fdrv-dkms"
+            ls -l /tmp/cache/*.pkg.tar.zst
+          ' 2>&1 | tee /tmp/smoke.log; then
+            tail -n 15 /tmp/smoke.log | while IFS= read -r line; do
+              echo "::error title=Smoke test::${line}"
+            done
+            exit 1
+          fi
+          echo "::notice title=Smoke test::pacman resolved and downloaded the package from ${BASE}x86_64"
+
+      - name: Report published repository
+        run: |
+          echo "::notice title=Pacman repo::published at ${{ steps.deploy.outputs.page_url }}x86_64"
