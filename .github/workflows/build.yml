@@ -105,19 +105,32 @@ jobs:
   # so the jobs above cannot compile the >= 7.2 code paths at all. Prepare an
   # upstream tree instead - that is the only way to prove the 7.2 claim.
   build-upstream:
-    name: Build against upstream ${{ matrix.tag }}
+    name: Build against upstream ${{ matrix.tag }} (${{ matrix.compiler }})
     runs-on: ubuntu-latest
     container:
       image: archlinux:base-devel
     strategy:
       fail-fast: false
       matrix:
-        tag:
-          - v7.2
+        include:
+          - tag: v7.2
+            compiler: gcc
+            llvm: ''
+          # gcc-only matrix misses clang-only errors. CONFIG_CC_IS_CLANG is
+          # def_bool $(success,...) in init/Kconfig - not settable via
+          # scripts/config, so the tree must be built with LLVM=1.
+          - tag: v7.2
+            compiler: clang
+            llvm: 'LLVM=1'
     steps:
       - name: Install toolchain
         run: |
           pacman -Syu --noconfirm --needed git bc cpio elfutils flex bison openssl perl python
+
+      - name: Install LLVM toolchain
+        if: matrix.compiler == 'clang'
+        run: |
+          pacman -S --noconfirm --needed clang llvm lld
 
       - name: Checkout driver
         uses: actions/checkout@v4
@@ -130,27 +143,39 @@ jobs:
           git clone --depth 1 --branch '${{ matrix.tag }}' \
             https://github.com/torvalds/linux.git linux
           cd linux
-          make -s -j"$(nproc)" defconfig
+          make -s -j"$(nproc)" ${{ matrix.llvm }} defconfig
           # modules_prepare only builds scripts and headers, so there is no
           # Module.symvers; MODVERSIONS would then reject the out-of-tree build.
           # CONFIG_WERROR is left at upstream's default (y) on purpose: the
           # driver is clean under it, so any newly introduced warning fails here
           # instead of silently accumulating.
+          #
+          # IPW2200 only to select CONFIG_WIRELESS_EXT: promptless bool, and
+          # CFG80211_WEXT selects WEXT_CORE not WIRELESS_EXT. Without it
+          # aic8800_fdrv/Makefile disables CONFIG_USE_WIRELESS_EXT.
           scripts/config --disable MODVERSIONS \
                          --disable MODULE_SIG \
                          --disable DEBUG_INFO_BTF \
                          --enable MODULES \
+                         --enable WLAN \
                          --module CFG80211 \
-                         --module MAC80211
-          make -s -j"$(nproc)" olddefconfig
-          # Assert the strictness this job depends on, so a future defconfig
-          # change cannot silently turn the strict build into a permissive one.
+                         --module MAC80211 \
+                         --module IPW2200
+          make -s -j"$(nproc)" ${{ matrix.llvm }} olddefconfig
           if ! grep -q '^CONFIG_WERROR=y' .config; then
             echo "ERROR: CONFIG_WERROR is not enabled - a green build here would prove nothing"
             exit 1
           fi
-          make -s -j"$(nproc)" modules_prepare
-          KVER=$(make -s kernelrelease)
+          if ! grep -q '^CONFIG_WIRELESS_EXT=y' .config; then
+            echo "ERROR: CONFIG_WIRELESS_EXT is not enabled - the wireless-extensions path would not be compiled"
+            exit 1
+          fi
+          if [ '${{ matrix.compiler }}' = clang ] && ! grep -q '^CONFIG_CC_IS_CLANG=y' .config; then
+            echo "ERROR: kernel tree was not built with clang - the driver build would fall back to gcc"
+            exit 1
+          fi
+          make -s -j"$(nproc)" ${{ matrix.llvm }} modules_prepare
+          KVER=$(make -s ${{ matrix.llvm }} kernelrelease)
           echo "kdir=${PWD}" >> "$GITHUB_OUTPUT"
           echo "kver=${KVER}" >> "$GITHUB_OUTPUT"
           echo "Prepared kernel ${KVER}"
@@ -181,18 +206,23 @@ jobs:
             exit 1
           fi
           echo "$FOUND"
+          if [ ! -f driver/drivers/aic8800/aic8800_fdrv/aicwf_wext_linux.o ]; then
+            echo "ERROR: aicwf_wext_linux.o was not built - the wireless-extensions path is not covered"
+            exit 1
+          fi
 
       - name: Check for unused-label warnings
         run: |
           # Annotation rather than a build failure - see the build job for why.
+          LABEL='upstream ${{ matrix.tag }} (${{ matrix.compiler }})'
           N=$(grep -c 'unused-label' /tmp/build.log || true)
           if [ "$N" -gt 0 ]; then
-            echo "::warning title=Unused label::upstream ${{ matrix.tag }}: ${N} -Wunused-label warning(s)"
+            echo "::warning title=Unused label::${LABEL}: ${N} -Wunused-label warning(s)"
             grep 'unused-label' /tmp/build.log | head -n 5
           else
-            echo "::notice title=Unused label::upstream ${{ matrix.tag }}: no -Wunused-label warnings"
+            echo "::notice title=Unused label::${LABEL}: no -Wunused-label warnings"
           fi
 
       - name: Report kernel coverage
         run: |
-          echo "::notice title=Kernel coverage::upstream ${{ matrix.tag }} = ${{ steps.kernel.outputs.kver }}: exercises the >= 7.2 code path"
+          echo "::notice title=Kernel coverage::upstream ${{ matrix.tag }} = ${{ steps.kernel.outputs.kver }}, ${{ matrix.compiler }}, WIRELESS_EXT=y: exercises the >= 7.2 code path"
