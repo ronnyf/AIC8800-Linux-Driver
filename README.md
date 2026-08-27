@@ -7,10 +7,11 @@ AIC8800 WiFi driver for AIC8800D80/AIC8800DC/AIC8800DW chips, tested on CachyOS 
 This driver provides fullmac WiFi support for AIC8800 series chips on Linux kernels 6.0 through 7.2.
 Tested and verified on kernel 6.19.10 with LLVM/Clang compilation.
 
-Kernel 7.3 is **not** supported yet: upstream converted the cfg80211 `cookie`
+Kernel 7.3 is **not** supported yet. Upstream converted the cfg80211 `cookie`
 from an output to a pre-assigned input parameter, which changes the behaviour of
-`.remain_on_channel`, `.mgmt_tx` and `.probe_client` rather than just their
-signatures.
+`.remain_on_channel` and `.mgmt_tx` rather than just their signatures, and
+removed `.probe_client` from `struct cfg80211_ops` altogether. This driver
+implements all three.
 
 ## Test Environment
 
