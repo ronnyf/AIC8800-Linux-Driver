@@ -20,8 +20,10 @@ signatures.
 - **Architecture**: x86_64
 - **USB Interface**: AIC8800D80 USB WiFi adapter
 
-Every pull request is additionally compiled in CI against the current Arch
-`linux-headers` and `linux-lts-headers` packages.
+Every pull request is additionally compiled in CI against four kernels: the
+current Arch `linux-headers` and `linux-lts-headers`, the Arch testing headers,
+and an upstream v7.2 tree — the last of these is what actually exercises the
+7.2-specific code paths, since Arch does not package 7.2 yet.
 
 ## Acknowledgments
 

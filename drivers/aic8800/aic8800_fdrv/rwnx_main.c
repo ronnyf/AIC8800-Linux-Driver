@@ -4480,10 +4480,7 @@ rwnx_cfg80211_remain_on_channel_(struct wiphy *wiphy, struct wireless_dev *wdev,
  * ever changes, RoC address filtering must be implemented here or it becomes a
  * silent no-op.
  *
- * The guard is deliberately bounded at 7.3: upstream has since converted the
- * cookie from an output to a pre-assigned input parameter (u64 cookie), which
- * is a behaviour change, not just a signature change, and affects .mgmt_tx and
- * .probe_client as well.
+ * 7.3 needs more than another parameter here - see README.
  */
 static int
 rwnx_cfg80211_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *wdev,

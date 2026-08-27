@@ -1586,13 +1586,7 @@ static int rwnx_plat_patch_load(struct rwnx_hw *rwnx_hw)
     if(rwnx_hw->usbdev->chipid == PRODUCT_ID_AIC8800DC ||
         rwnx_hw->usbdev->chipid == PRODUCT_ID_AIC8800DW){
 #ifndef ANDROID_PLATFORM
-        {
-            /* Passing aic_fw_path as both destination and source of sprintf()
-             * is undefined behaviour (-Wrestrict); append in place instead. */
-            size_t off = strlen(aic_fw_path);
-
-            snprintf(aic_fw_path + off, sizeof(aic_fw_path) - off, "/%s", "aic8800DC");
-        }
+        aic_fw_path_append("aic8800DC");
 #endif
         AICWFDBG(LOGINFO, "testmode=%d\n", testmode);
         if (chip_sub_id == 0) {
@@ -3043,7 +3037,7 @@ int ParseQualifiedString(char *In, u32 *Start, char *Out, char LeftQualifier, ch
     /* memcpy(), not strscpy(): the source is a longer line and the caller
      * pre-zeroes Out, so this is byte-identical to the strncpy() it replaces
      * (strncpy() was removed from the kernel in 7.2.0) */
-    memcpy((char *)Out, (const char *)(In + i), j - i + 1);
+    memcpy(Out, In + i, j - i + 1);
     return 1;
 }
 

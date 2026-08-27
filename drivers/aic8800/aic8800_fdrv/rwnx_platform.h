@@ -186,6 +186,25 @@ void get_userconfig_xtal_cap(xtal_cap_conf_t *xtal_cap);
 int rwnx_request_firmware_common(struct rwnx_hw *rwnx_hw, u32** buffer, const char *filename);
 void rwnx_release_firmware_common(u32** buffer);
 void rwnx_plat_userconfig_parsing_8800d80x2(char *buffer, int size);
+
+#define AIC_FW_PATH_MAX 200
+extern char aic_fw_path[AIC_FW_PATH_MAX];
+
+/**
+ * aic_fw_path_append() - append a chip sub-directory to the firmware path
+ *
+ * The firmware lookups all read aic_fw_path as their base directory, so the
+ * chip sub-directory is appended in place. Deliberately not
+ * sprintf(aic_fw_path, "%s/%s", aic_fw_path, subdir): overlapping source and
+ * destination is undefined behaviour (-Wrestrict).
+ */
+static inline void aic_fw_path_append(const char *subdir)
+{
+    size_t off = strlen(aic_fw_path);
+
+    scnprintf(aic_fw_path + off, sizeof(aic_fw_path) - off, "/%s", subdir);
+}
+
 static inline unsigned int rwnx_platform_get_irq(struct rwnx_plat *rwnx_plat)
 {
     return rwnx_plat->pci_dev->irq;

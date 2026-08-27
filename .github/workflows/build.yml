@@ -40,8 +40,7 @@ jobs:
 
       - name: Install toolchain and kernel headers
         run: |
-          pacman -Sy --noconfirm
-          pacman -S --noconfirm --needed git bc cpio ${{ matrix.package }}
+          pacman -Sy --noconfirm --needed git bc cpio ${{ matrix.package }}
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -64,8 +63,8 @@ jobs:
       - name: Build modules
         run: |
           set -o pipefail
-          make -C drivers/aic8800 KDIR='${{ steps.kernel.outputs.kdir }}' modules 2>&1 \
-            | tee /tmp/build.log
+          make -j"$(nproc)" -Otarget -C drivers/aic8800 \
+            KDIR='${{ steps.kernel.outputs.kdir }}' modules 2>&1 | tee /tmp/build.log
 
       - name: Check for unused-label warnings
         run: |
@@ -82,7 +81,7 @@ jobs:
 
       - name: Verify modules were produced
         run: |
-          FOUND=$(find drivers/aic8800 -name '*.ko' -printf '%p\n' | sort)
+          FOUND=$(find drivers/aic8800 -name '*.ko' | sort)
           if [ -z "$FOUND" ]; then
             echo "ERROR: build reported success but produced no .ko files"
             exit 1
@@ -95,13 +94,11 @@ jobs:
           # Surfaced as an annotation, not just log output, so which kernel was
           # actually compiled against is visible without digging into the logs.
           KVER='${{ steps.kernel.outputs.kver }}'
-          MAJ=${KVER%%.*}
-          REST=${KVER#*.}
-          MIN=${REST%%.*}
+          IFS='.-' read -r MAJ MIN _ <<<"$KVER"
           if [ "$MAJ" -gt 7 ] || { [ "$MAJ" -eq 7 ] && [ "$MIN" -ge 2 ]; }; then
             echo "::notice title=Kernel coverage::${{ matrix.label }} = ${KVER}: exercises the >= 7.2 code path"
           else
-            echo "::warning title=Kernel coverage::${{ matrix.label }} = ${KVER}: below 7.2, so the >= 7.2 code path was NOT compiled by this job"
+            echo "::notice title=Kernel coverage::${{ matrix.label }} = ${KVER}: below 7.2, so the >= 7.2 path is covered by the upstream job instead"
           fi
 
   # Arch does not package kernel 7.2 yet, not even in the testing repositories,
@@ -166,20 +163,19 @@ jobs:
           # KBUILD_MODPOST_WARN downgrades that to warnings. Compilation is what
           # proves API compatibility here: a cfg80211_ops signature mismatch is
           # a hard compile error long before modpost runs.
-          if ! make -C driver/drivers/aic8800 \
+          if ! make -j"$(nproc)" -Otarget -C driver/drivers/aic8800 \
                  KDIR='${{ steps.kernel.outputs.kdir }}' \
                  KBUILD_MODPOST_WARN=1 modules 2>&1 | tee /tmp/build.log; then
             # Promote compiler diagnostics to annotations so a failure is
             # diagnosable from the checks API without opening the raw log.
-            grep -E 'error:|Error [0-9]+' /tmp/build.log | head -n 25 | while IFS= read -r line; do
-              echo "::error title=Build error::${line}"
-            done
+            grep -E 'error:|Error [0-9]+' /tmp/build.log | head -n 25 \
+              | sed 's|^|::error title=Build error::|'
             exit 1
           fi
 
       - name: Verify modules were produced
         run: |
-          FOUND=$(find driver/drivers/aic8800 -name '*.ko' -printf '%p\n' | sort)
+          FOUND=$(find driver/drivers/aic8800 -name '*.ko' | sort)
           if [ -z "$FOUND" ]; then
             echo "ERROR: build reported success but produced no .ko files"
             exit 1
@@ -188,6 +184,7 @@ jobs:
 
       - name: Check for unused-label warnings
         run: |
+          # Annotation rather than a build failure - see the build job for why.
           N=$(grep -c 'unused-label' /tmp/build.log || true)
           if [ "$N" -gt 0 ]; then
             echo "::warning title=Unused label::upstream ${{ matrix.tag }}: ${N} -Wunused-label warning(s)"
