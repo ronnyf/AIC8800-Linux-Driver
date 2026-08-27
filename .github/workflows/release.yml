@@ -128,3 +128,15 @@ jobs:
             PKGBUILD
             .SRCINFO
             aic8800-fdrv-dkms.install
+
+  # Runs only after the release exists, since the repository is built from
+  # release assets. Using needs: rather than a workflow_run trigger keeps the
+  # ordering explicit instead of racing release creation.
+  publish-repo:
+    name: Publish pacman repository
+    needs: release
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pacman-repo.yml
