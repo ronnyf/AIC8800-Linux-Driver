@@ -156,6 +156,34 @@ jobs:
         id: deploy
         uses: actions/deploy-pages@v4
 
+      - name: Smoke-test the published repository over HTTPS
+        run: |
+          BASE='${{ steps.deploy.outputs.page_url }}'
+          DB="${BASE}x86_64/${REPO_NAME}.db"
+          # A fresh deployment can take a moment to be served.
+          for i in $(seq 1 20); do
+            CODE=$(curl -sS -o /dev/null -w '%{http_code}' "$DB" || true)
+            [ "$CODE" = "200" ] && break
+            echo "attempt ${i}: ${DB} -> ${CODE}, retrying"
+            sleep 15
+          done
+          if [ "$CODE" != "200" ]; then
+            echo "::error title=Repo unreachable::${DB} returned ${CODE}"
+            exit 1
+          fi
+          # Resolve and download through the real URL, not a local path: this is
+          # what catches anything Pages serves differently from the filesystem,
+          # such as the symlinks repo-add creates.
+          docker run --rm archlinux:base bash -euo pipefail -c '
+            printf "[%s]\nSigLevel = Optional TrustAll\nServer = %s\n" \
+              "'"${REPO_NAME}"'" "'"${BASE}"'x86_64" >> /etc/pacman.conf
+            pacman -Sy --noconfirm >/dev/null
+            pacman -Si "'"${REPO_NAME}"'/aic8800-fdrv-dkms" | head -n 8
+            pacman -Sw --noconfirm --cachedir /tmp/cache "'"${REPO_NAME}"'/aic8800-fdrv-dkms"
+            ls -l /tmp/cache/*.pkg.tar.zst
+          '
+          echo "::notice title=Smoke test::pacman resolved and downloaded the package from ${BASE}x86_64"
+
       - name: Report published repository
         run: |
           echo "::notice title=Pacman repo::published at ${{ steps.deploy.outputs.page_url }}x86_64"
