@@ -11,7 +11,10 @@
 #ifndef _RWNX_PLATFORM_H_
 #define _RWNX_PLATFORM_H_
 
+/* kernel.h not sprintf.h: sprintf.h absent on 6.0, kernel.h declares scnprintf there */
+#include <linux/kernel.h>
 #include <linux/pci.h>
+#include <linux/string.h>
 #include "lmac_msg.h"
 
 
