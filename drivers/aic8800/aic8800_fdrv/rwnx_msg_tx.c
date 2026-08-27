@@ -10,6 +10,7 @@
  ******************************************************************************
  */
 
+#include <linux/string.h>
 #include "rwnx_msg_tx.h"
 #include "rwnx_mod_params.h"
 #include "reg_access.h"
@@ -4706,7 +4707,8 @@ int rwnx_send_dbg_trigger_req(struct rwnx_hw *rwnx_hw, char *msg)
         return -ENOMEM;
 
     /* Set parameters for the MM_DBG_TRIGGER_REQ message */
-    strncpy(req->error, msg, sizeof(req->error));
+    /* strscpy() NUL-terminates; strncpy() did not, and was removed in 7.2 */
+    strscpy(req->error, msg, sizeof(req->error));
 
     /* Send the MM_DBG_TRIGGER_REQ message to LMAC FW */
     return rwnx_send_msg(rwnx_hw, req, 0, -1, NULL);

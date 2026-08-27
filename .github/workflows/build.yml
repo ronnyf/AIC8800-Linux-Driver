@@ -1,0 +1,228 @@
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build against ${{ matrix.label }}
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel
+    strategy:
+      # Report every kernel independently - a break on one is not a reason to
+      # hide the result for the other.
+      fail-fast: false
+      matrix:
+        include:
+          - label: linux-headers
+            package: linux-headers
+            testing: false
+          - label: linux-lts-headers
+            package: linux-lts-headers
+            testing: false
+          # Arch stable trails the newest kernel, so the stable jobs above cannot
+          # exercise the newest version-guarded code paths. The testing repos
+          # carry the next kernel; "Report kernel coverage" below states which
+          # version each job actually compiled against.
+          - label: linux-headers (testing)
+            package: linux-headers
+            testing: true
+    steps:
+      - name: Enable Arch testing repositories
+        if: matrix.testing
+        run: |
+          # Must precede [core]/[extra] in pacman.conf to take precedence.
+          sed -i '/^\[core\]/i [core-testing]\nInclude = /etc/pacman.d/mirrorlist\n\n[extra-testing]\nInclude = /etc/pacman.d/mirrorlist\n' /etc/pacman.conf
+
+      - name: Install toolchain and kernel headers
+        run: |
+          pacman -Sy --noconfirm --needed git bc cpio ${{ matrix.package }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve kernel build directory
+        id: kernel
+        run: |
+          # uname -r inside the container reports the runner's host kernel, not
+          # the headers we just installed, so KDIR has to be resolved explicitly.
+          KDIR=$(ls -d /usr/lib/modules/*/build 2>/dev/null | head -1)
+          if [ -z "$KDIR" ]; then
+            echo "ERROR: no kernel build directory found for ${{ matrix.package }}"
+            exit 1
+          fi
+          KVER=$(basename "$(dirname "$KDIR")")
+          echo "kdir=${KDIR}" >> "$GITHUB_OUTPUT"
+          echo "kver=${KVER}" >> "$GITHUB_OUTPUT"
+          echo "Building against kernel ${KVER} (${KDIR})"
+
+      - name: Build modules
+        run: |
+          set -o pipefail
+          make -j"$(nproc)" -Otarget -C drivers/aic8800 \
+            KDIR='${{ steps.kernel.outputs.kdir }}' modules 2>&1 | tee /tmp/build.log
+
+      - name: Check for unused-label warnings
+        run: |
+          # Kernel builds enable -Wall, so -Wunused-label shows up here without
+          # CONFIG_WERROR. Reported as an annotation rather than failing the
+          # build, so pre-existing vendor warnings cannot block unrelated PRs.
+          N=$(grep -c 'unused-label' /tmp/build.log || true)
+          if [ "$N" -gt 0 ]; then
+            echo "::warning title=Unused label::${{ matrix.label }}: ${N} -Wunused-label warning(s)"
+            grep 'unused-label' /tmp/build.log | head -n 5
+          else
+            echo "::notice title=Unused label::${{ matrix.label }}: no -Wunused-label warnings"
+          fi
+
+      - name: Verify modules were produced
+        run: |
+          FOUND=$(find drivers/aic8800 -name '*.ko' | sort)
+          if [ -z "$FOUND" ]; then
+            echo "ERROR: build reported success but produced no .ko files"
+            exit 1
+          fi
+          echo "Built against kernel ${{ steps.kernel.outputs.kver }}:"
+          echo "$FOUND"
+
+      - name: Report kernel coverage
+        run: |
+          # Surfaced as an annotation, not just log output, so which kernel was
+          # actually compiled against is visible without digging into the logs.
+          KVER='${{ steps.kernel.outputs.kver }}'
+          IFS='.-' read -r MAJ MIN _ <<<"$KVER"
+          if [ "$MAJ" -gt 7 ] || { [ "$MAJ" -eq 7 ] && [ "$MIN" -ge 2 ]; }; then
+            echo "::notice title=Kernel coverage::${{ matrix.label }} = ${KVER}: exercises the >= 7.2 code path"
+          else
+            echo "::notice title=Kernel coverage::${{ matrix.label }} = ${KVER}: below 7.2, so the >= 7.2 path is covered by the upstream job instead"
+          fi
+
+  # Arch does not package kernel 7.2 yet, not even in the testing repositories,
+  # so the jobs above cannot compile the >= 7.2 code paths at all. Prepare an
+  # upstream tree instead - that is the only way to prove the 7.2 claim.
+  build-upstream:
+    name: Build against upstream ${{ matrix.tag }} (${{ matrix.compiler }})
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tag: v7.2
+            compiler: gcc
+            llvm: ''
+          # gcc-only matrix misses clang-only errors. CONFIG_CC_IS_CLANG is
+          # def_bool $(success,...) in init/Kconfig - not settable via
+          # scripts/config, so the tree must be built with LLVM=1.
+          - tag: v7.2
+            compiler: clang
+            llvm: 'LLVM=1'
+    steps:
+      - name: Install toolchain
+        run: |
+          pacman -Syu --noconfirm --needed git bc cpio elfutils flex bison openssl perl python
+
+      - name: Install LLVM toolchain
+        if: matrix.compiler == 'clang'
+        run: |
+          pacman -S --noconfirm --needed clang llvm lld
+
+      - name: Checkout driver
+        uses: actions/checkout@v4
+        with:
+          path: driver
+
+      - name: Prepare upstream kernel ${{ matrix.tag }}
+        id: kernel
+        run: |
+          git clone --depth 1 --branch '${{ matrix.tag }}' \
+            https://github.com/torvalds/linux.git linux
+          cd linux
+          make -s -j"$(nproc)" ${{ matrix.llvm }} defconfig
+          # modules_prepare only builds scripts and headers, so there is no
+          # Module.symvers; MODVERSIONS would then reject the out-of-tree build.
+          # CONFIG_WERROR is left at upstream's default (y) on purpose: the
+          # driver is clean under it, so any newly introduced warning fails here
+          # instead of silently accumulating.
+          #
+          # IPW2200 only to select CONFIG_WIRELESS_EXT: promptless bool, and
+          # CFG80211_WEXT selects WEXT_CORE not WIRELESS_EXT. Without it
+          # aic8800_fdrv/Makefile disables CONFIG_USE_WIRELESS_EXT.
+          scripts/config --disable MODVERSIONS \
+                         --disable MODULE_SIG \
+                         --disable DEBUG_INFO_BTF \
+                         --enable MODULES \
+                         --enable WLAN \
+                         --module CFG80211 \
+                         --module MAC80211 \
+                         --module IPW2200
+          make -s -j"$(nproc)" ${{ matrix.llvm }} olddefconfig
+          if ! grep -q '^CONFIG_WERROR=y' .config; then
+            echo "ERROR: CONFIG_WERROR is not enabled - a green build here would prove nothing"
+            exit 1
+          fi
+          if ! grep -q '^CONFIG_WIRELESS_EXT=y' .config; then
+            echo "ERROR: CONFIG_WIRELESS_EXT is not enabled - the wireless-extensions path would not be compiled"
+            exit 1
+          fi
+          if [ '${{ matrix.compiler }}' = clang ] && ! grep -q '^CONFIG_CC_IS_CLANG=y' .config; then
+            echo "ERROR: kernel tree was not built with clang - the driver build would fall back to gcc"
+            exit 1
+          fi
+          make -s -j"$(nproc)" ${{ matrix.llvm }} modules_prepare
+          KVER=$(make -s ${{ matrix.llvm }} kernelrelease)
+          echo "kdir=${PWD}" >> "$GITHUB_OUTPUT"
+          echo "kver=${KVER}" >> "$GITHUB_OUTPUT"
+          echo "Prepared kernel ${KVER}"
+
+      - name: Build modules
+        run: |
+          set -o pipefail
+          # modules_prepare does not build the kernel, so there is no kernel
+          # Module.symvers and modpost cannot resolve external symbols.
+          # KBUILD_MODPOST_WARN downgrades that to warnings. Compilation is what
+          # proves API compatibility here: a cfg80211_ops signature mismatch is
+          # a hard compile error long before modpost runs.
+          if ! make -j"$(nproc)" -Otarget -C driver/drivers/aic8800 \
+                 KDIR='${{ steps.kernel.outputs.kdir }}' \
+                 KBUILD_MODPOST_WARN=1 modules 2>&1 | tee /tmp/build.log; then
+            # Promote compiler diagnostics to annotations so a failure is
+            # diagnosable from the checks API without opening the raw log.
+            grep -E 'error:|Error [0-9]+' /tmp/build.log | head -n 25 \
+              | sed 's|^|::error title=Build error::|'
+            exit 1
+          fi
+
+      - name: Verify modules were produced
+        run: |
+          FOUND=$(find driver/drivers/aic8800 -name '*.ko' | sort)
+          if [ -z "$FOUND" ]; then
+            echo "ERROR: build reported success but produced no .ko files"
+            exit 1
+          fi
+          echo "$FOUND"
+          if [ ! -f driver/drivers/aic8800/aic8800_fdrv/aicwf_wext_linux.o ]; then
+            echo "ERROR: aicwf_wext_linux.o was not built - the wireless-extensions path is not covered"
+            exit 1
+          fi
+
+      - name: Check for unused-label warnings
+        run: |
+          # Annotation rather than a build failure - see the build job for why.
+          LABEL='upstream ${{ matrix.tag }} (${{ matrix.compiler }})'
+          N=$(grep -c 'unused-label' /tmp/build.log || true)
+          if [ "$N" -gt 0 ]; then
+            echo "::warning title=Unused label::${LABEL}: ${N} -Wunused-label warning(s)"
+            grep 'unused-label' /tmp/build.log | head -n 5
+          else
+            echo "::notice title=Unused label::${LABEL}: no -Wunused-label warnings"
+          fi
+
+      - name: Report kernel coverage
+        run: |
+          echo "::notice title=Kernel coverage::upstream ${{ matrix.tag }} = ${{ steps.kernel.outputs.kver }}, ${{ matrix.compiler }}, WIRELESS_EXT=y: exercises the >= 7.2 code path"
