@@ -27,6 +27,31 @@ This project references the following resources:
 - **2026.04.03**: Updated for kernel 6.19.10, verified LLVM compilation, added production configuration
 - **2025.11.11**: Linux Kernel 6.17.7-arch1-1 compilation verified
 
+## Installation on Arch Linux / CachyOS (pacman repository)
+
+The recommended route. Add the repository once and updates arrive with a normal
+`pacman -Syu`. Append to `/etc/pacman.conf`:
+
+```ini
+[aic8800]
+SigLevel = Optional TrustAll
+Server = https://ronnyf.github.io/AIC8800-Linux-Driver/x86_64
+```
+
+Then install, along with the headers matching your kernel:
+
+```bash
+sudo pacman -Sy aic8800/aic8800-fdrv-dkms
+sudo pacman -S linux-headers          # or linux-cachyos-headers, linux-lts-headers, linux-zen-headers
+```
+
+DKMS rebuilds the modules automatically on each kernel update.
+
+> The packages are **not** PGP signed, which is why `SigLevel = Optional TrustAll`
+> is required — you are trusting GitHub Pages and this repository's release
+> pipeline. If that is not acceptable, build from the `PKGBUILD` attached to a
+> [release](https://github.com/ronnyf/AIC8800-Linux-Driver/releases) instead.
+
 ## Compilation and Installation
 
 ```bash

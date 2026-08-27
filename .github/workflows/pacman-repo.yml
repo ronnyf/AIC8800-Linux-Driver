@@ -6,12 +6,6 @@ on:
   # Manual re-publish, e.g. after deleting a release or changing the layout.
   # Rebuilds from whatever releases currently exist, so it is always safe to run.
   workflow_dispatch:
-  # TEMPORARY: lets this be validated before it reaches the default branch.
-  # Removed before merge - workflow_dispatch is not selectable until the file
-  # exists on the default branch.
-  push:
-    branches:
-      - feat/pacman-repo-pages
 
 permissions:
   contents: read
