@@ -493,7 +493,7 @@ static int aicwf_vendor_logger_start_logging(struct wiphy *wiphy, struct wireles
 {
 	int ret = 0, rem, type, intval, size, i;
 	const struct nlattr *iter;
-	struct wifi_ring_buffer_status rb;
+	struct wifi_ring_buffer_status rb = {};
 
 	nla_for_each_attr(iter, data, len, rem) {
 		type = nla_type(iter);
@@ -511,8 +511,6 @@ static int aicwf_vendor_logger_start_logging(struct wiphy *wiphy, struct wireles
 			size = nla_get_u32(iter);
 			break;
 		case LOGGER_ATTRIBUTE_RING_NAME:
-			/* Bounded and NUL-terminating: nla_data() is neither length-checked
-			 * nor guaranteed NUL-terminated, so strcpy() overran rb.name. */
 			nla_strscpy((char *)rb.name, iter, sizeof(rb.name));
 			break;
 		default:
@@ -541,14 +539,12 @@ static int aicwf_vendor_logger_get_ring_data(struct wiphy *wiphy, struct wireles
 {
 	int ret = 0, rem, type, i;
 	const struct nlattr *iter;
-	struct wifi_ring_buffer_status rb;
+	struct wifi_ring_buffer_status rb = {};
 
 	nla_for_each_attr(iter, data, len, rem) {
 		type = nla_type(iter);
 		switch (type) {
 		case LOGGER_ATTRIBUTE_RING_NAME:
-			/* Bounded and NUL-terminating: nla_data() is neither length-checked
-			 * nor guaranteed NUL-terminated, so strcpy() overran rb.name. */
 			nla_strscpy((char *)rb.name, iter, sizeof(rb.name));
 			break;
 		default:
