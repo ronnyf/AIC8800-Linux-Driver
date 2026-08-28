@@ -56,31 +56,98 @@ jobs:
           echo "::notice title=Packages::collected ${COUNT} package(s) from ${#TAGS[@]} release(s)"
           ls -1 repo/x86_64
 
+      - name: Prepare signing key
+        env:
+          KEY: ${{ secrets.REPO_SIGNING_KEY }}
+          PASSPHRASE: ${{ secrets.REPO_SIGNING_PASSPHRASE }}
+        run: |
+          echo "::add-mask::$KEY"
+          echo "::add-mask::$PASSPHRASE"
+          if [ -z "$KEY" ] || [ -z "$PASSPHRASE" ]; then
+            echo "::error title=Signing key::REPO_SIGNING_KEY / REPO_SIGNING_PASSPHRASE missing on the github-pages environment"
+            exit 1
+          fi
+          mkdir -p .signing
+          umask 077
+          # Accept either the raw armored key or base64 of it
+          if printf '%s' "$KEY" | head -n 1 | grep -q '^-----BEGIN PGP'; then
+            printf '%s\n' "$KEY" > .signing/key.gpg
+          else
+            printf '%s\n' "$KEY" | base64 -d > .signing/key.gpg
+          fi
+          printf '%s\n' "$PASSPHRASE" > .signing/pass.txt
+          gpg --batch --show-keys .signing/key.gpg >/dev/null \
+            || { echo "::error title=Signing key::secret does not decode to a GPG private key"; exit 1; }
+
       - name: Build repository database
         run: |
-          docker run --rm -v "${PWD}/repo/x86_64:/repo" -w /repo archlinux:base \
+          docker run --rm \
+            -v "${PWD}/repo/x86_64:/repo" \
+            -v "${PWD}/.signing/key.gpg:/key.gpg:ro" \
+            -v "${PWD}/.signing/pass.txt:/pass.txt:ro" \
+            -v "${PWD}/aic8800-key.asc:/pubkey.asc:ro" \
+            -w /repo archlinux:base \
             bash -euo pipefail -c '
+              export GNUPGHOME=$(mktemp -d)
+              chmod 700 "${GNUPGHOME}"
+              echo allow-loopback-pinentry > "${GNUPGHOME}/gpg-agent.conf"
+              # pass the passphrase exactly once: turn the key passphraseless
+              # in-container, every sign after that is TTY-free
+              gpg --batch --import /key.gpg
+              gpg --batch --pinentry-mode loopback --passphrase-file /pass.txt \
+                --decrypt /key.gpg > /key-free.gpg
+              gpg --batch --import /key-free.gpg
+              rm -f /key-free.gpg
+              # served key must equal signing key, or a key swap in the
+              # secret goes unnoticed
+              FPR=$(gpg --batch --with-colons --list-secret-keys \
+                | awk -F: "/^fpr/{print \$10; exit}")
+              PUBFPR=$(gpg --batch --with-colons --show-keys /pubkey.asc \
+                | awk -F: "/^fpr/{print \$10; exit}")
+              if [ -z "$FPR" ] || [ "$FPR" != "$PUBFPR" ]; then
+                echo "ERROR: signing key ${FPR} does not match aic8800-key.asc ${PUBFPR}"
+                exit 1
+              fi
+              for p in *.pkg.tar.zst; do
+                gpg --batch --local-user "$FPR" --detach-sign "$p"
+                gpg --verify "$p.sig" "$p" >/dev/null
+              done
               # Version-sort so the newest package is added last: a pacman db
               # holds one entry per pkgname, and the last one added wins.
               mapfile -t PKGS < <(ls -1 *.pkg.tar.zst | sort -V)
               printf "adding: %s\n" "${PKGS[@]}"
-              repo-add "'"${REPO_NAME}"'.db.tar.zst" "${PKGS[@]}"
+              GPG_KEY_NAME="$FPR" repo-add --sign "'"${REPO_NAME}"'.db.tar.zst" "${PKGS[@]}"
+              gpg --verify "'"${REPO_NAME}"'.db.tar.zst.sig" "'"${REPO_NAME}"'.db.tar.zst" >/dev/null
+              cp /pubkey.asc "'"${REPO_NAME}"'-key.asc"
               # Pages does not serve symlinks, and pacman fetches the bare
               # .db/.files names, so replace repo-adds symlinks with real files.
-              for l in "'"${REPO_NAME}"'.db" "'"${REPO_NAME}"'.files"; do
+              for l in "'"${REPO_NAME}"'.db" "'"${REPO_NAME}"'.files" "'"${REPO_NAME}"'.db.sig"; do
                 if [ -L "$l" ]; then t=$(readlink "$l"); rm "$l"; cp "$t" "$l"; fi
               done
+              # older repo-add only emits the long .sig name; materialize the
+              # short one pacman fetches
+              if [ ! -f "'"${REPO_NAME}"'.db.sig" ] && [ -f "'"${REPO_NAME}"'.db.tar.zst.sig" ]; then
+                cp "'"${REPO_NAME}"'.db.tar.zst.sig" "'"${REPO_NAME}"'.db.sig"
+              fi
             '
+          KEY_FPR=$(gpg --batch --with-colons --show-keys aic8800-key.asc \
+            | awk -F: '/^fpr/{print $10; exit}')
+          [ -n "$KEY_FPR" ] || { echo "::error title=Signing key::cannot read aic8800-key.asc"; exit 1; }
+          echo "KEY_FPR=${KEY_FPR}" >> "${GITHUB_ENV}"
           echo "--- repository contents ---"
           ls -l repo/x86_64
 
       - name: Verify the database is readable by pacman
         run: |
           # A served db that pacman cannot parse would fail silently on users'
-          # machines, so assert the package is actually resolvable from it.
-          docker run --rm -v "${PWD}/repo/x86_64:/repo:ro" archlinux:base \
+          # machines, so assert the package is resolvable from it with the
+          # distro-default strict SigLevel, not Optional TrustAll.
+          docker run --rm -v "${PWD}/repo/x86_64:/repo:ro" \
+            -v "${PWD}/aic8800-key.asc:/key.asc:ro" archlinux:base \
             bash -euo pipefail -c '
-              printf "[%s]\nSigLevel = Optional TrustAll\nServer = file:///repo\n" "'"${REPO_NAME}"'" \
+              pacman-key --no-gpg-tty --add /key.asc
+              pacman-key --no-gpg-tty --lsign-key "'"${KEY_FPR}"'"
+              printf "[%s]\nServer = file:///repo\n" "'"${REPO_NAME}"'" \
                 >> /etc/pacman.conf
               pacman -Sy --noconfirm >/dev/null
               pacman -Si "'"${REPO_NAME}"'/aic8800-fdrv-dkms" | head -n 12
@@ -117,8 +184,10 @@ jobs:
             <h2>Add the repository</h2>
             <p>Append to <code>/etc/pacman.conf</code>:</p>
           <pre>[${REPO_NAME}]
-          SigLevel = Optional TrustAll
           Server = ${BASE}/x86_64</pre>
+            <p>Trust the repository key once:</p>
+          <pre>pacman-key --add ${BASE}${REPO_NAME}-key.asc
+          sudo pacman-key --lsign-key ${KEY_FPR}</pre>
 
             <h2>Install</h2>
           <pre>sudo pacman -Sy ${REPO_NAME}/aic8800-fdrv-dkms</pre>
@@ -128,10 +197,13 @@ jobs:
               DKMS then rebuilds the modules on every kernel update.</p>
 
             <h2>A note on signing</h2>
-            <p>These packages are <strong>not</strong> PGP signed, which is why
-              <code>SigLevel = Optional TrustAll</code> is required. You are
-              trusting GitHub Pages and this repository's release pipeline. If
-              that is not acceptable, build from the
+            <p>Packages and the repository database are PGP signed with the key
+              above (fingerprint <code>${KEY_FPR}</code>), which is why no
+              <code>SigLevel</code> override is needed — pacman's default
+              <code>Required DatabaseOptional</code> applies. Note that a
+              signature does not prove who runs the pipeline: it only means
+              the contents match the private key held by this repository's CI.
+              If that is not acceptable, build from the
               <a href="https://github.com/${GITHUB_REPOSITORY}/releases">PKGBUILD</a>
               instead.</p>
           </body>
@@ -165,19 +237,26 @@ jobs:
             echo "::error title=Repo unreachable::${DB} returned ${CODE}"
             exit 1
           fi
+          # The served public key must be byte-identical to the committed one
+          curl -fsSL "${BASE}${REPO_NAME}-key.asc" -o .signing/served-key.asc
+          cmp -s aic8800-key.asc .signing/served-key.asc \
+            || { echo "::error title=Key mismatch::served -key.asc differs from aic8800-key.asc"; exit 1; }
           # Resolve and download through the real URL, not a local path: this is
           # what catches anything Pages serves differently from the filesystem,
-          # such as the symlinks repo-add creates.
+          # such as the symlinks repo-add creates. Strict SigLevel, trusted key.
           set -o pipefail
-          if ! docker run --rm archlinux:base bash -euo pipefail -c '
-            printf "[%s]\nSigLevel = Optional TrustAll\nServer = %s\n" \
-              "'"${REPO_NAME}"'" "'"${BASE}"'x86_64" >> /etc/pacman.conf
-            pacman -Sy --noconfirm
-            pacman -Si "'"${REPO_NAME}"'/aic8800-fdrv-dkms" | head -n 8
-            mkdir -p /tmp/cache
-            pacman -Sw --noconfirm --cachedir /tmp/cache "'"${REPO_NAME}"'/aic8800-fdrv-dkms"
-            ls -l /tmp/cache/*.pkg.tar.zst
-          ' 2>&1 | tee /tmp/smoke.log; then
+          if ! docker run --rm -v "${PWD}/.signing/served-key.asc:/key.asc:ro" \
+            archlinux:base bash -euo pipefail -c '
+              pacman-key --no-gpg-tty --add /key.asc
+              pacman-key --no-gpg-tty --lsign-key "'"${KEY_FPR}"'"
+              printf "[%s]\nServer = %s\n" \
+                "'"${REPO_NAME}"'" "'"${BASE}"'x86_64" >> /etc/pacman.conf
+              pacman -Sy --noconfirm
+              pacman -Si "'"${REPO_NAME}"'/aic8800-fdrv-dkms" | head -n 8
+              mkdir -p /tmp/cache
+              pacman -Sw --noconfirm --cachedir /tmp/cache "'"${REPO_NAME}"'/aic8800-fdrv-dkms"
+              ls -l /tmp/cache/*.pkg.tar.zst
+            ' 2>&1 | tee /tmp/smoke.log; then
             tail -n 15 /tmp/smoke.log | while IFS= read -r line; do
               echo "::error title=Smoke test::${line}"
             done
@@ -188,3 +267,7 @@ jobs:
       - name: Report published repository
         run: |
           echo "::notice title=Pacman repo::published at ${{ steps.deploy.outputs.page_url }}x86_64"
+
+      - name: Remove signing material
+        if: always()
+        run: rm -rf .signing
