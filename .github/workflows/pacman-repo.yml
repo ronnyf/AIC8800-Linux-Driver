@@ -29,6 +29,9 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
       - name: Collect packages from releases
         env:
           GH_TOKEN: ${{ github.token }}
@@ -56,28 +59,43 @@ jobs:
           echo "::notice title=Packages::collected ${COUNT} package(s) from ${#TAGS[@]} release(s)"
           ls -1 repo/x86_64
 
+      - name: Compute repository key fingerprint
+        id: keyfpr
+        run: |
+          KEY_FPR=$(gpg --batch --with-colons --show-keys aic8800-key.asc \
+            | awk -F: '/^fpr/{print $10; exit}')
+          [ -n "$KEY_FPR" ] \
+            || { echo "::error title=Signing key::cannot read aic8800-key.asc"; exit 1; }
+          echo "KEY_FPR=${KEY_FPR}" >> "${GITHUB_ENV}"
+
       - name: Prepare signing key
         env:
           KEY: ${{ secrets.REPO_SIGNING_KEY }}
           PASSPHRASE: ${{ secrets.REPO_SIGNING_PASSPHRASE }}
         run: |
-          echo "::add-mask::$KEY"
-          echo "::add-mask::$PASSPHRASE"
           if [ -z "$KEY" ] || [ -z "$PASSPHRASE" ]; then
             echo "::error title=Signing key::REPO_SIGNING_KEY / REPO_SIGNING_PASSPHRASE missing on the github-pages environment"
             exit 1
           fi
-          mkdir -p .signing
+          # Never print these values: an armored multi-line key written to the
+          # log would leak past its first line, which log masking does not
+          # reliably cover.
           umask 077
+          mkdir -p .signing
           # Accept either the raw armored key or base64 of it
           if printf '%s' "$KEY" | head -n 1 | grep -q '^-----BEGIN PGP'; then
             printf '%s\n' "$KEY" > .signing/key.gpg
           else
             printf '%s\n' "$KEY" | base64 -d > .signing/key.gpg
           fi
-          printf '%s\n' "$PASSPHRASE" > .signing/pass.txt
+          # No trailing newline: the container hex-encodes these exact bytes
+          printf '%s' "$PASSPHRASE" > .signing/pass.txt
           gpg --batch --show-keys .signing/key.gpg >/dev/null \
             || { echo "::error title=Signing key::secret does not decode to a GPG private key"; exit 1; }
+          SEC_FPR=$(gpg --batch --with-colons --show-keys .signing/key.gpg \
+            | awk -F: '/^fpr/{print $10; exit}')
+          [ -n "$SEC_FPR" ] && [ "$SEC_FPR" = "$KEY_FPR" ] \
+            || { echo "::error title=Signing key::secret key ${SEC_FPR:-unreadable} does not match committed key ${KEY_FPR}"; exit 1; }
 
       - name: Build repository database
         run: |
@@ -85,55 +103,52 @@ jobs:
             -v "${PWD}/repo/x86_64:/repo" \
             -v "${PWD}/.signing/key.gpg:/key.gpg:ro" \
             -v "${PWD}/.signing/pass.txt:/pass.txt:ro" \
-            -v "${PWD}/aic8800-key.asc:/pubkey.asc:ro" \
+            -e EXPECTED_FPR="$KEY_FPR" \
             -w /repo archlinux:base \
             bash -euo pipefail -c '
               export GNUPGHOME=$(mktemp -d)
               chmod 700 "${GNUPGHOME}"
-              echo allow-loopback-pinentry > "${GNUPGHOME}/gpg-agent.conf"
-              # pass the passphrase exactly once: turn the key passphraseless
-              # in-container, every sign after that is TTY-free
+              # The key keeps its passphrase; seed the agent cache once so
+              # every sign (including the gpg invocation inside repo-add,
+              # which cannot take passphrase options) works without a TTY.
+              printf "allow-preset-passphrase\n" > "${GNUPGHOME}/gpg-agent.conf"
               gpg --batch --import /key.gpg
-              gpg --batch --pinentry-mode loopback --passphrase-file /pass.txt \
-                --decrypt /key.gpg > /key-free.gpg
-              gpg --batch --import /key-free.gpg
-              rm -f /key-free.gpg
-              # served key must equal signing key, or a key swap in the
-              # secret goes unnoticed
-              FPR=$(gpg --batch --with-colons --list-secret-keys \
-                | awk -F: "/^fpr/{print \$10; exit}")
-              PUBFPR=$(gpg --batch --with-colons --show-keys /pubkey.asc \
-                | awk -F: "/^fpr/{print \$10; exit}")
-              if [ -z "$FPR" ] || [ "$FPR" != "$PUBFPR" ]; then
-                echo "ERROR: signing key ${FPR} does not match aic8800-key.asc ${PUBFPR}"
-                exit 1
-              fi
+              # Sign with the committed key specifically, not whichever key
+              # happens to be listed first (would be ambiguous if the secret
+              # ever carries more than one key). The keygrip indexes the
+              # agent cache, the fingerprint names the key to sign with.
+              KEYGRIP=$(gpg --batch --with-colons --with-keygrip --list-secret-keys \
+                "$EXPECTED_FPR" | awk -F: "\$1==\"grp\"{print \$10; exit}")
+              [ -n "$KEYGRIP" ] \
+                || { echo "ERROR: committed key ${EXPECTED_FPR} not found in the signing secret"; exit 1; }
+              PASS_HEX=$(od -An -v -tx1 /pass.txt | tr -d " \n")
+              gpg-connect-agent --homedir "${GNUPGHOME}" \
+                "PRESET_PASSPHRASE ${KEYGRIP} -1 ${PASS_HEX}" /bye >/dev/null
               for p in *.pkg.tar.zst; do
-                gpg --batch --local-user "$FPR" --detach-sign "$p"
+                gpg --batch --local-user "$EXPECTED_FPR" --detach-sign "$p"
                 gpg --verify "$p.sig" "$p" >/dev/null
               done
               # Version-sort so the newest package is added last: a pacman db
               # holds one entry per pkgname, and the last one added wins.
               mapfile -t PKGS < <(ls -1 *.pkg.tar.zst | sort -V)
               printf "adding: %s\n" "${PKGS[@]}"
-              GPG_KEY_NAME="$FPR" repo-add --sign "'"${REPO_NAME}"'.db.tar.zst" "${PKGS[@]}"
+              GPGKEY="$EXPECTED_FPR" repo-add --sign "'"${REPO_NAME}"'.db.tar.zst" "${PKGS[@]}"
               gpg --verify "'"${REPO_NAME}"'.db.tar.zst.sig" "'"${REPO_NAME}"'.db.tar.zst" >/dev/null
-              cp /pubkey.asc "'"${REPO_NAME}"'-key.asc"
               # Pages does not serve symlinks, and pacman fetches the bare
-              # .db/.files names, so replace repo-adds symlinks with real files.
-              for l in "'"${REPO_NAME}"'.db" "'"${REPO_NAME}"'.files" "'"${REPO_NAME}"'.db.sig"; do
+              # .db/.files names plus their .sig files, so replace the
+              # symlinks repo-add creates with real files.
+              for l in "'"${REPO_NAME}"'.db" "'"${REPO_NAME}"'.files" "'"${REPO_NAME}"'.db.sig" "'"${REPO_NAME}"'.files.sig"; do
                 if [ -L "$l" ]; then t=$(readlink "$l"); rm "$l"; cp "$t" "$l"; fi
               done
-              # older repo-add only emits the long .sig name; materialize the
-              # short one pacman fetches
-              if [ ! -f "'"${REPO_NAME}"'.db.sig" ] && [ -f "'"${REPO_NAME}"'.db.tar.zst.sig" ]; then
-                cp "'"${REPO_NAME}"'.db.tar.zst.sig" "'"${REPO_NAME}"'.db.sig"
-              fi
+              # older repo-add only emits the long .sig names; materialize the
+              # short ones pacman fetches
+              for core in db files; do
+                short="'"${REPO_NAME}"'.${core}.sig"
+                long="'"${REPO_NAME}"'.${core}.tar.zst.sig"
+                if [ ! -e "$short" ] && [ -f "$long" ]; then cp "$long" "$short"; fi
+              done
             '
-          KEY_FPR=$(gpg --batch --with-colons --show-keys aic8800-key.asc \
-            | awk -F: '/^fpr/{print $10; exit}')
-          [ -n "$KEY_FPR" ] || { echo "::error title=Signing key::cannot read aic8800-key.asc"; exit 1; }
-          echo "KEY_FPR=${KEY_FPR}" >> "${GITHUB_ENV}"
+          cp aic8800-key.asc "repo/x86_64/${REPO_NAME}-key.asc"
           echo "--- repository contents ---"
           ls -l repo/x86_64
 
@@ -142,16 +157,11 @@ jobs:
           # A served db that pacman cannot parse would fail silently on users'
           # machines, so assert the package is resolvable from it with the
           # distro-default strict SigLevel, not Optional TrustAll.
-          docker run --rm -v "${PWD}/repo/x86_64:/repo:ro" \
-            -v "${PWD}/aic8800-key.asc:/key.asc:ro" archlinux:base \
-            bash -euo pipefail -c '
-              pacman-key --no-gpg-tty --add /key.asc
-              pacman-key --no-gpg-tty --lsign-key "'"${KEY_FPR}"'"
-              printf "[%s]\nServer = file:///repo\n" "'"${REPO_NAME}"'" \
-                >> /etc/pacman.conf
-              pacman -Sy --noconfirm >/dev/null
-              pacman -Si "'"${REPO_NAME}"'/aic8800-fdrv-dkms" | head -n 12
-            '
+          docker run --rm \
+            -v "${PWD}/repo/x86_64:/repo:ro" \
+            -v "${PWD}/aic8800-key.asc:/key.asc:ro" \
+            -v "${PWD}/scripts/pacman-smoke.sh:/opt/pacman-smoke.sh:ro" \
+            archlinux:base /opt/pacman-smoke.sh /key.asc "file:///repo" "${REPO_NAME}" "${KEY_FPR}"
 
       - name: Configure Pages
         id: pages
@@ -160,6 +170,7 @@ jobs:
       - name: Write landing page
         run: |
           BASE='${{ steps.pages.outputs.base_url }}'
+          BASE="${BASE%/}"
           cat > repo/index.html <<HTML
           <!DOCTYPE html>
           <html lang="en">
@@ -186,7 +197,7 @@ jobs:
           <pre>[${REPO_NAME}]
           Server = ${BASE}/x86_64</pre>
             <p>Trust the repository key once:</p>
-          <pre>pacman-key --add ${BASE}${REPO_NAME}-key.asc
+          <pre>sudo pacman-key --add ${BASE}/x86_64/aic8800-key.asc
           sudo pacman-key --lsign-key ${KEY_FPR}</pre>
 
             <h2>Install</h2>
@@ -225,7 +236,8 @@ jobs:
       - name: Smoke-test the published repository over HTTPS
         run: |
           BASE='${{ steps.deploy.outputs.page_url }}'
-          DB="${BASE}x86_64/${REPO_NAME}.db"
+          BASE="${BASE%/}"
+          DB="${BASE}/x86_64/${REPO_NAME}.db"
           # A fresh deployment can take a moment to be served.
           for i in $(seq 1 20); do
             CODE=$(curl -sS -o /dev/null -w '%{http_code}' "$DB" || true)
@@ -237,32 +249,27 @@ jobs:
             echo "::error title=Repo unreachable::${DB} returned ${CODE}"
             exit 1
           fi
-          # The served public key must be byte-identical to the committed one
-          curl -fsSL "${BASE}${REPO_NAME}-key.asc" -o .signing/served-key.asc
+          # The served public key must be byte-identical to the committed one,
+          # fetched from the same URL the docs tell users to use (Pages serves
+          # repo/x86_64 under x86_64/)
+          curl -fsSL "${BASE}/x86_64/aic8800-key.asc" -o .signing/served-key.asc
           cmp -s aic8800-key.asc .signing/served-key.asc \
             || { echo "::error title=Key mismatch::served -key.asc differs from aic8800-key.asc"; exit 1; }
           # Resolve and download through the real URL, not a local path: this is
           # what catches anything Pages serves differently from the filesystem,
           # such as the symlinks repo-add creates. Strict SigLevel, trusted key.
           set -o pipefail
-          if ! docker run --rm -v "${PWD}/.signing/served-key.asc:/key.asc:ro" \
-            archlinux:base bash -euo pipefail -c '
-              pacman-key --no-gpg-tty --add /key.asc
-              pacman-key --no-gpg-tty --lsign-key "'"${KEY_FPR}"'"
-              printf "[%s]\nServer = %s\n" \
-                "'"${REPO_NAME}"'" "'"${BASE}"'x86_64" >> /etc/pacman.conf
-              pacman -Sy --noconfirm
-              pacman -Si "'"${REPO_NAME}"'/aic8800-fdrv-dkms" | head -n 8
-              mkdir -p /tmp/cache
-              pacman -Sw --noconfirm --cachedir /tmp/cache "'"${REPO_NAME}"'/aic8800-fdrv-dkms"
-              ls -l /tmp/cache/*.pkg.tar.zst
-            ' 2>&1 | tee /tmp/smoke.log; then
+          if ! docker run --rm \
+              -v "${PWD}/.signing/served-key.asc:/key.asc:ro" \
+              -v "${PWD}/scripts/pacman-smoke.sh:/opt/pacman-smoke.sh:ro" \
+              archlinux:base /opt/pacman-smoke.sh /key.asc "${BASE}/x86_64" "${REPO_NAME}" "${KEY_FPR}" 1 \
+            2>&1 | tee /tmp/smoke.log; then
             tail -n 15 /tmp/smoke.log | while IFS= read -r line; do
               echo "::error title=Smoke test::${line}"
             done
             exit 1
           fi
-          echo "::notice title=Smoke test::pacman resolved and downloaded the package from ${BASE}x86_64"
+          echo "::notice title=Smoke test::pacman resolved and downloaded the package from ${BASE}/x86_64"
 
       - name: Report published repository
         run: |
