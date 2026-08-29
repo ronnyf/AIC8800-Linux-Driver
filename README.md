@@ -48,8 +48,14 @@ The recommended route. Add the repository once and updates arrive with a normal
 
 ```ini
 [aic8800]
-SigLevel = Optional TrustAll
 Server = https://ronnyf.github.io/AIC8800-Linux-Driver/x86_64
+```
+
+Trust the repository signing key once:
+
+```bash
+sudo pacman-key --add https://ronnyf.github.io/AIC8800-Linux-Driver/x86_64/aic8800-key.asc
+sudo pacman-key --lsign-key D828912CEF9298B1DF64B2107D7C9C144215C362
 ```
 
 Then install, along with the headers matching your kernel:
@@ -61,9 +67,11 @@ sudo pacman -S linux-headers          # or linux-cachyos-headers, linux-lts-head
 
 DKMS rebuilds the modules automatically on each kernel update.
 
-> The packages are **not** PGP signed, which is why `SigLevel = Optional TrustAll`
-> is required — you are trusting GitHub Pages and this repository's release
-> pipeline. If that is not acceptable, build from the `PKGBUILD` attached to a
+> Packages and the repository database are PGP signed with the key above, so
+> pacman's default `SigLevel` applies — no `SigLevel` override is needed. Note
+> that a signature does not prove who runs the pipeline: it only means the
+> contents match the private key held by this repository's CI. If that is not
+> acceptable, build from the `PKGBUILD` attached to a
 > [release](https://github.com/ronnyf/AIC8800-Linux-Driver/releases) instead.
 
 ## Compilation and Installation
