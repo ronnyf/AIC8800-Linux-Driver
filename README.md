@@ -90,6 +90,32 @@ lsmod | grep aic
 iwconfig
 ```
 
+### Firmware for base AIC8800 / AIC8800DC / AIC8800DW (USB)
+
+`fw/aic8800D80` in this repo only covers the D80 chip. A USB adapter that
+enumerates as `a69c:8800` (not `a69c:8d80`) is the older base AIC8800/DC/DW
+chip instead — check with `lsusb`. On that hardware `aic_load_fw` looks for
+`/lib/firmware/aic8800/fmacfw.bin` and fails with `file failed to open` /
+`wrong size of firmware file` in `dmesg`, since that directory isn't shipped
+here.
+
+Grab the matching firmware set (`fmacfw.bin`, `fw_patch.bin`, `fw_adid.bin`,
+`fw_patch_table.bin`, `aic_userconfig.txt`, ...) from
+[armbian/firmware](https://github.com/armbian/firmware/tree/master/aic8800/USB/aic8800)
+into `/lib/firmware/aic8800/`, then reload the modules:
+
+```bash
+sudo mkdir -p /lib/firmware/aic8800
+sudo curl -sSL -o /lib/firmware/aic8800/fmacfw.bin \
+  https://raw.githubusercontent.com/armbian/firmware/master/aic8800/USB/aic8800/fmacfw.bin
+# repeat for fw_patch.bin, fw_adid.bin, fw_patch_table.bin, aic_userconfig.txt
+# (fetch the full file list from the armbian/firmware link above)
+
+sudo modprobe -r aic8800_fdrv aic_load_fw
+sudo modprobe aic_load_fw
+sudo modprobe aic8800_fdrv
+```
+
 ## Configuration
 
 The driver is configured for production use with the following key settings:
