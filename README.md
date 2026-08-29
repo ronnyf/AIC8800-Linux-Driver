@@ -1,3 +1,7 @@
+# Fork
+- Add support fork kernel 7.x
+- Add support for https://www.tunisianet.com.tn/cle-wifi-bluetooth/94539-adaptateur-hikvision-ds-3wru9x-h-usb-wi-fi-6-noir.html
+
 # AIC8800 Linux Driver
 
 AIC8800 WiFi driver for AIC8800D80/AIC8800DC/AIC8800DW chips, tested on CachyOS Linux (Arch-based).
