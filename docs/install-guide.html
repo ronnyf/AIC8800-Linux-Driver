@@ -1,0 +1,507 @@
+<title>AIC8800 Install Guide</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --paper:#eef1f3;
+    --paper-raised:#e3e8ec;
+    --ink:#14202b;
+    --ink-soft:#4c5c68;
+    --line:#c7d0d6;
+    --accent:#c4661f;
+    --accent-soft:#f0dcc8;
+    --accent2:#2e6e62;
+    --accent2-soft:#d9e8e4;
+    --danger:#b0402e;
+    --danger-soft:#f3dad4;
+    --code-bg:#e3e8ec;
+    --code-ink:#1c2a35;
+    --shadow: 0 1px 2px rgba(20,32,43,.06), 0 8px 24px -12px rgba(20,32,43,.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#0f1720;
+      --paper-raised:#16212c;
+      --ink:#e7ecef;
+      --ink-soft:#9aabb6;
+      --line:#26313f;
+      --accent:#e0873a;
+      --accent-soft:#3a2a19;
+      --accent2:#4fa391;
+      --accent2-soft:#17302c;
+      --danger:#e2685a;
+      --danger-soft:#3a201c;
+      --code-bg:#0b1219;
+      --code-ink:#dbe6ec;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0f1720;
+    --paper-raised:#16212c;
+    --ink:#e7ecef;
+    --ink-soft:#9aabb6;
+    --line:#26313f;
+    --accent:#e0873a;
+    --accent-soft:#3a2a19;
+    --accent2:#4fa391;
+    --accent2-soft:#17302c;
+    --danger:#e2685a;
+    --danger-soft:#3a201c;
+    --code-bg:#0b1219;
+    --code-ink:#dbe6ec;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--accent-soft); color:var(--ink); }
+
+  .sheet{
+    max-width:760px;
+    margin:0 auto;
+    padding:64px 24px 96px;
+  }
+
+  /* background grid, faint, evokes graph/schematic paper */
+  .sheet{
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 32px 32px;
+    background-position: -1px -1px;
+    background-attachment: local;
+    opacity: 1;
+  }
+  .sheet > *{ position:relative; }
+
+  header.page{
+    background:var(--paper);
+    padding-bottom:8px;
+  }
+  .eyebrow{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:11px;
+    font-weight:500;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:18px; height:1px;
+    background:var(--accent);
+    display:inline-block;
+  }
+  h1{
+    font-size:clamp(30px,5vw,42px);
+    font-weight:700;
+    letter-spacing:-.01em;
+    margin:14px 0 10px;
+    text-wrap:balance;
+  }
+  .dek{
+    font-size:16px;
+    color:var(--ink-soft);
+    max-width:56ch;
+    margin:0 0 6px;
+  }
+  .meta-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px 10px;
+    margin-top:22px;
+  }
+  .chip{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:12px;
+    padding:5px 10px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    color:var(--ink-soft);
+    background:var(--paper-raised);
+  }
+
+  /* kernel version timeline */
+  .timeline{
+    margin:36px 0 8px;
+    padding:22px 20px 18px;
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:6px;
+    box-shadow:var(--shadow);
+  }
+  .timeline-label{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:18px;
+  }
+  .timeline-track{
+    position:relative;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    padding-top:8px;
+  }
+  .timeline-track::before{
+    content:"";
+    position:absolute;
+    top:8px; left:2%; right:2%;
+    height:2px;
+    background:var(--line);
+  }
+  .tpoint{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:19%;
+    text-align:center;
+  }
+  .tpoint .dot{
+    width:9px; height:9px;
+    border-radius:50%;
+    background:var(--ink-soft);
+    border:2px solid var(--paper-raised);
+    z-index:1;
+  }
+  .tpoint.hit .dot{ background:var(--accent); }
+  .tpoint .v{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:12px;
+    font-weight:600;
+    margin-top:8px;
+  }
+  .tpoint .d{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin-top:2px;
+    line-height:1.35;
+  }
+
+  section.doc{ margin-top:56px; }
+  .steps{ display:flex; flex-direction:column; }
+  .step{
+    display:grid;
+    grid-template-columns:40px 1fr;
+    gap:0 20px;
+    padding-bottom:40px;
+    position:relative;
+  }
+  .step:last-child{ padding-bottom:0; }
+  .rail{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .num{
+    width:34px; height:34px;
+    border-radius:50%;
+    background:var(--ink);
+    color:var(--paper);
+    display:flex; align-items:center; justify-content:center;
+    font-family:"IBM Plex Mono", monospace;
+    font-weight:600;
+    font-size:13px;
+    flex:none;
+  }
+  .rail-line{
+    width:2px;
+    flex:1;
+    background:var(--line);
+    margin-top:6px;
+  }
+  .step:last-child .rail-line{ display:none; }
+  .step-body{ padding-top:4px; }
+  .step-body h2{
+    font-size:19px;
+    font-weight:600;
+    margin:2px 0 8px;
+  }
+  .step-body p{ margin:0 0 12px; color:var(--ink-soft); max-width:60ch; }
+  .step-body p code, .step-body li code{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.88em;
+    background:var(--code-bg);
+    color:var(--code-ink);
+    padding:1px 5px;
+    border-radius:3px;
+  }
+
+  pre{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:13px;
+    background:var(--code-bg);
+    color:var(--code-ink);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:14px 16px;
+    overflow-x:auto;
+    margin:0 0 12px;
+    line-height:1.55;
+  }
+  pre .c{ color:var(--ink-soft); } /* comment */
+
+  .branch-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    margin:14px 0 4px;
+  }
+  @media (max-width:560px){ .branch-grid{ grid-template-columns:1fr; } }
+  .branch{
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:14px 16px;
+    background:var(--paper-raised);
+  }
+  .branch .tag{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:10.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    font-weight:600;
+    padding:3px 8px;
+    border-radius:3px;
+    display:inline-block;
+    margin-bottom:9px;
+  }
+  .branch.ok .tag{ background:var(--accent2-soft); color:var(--accent2); }
+  .branch.need .tag{ background:var(--accent-soft); color:var(--accent); }
+  .branch h3{ font-size:14.5px; margin:0 0 6px; font-weight:600; }
+  .branch p{ font-size:13.5px; margin:0 0 10px; color:var(--ink-soft); }
+  .branch pre{ font-size:12px; margin:0; }
+
+  .callout{
+    border-left:3px solid var(--accent);
+    background:var(--accent-soft);
+    padding:12px 14px;
+    border-radius:0 5px 5px 0;
+    font-size:13.5px;
+    margin:0 0 14px;
+    color:var(--ink);
+  }
+  .callout a{ color:inherit; }
+  .callout strong{ font-weight:600; }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13.5px;
+  }
+  .table-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:6px; }
+  th, td{
+    text-align:left;
+    padding:10px 12px;
+    border-bottom:1px solid var(--line);
+    vertical-align:top;
+  }
+  thead th{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--ink-soft);
+    background:var(--paper-raised);
+  }
+  tbody tr:last-child td{ border-bottom:none; }
+  td code{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:12px;
+    color:var(--danger);
+    background:var(--danger-soft);
+    padding:1px 5px;
+    border-radius:3px;
+    white-space:nowrap;
+  }
+
+  footer.refs{
+    margin-top:64px;
+    padding-top:24px;
+    border-top:1px solid var(--line);
+  }
+  footer.refs .eyebrow{ margin-bottom:14px; }
+  .ref-list{ display:flex; flex-direction:column; gap:9px; }
+  .ref-list a{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:13px;
+    color:var(--ink);
+    text-decoration:none;
+    display:flex;
+    gap:10px;
+    align-items:baseline;
+  }
+  .ref-list a:hover{ color:var(--accent); }
+  .ref-list .pr{ color:var(--accent); font-weight:600; min-width:38px; }
+  .ref-list .desc{ color:var(--ink-soft); font-family:"IBM Plex Sans",sans-serif; }
+
+  a{ color:var(--accent); }
+
+  @media (prefers-reduced-motion: no-preference){
+    .step, .timeline{ transition:none; }
+  }
+</style>
+
+<div class="sheet">
+
+  <header class="page">
+    <div class="eyebrow">Hardware · Linux Kernel Driver</div>
+    <h1>AIC8800 Install Guide</h1>
+    <p class="dek">Fullmac WiFi driver build, firmware, and load procedure for AIC8800-series USB adapters — verified on Ubuntu 24.04, kernel 6.8.0-136-generic.</p>
+    <div class="meta-row">
+      <span class="chip">a69c:8800 · base/DC/DW</span>
+      <span class="chip">a69c:8d80 · D80</span>
+      <span class="chip">kernel 6.0 – 7.2</span>
+    </div>
+  </header>
+
+  <div class="timeline">
+    <div class="timeline-label">cfg80211 ABI drift this driver has to straddle</div>
+    <div class="timeline-track">
+      <div class="tpoint"><span class="dot"></span><span class="v">6.0</span><span class="d">baseline cfg80211 API</span></div>
+      <div class="tpoint"><span class="dot"></span><span class="v">6.13</span><span class="d"><code>set_monitor_channel</code> gains <code>dev</code></span></div>
+      <div class="tpoint hit"><span class="dot"></span><span class="v">6.17</span><span class="d"><code>link_id</code> / <code>radio_idx</code> added</span></div>
+      <div class="tpoint"><span class="dot"></span><span class="v">7.2</span><span class="d">last version this driver targets</span></div>
+      <div class="tpoint"><span class="dot"></span><span class="v">7.3</span><span class="d">unsupported — cookie semantics changed</span></div>
+    </div>
+  </div>
+
+  <section class="doc">
+    <div class="steps">
+
+      <div class="step">
+        <div class="rail"><div class="num">1</div><div class="rail-line"></div></div>
+        <div class="step-body">
+          <h2>Identify your chip</h2>
+          <p>The USB product ID decides which firmware path you're on. Run:</p>
+          <pre>lsusb | grep -i aic</pre>
+          <p>Match the ID against the two chips this driver supports.</p>
+          <div class="branch-grid">
+            <div class="branch ok">
+              <span class="tag">firmware included</span>
+              <h3>a69c:8d80 — AIC8800D80</h3>
+              <p>Ships in <code>fw/aic8800D80</code>. No extra download needed.</p>
+            </div>
+            <div class="branch need">
+              <span class="tag">firmware missing</span>
+              <h3>a69c:8800 — base / DC / DW</h3>
+              <p>Older chip, same PID as the D80's download-mode bootloader. Repo has nothing for it — see step 4.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="rail"><div class="num">2</div><div class="rail-line"></div></div>
+        <div class="step-body">
+          <h2>Install kernel headers</h2>
+          <p>Must match the running kernel exactly.</p>
+          <pre>sudo apt install linux-headers-$(uname -r)</pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="rail"><div class="num">3</div><div class="rail-line"></div></div>
+        <div class="step-body">
+          <h2>Build and install the module</h2>
+          <div class="callout">
+            On kernel <strong>6.0 – 6.16</strong> (e.g. Ubuntu's stock 6.8), <code>main</code> fails to build — three cfg80211 compat guards assume the ABI change landed at 6.0, but it actually landed at 6.17. Check out <a href="https://github.com/ronnyf/AIC8800-Linux-Driver/pull/27">PR&nbsp;#27</a> until it merges.
+          </div>
+          <pre>git clone https://github.com/ronnyf/AIC8800-Linux-Driver.git
+cd AIC8800-Linux-Driver
+<span class="c"># add LLVM=1 if your kernel was built with clang</span>
+make -C drivers/aic8800
+sudo make -C drivers/aic8800 install</pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="rail"><div class="num">4</div><div class="rail-line"></div></div>
+        <div class="step-body">
+          <h2>Firmware — base / DC / DW chips only</h2>
+          <p>Skip this step entirely on D80. Otherwise pull the matching set from <a href="https://github.com/armbian/firmware/tree/master/aic8800/USB/aic8800">armbian/firmware</a>:</p>
+          <pre>sudo mkdir -p /lib/firmware/aic8800
+for f in fmacfw.bin fw_patch.bin fw_adid.bin fw_patch_table.bin aic_userconfig.txt; do
+  sudo curl -sSL -o /lib/firmware/aic8800/$f \
+    https://raw.githubusercontent.com/armbian/firmware/master/aic8800/USB/aic8800/$f
+done</pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="rail"><div class="num">5</div><div class="rail-line"></div></div>
+        <div class="step-body">
+          <h2>Load the driver</h2>
+          <pre>sudo modprobe aic_load_fw
+sudo modprobe aic8800_fdrv</pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="rail"><div class="num">6</div></div>
+        <div class="step-body">
+          <h2>Verify</h2>
+          <pre>lsmod | grep aic
+ip link show | grep wlx        <span class="c"># interface name is wlx&lt;mac&gt;</span>
+nmcli device wifi list ifname &lt;interface&gt;
+sudo dmesg | tail -30           <span class="c"># check here if the interface never appears</span></pre>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="doc" style="margin-top:8px;">
+    <h2 style="font-size:19px; font-weight:600; margin:0 0 14px;">Troubleshooting</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Symptom in <code>dmesg</code></th><th>Cause</th><th>Fix</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>fmacfw.bin file failed to open</code></td>
+            <td>Chip is base/DC/DW, firmware directory not present</td>
+            <td>Step 4</td>
+          </tr>
+          <tr>
+            <td><code>wrong size of firmware file</code></td>
+            <td>Same as above — driver opened an empty/wrong path</td>
+            <td>Step 4</td>
+          </tr>
+          <tr>
+            <td><code>too many arguments to function&nbsp;'cfg80211_rx_spurious_frame'</code></td>
+            <td>Building on kernel 6.0–6.16 against unpatched <code>main</code></td>
+            <td>PR #27</td>
+          </tr>
+          <tr>
+            <td><code>no mac address in efuse!</code></td>
+            <td>Chip has no burned-in MAC</td>
+            <td>Harmless — driver assigns a random one</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="refs">
+    <div class="eyebrow">Upstream references</div>
+    <div class="ref-list">
+      <a href="https://github.com/ronnyf/AIC8800-Linux-Driver/pull/27"><span class="pr">#27</span><span>cfg80211 version-guard fix (6.0 → 6.17)</span></a>
+      <a href="https://github.com/ronnyf/AIC8800-Linux-Driver/pull/28"><span class="pr">#28</span><span>Firmware docs for base AIC8800/DC/DW</span></a>
+      <a href="https://github.com/ronnyf/AIC8800-Linux-Driver/pull/29"><span class="pr">#29</span><span>.gitignore for Kbuild artifacts</span></a>
+    </div>
+  </footer>
+
+</div>
