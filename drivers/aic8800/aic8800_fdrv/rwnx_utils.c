@@ -20,6 +20,7 @@ extern int get_testmode(void);
 extern void get_fw_path(char* fw_path);
 extern int testmode;
 extern char aic_fw_path[200];
+extern char aic_fw_path_override[200];
 
 int rwnx_init_aic(struct rwnx_hw *rwnx_hw)
 {
@@ -33,8 +34,12 @@ int rwnx_init_aic(struct rwnx_hw *rwnx_hw)
 
 	testmode = get_testmode();
 	memset(aic_fw_path, 0, 200);
-	get_fw_path(aic_fw_path);
-	
+	if (strlen(aic_fw_path_override) > 0) {
+		memcpy(aic_fw_path, aic_fw_path_override, strlen(aic_fw_path_override));
+	} else {
+		get_fw_path(aic_fw_path);
+	}
+
     return 0;
 }
 
