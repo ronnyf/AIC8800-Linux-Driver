@@ -4,5 +4,19 @@
 build/
 drivers/aic8800/build/
 
+# Kbuild out-of-tree module artifacts (drivers/aic8800/**)
+*.o
+*.o.d
+*.ko
+*.mod
+*.mod.c
+*.mod.cmd
+.*.cmd
+.*.d
+modules.order
+Module.symvers
+.tmp_versions/
+.cache.mk
+
 .worktrees/
 worktrees/
