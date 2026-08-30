@@ -1,8 +1,6 @@
 # Cài đặt driver WiFi AIC8800
 
-Tài liệu này hướng dẫn cài driver AIC8800 (D80/DC/DW) trên Linux. Không dùng
-màu trong output `make` — nếu terminal tự tô màu cảnh báo/lỗi, thêm cờ tắt màu
-như ghi ở cuối mục Build.
+Tài liệu này hướng dẫn cài driver AIC8800 (D80/DC/DW) trên Linux.
 
 ## 1. Cách khuyến nghị: pacman repo (Arch/CachyOS)
 
@@ -50,16 +48,6 @@ Gỡ: `sudo make -C drivers/aic8800 uninstall` (hoặc `uninstall_firmware` /
 `uninstall_rules` / `uninstall_modules` riêng lẻ).
 
 Dọn build artifact: `make -C drivers/aic8800 clean`.
-
-**Tắt màu output**: `make`/kbuild tự tắt màu khi stdout không phải terminal
-(ví dụ redirect ra file hay pipe qua `tee`). Nếu vẫn thấy mã màu ANSI, build
-lại với:
-
-```bash
-NO_COLOR=1 make -C drivers/aic8800                       # honor NO_COLOR chung
-make LLVM=1 KCFLAGS=-fno-color-diagnostics -C drivers/aic8800   # clang
-make LLVM=0 KCFLAGS=-fdiagnostics-color=never -C drivers/aic8800 # gcc
-```
 
 ## 3. DKMS thủ công (không qua pacman)
 
