@@ -45,6 +45,8 @@ This project references the following resources:
 - **2026.04.03**: Updated for kernel 6.19.10, verified LLVM compilation, added production configuration
 - **2025.11.11**: Linux Kernel 6.17.7-arch1-1 compilation verified
 
+> Vietnamese install guide: [docs/INSTALL.md](docs/INSTALL.md)
+
 ## Installation on Arch Linux / CachyOS (pacman repository)
 
 The recommended route. Add the repository once and updates arrive with a normal

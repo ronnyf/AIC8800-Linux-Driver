@@ -430,8 +430,8 @@ enum {
 typedef __s64 time64_t;
 #endif
 
-/* CFG80211 - Kernel 6.x changes */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0)
+/* CFG80211 - link_id param added in 6.17 (was gfp-only before) */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0)
 #define cfg80211_rx_spurious_frame(dev, addr, gfp) \
     cfg80211_rx_spurious_frame(dev, addr, -1, gfp)
 
