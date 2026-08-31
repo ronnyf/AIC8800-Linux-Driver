@@ -1,0 +1,264 @@
+# Release Pipeline & Versioning Strategy Design
+
+**Date:** 2026-08-31
+**Status:** approved (design presented and accepted 2026-08-31)
+
+## Overview
+
+Extend the tag-triggered `release` workflow to produce, per release:
+
+1. the existing Arch/CachyOS DKMS package (`.pkg.tar.zst`)
+2. an Ubuntu/Debian DKMS package (`.deb`) for end users
+3. a Debian source package (`.dsc` + orig + debian tarballs) for maintainers
+4. the curated source tarball (existing; it *is* the cross-platform source archive — no zip)
+
+and fix what stands between the current pipeline and that: seven hand-copied
+version constants that drift, no verification that tag, package manifest, and
+repo state agree, and a release job whose cousin (Pages publish) has never run
+on a real tag.
+
+## Current State
+
+### Where the version lives today
+
+`6.4.3.0` is the AICSemi vendor driver/firmware baseline version. It is
+hand-copied into seven places, none generated, and they already disagree:
+
+| Location | Value today | Notes |
+|---|---|---|
+| `drivers/aic8800/aic8800_fdrv/rwnx_version_gen.h` | `RWNX_VERS_MOD "6.4.3.0"`, banner `ronnyf-6.4.3.0 (fork …)` | what `modinfo` shows (`MODULE_VERSION`, `rwnx_main.c:9105`) and the vendor-command banner (`aic_vendor.c:215`) |
+| `drivers/aic8800/aic_load_fw/rwnx_version_gen.h` | vendor-original banner `rwnx v6.4.3.0 - 1a4b0054d2M (master)` | hash `1a4b0054d2` is from AICSemi's own master |
+| `drivers/aic8800/aic8800_fdrv/Makefile:6` | `RWNX_VERS_NUM := 6.4.3.0` | **dead code — referenced nowhere** |
+| `dkms.conf:2` | `PACKAGE_VERSION="6.4.3.0"` | overwritten by `sed` in `PKGBUILD` at package time |
+| `PKGBUILD:4-5` | `pkgver=6.4.3.0`, `pkgrel=5` | **stale** — latest tag is `v6.4.3.0-7` |
+| git tags | `v6.4.3.0-3` … `v6.4.3.0-7` | tag encodes `v<pkgver>-<pkgrel>` |
+| release workflow | derives pkgver/pkgrel from tag | overrides PKGBUILD via `sed` before `makepkg` |
+
+Consequence: the working tree's manifest is not the released manifest, and the
+number a user sees in `modinfo`/`dmesg` says nothing about *which fork build*
+is running (all five releases report the same string).
+
+### Release workflow today
+
+`release.yml`, triggered by `v*` tags: one job in an `archlinux:base-devel`
+container builds the curated tarball, `makepkg`'s the zst package as a
+non-root `builder` user, and creates the GitHub release; a second `publish-repo`
+job (added in `#17`, 2026-08-27) rebuilds the pacman repository on GitHub Pages
+from whatever releases exist. The Pages job has **never executed on a real tag**
+(the last actual release, `v6.4.3.0-7`, predates it).
+
+## Design
+
+### 1. Versioning strategy: vendor baseline + fork revision
+
+Keep the scheme already shipped, formalize it, and stop the drift.
+
+- `6.4.3.0` is the **frozen vendor baseline**. It moves only if AICSemi ever
+  ships new firmware; when it does, the revision resets to 1.
+- `N` is the **fork release number**, strictly increasing, never reused.
+  Vendor upstream is effectively dead, so `N` *is* the driver's version axis.
+- One version, four consumers, all derived:
+
+| Consumer | Format | Value |
+|---|---|---|
+| git tag | `v<pkgver>-<pkgrel>` | `v6.4.3.0-8` |
+| Arch | `pkgver` / `pkgrel` | `6.4.3.0` / `8` |
+| Debian | `Version` | `6.4.3.0-8` (upstream `6.4.3.0`, revision `8`) |
+| DKMS | `PACKAGE_VERSION` | `6.4.3.0` (baseline only — see below) |
+| `modinfo` | `MODULE_VERSION` | `6.4.3.0` (vendor baseline, for support correlation) |
+
+DKMS deliberately keeps the *baseline-only* version: all `-N` releases ship
+into `/usr/src/aic8800-fdrv-dkms-6.4.3.0/` and the arch `.install` script
+already strips the `-N` (`${1%-*}`), so a package upgrade swaps the DKMS source
+in place instead of accumulating a dkms entry per release.
+
+#### Single source of truth: `VERSION` file
+
+New top-level `VERSION` file, one line, containing exactly the version of the
+release the repo is ready to cut (e.g. `6.4.3.0-8`). It is bumped **in the
+release PR** together with the other manifests, and the release workflow
+verifies everything against it.
+
+`tools/check_release_version.sh` fails a job when any of:
+
+- pushed tag (minus `v`) ≠ `VERSION` file
+- `PKGBUILD` `pkgver`/`pkgrel` ≠ tag's pkgver/pkgrel
+- top entry of `debian/changelog` ≠ tag version
+
+This is what makes the stale-pkgrel defect class unshippable: tag, manifests,
+and tag check must all agree before anything is built.
+
+#### Bump procedure (documented in `docs/versioning.md` + `AGENTS.md`)
+
+1. On `main`: PR bumping `VERSION` → `6.4.3.0-(N+1)`, `PKGBUILD` `pkgrel`,
+   and a `debian/changelog` entry (`dch` — see §3).
+2. Merge.
+3. Push tag `v6.4.3.0-(N+1)`.
+4. CI runs: version gate, Arch package, Debian package, Pages publish.
+
+#### Build-time driver identity
+
+The real question "where is the version defined" gets an honest answer:
+*generated at build time from the nearest trustworthy source.*
+
+- Both committed `rwnx_version_gen.h` files are **removed from git** and
+  generated by a make rule in each module's Makefile
+  (generator: `tools/gen_version.sh`), with the identity chain:
+  1. an environment override (`RWNX_VERSION_IDENTITY`, exported by CI from the
+     tag) — deterministic, no dependence on shallow-checkout `git describe`,
+  2. else `git describe --tags` (+ `-dirty`) when building inside a git
+     repository,
+  3. else the repo-root `VERSION` file (release tarballs, DKMS trees, and the
+     package payloads all carry it from now on),
+  4. else a hard build error with a clear message.
+- The generated header keeps `RWNX_VERS_MOD` = the parsed baseline
+  (`6.4.3.0`), so `modinfo` still states the vendor generation for support
+  correlation. The banner (used by the vendor command in
+  `aic8800_fdrv/aic_vendor.c:215`) becomes the identification string, e.g.:
+  `rwnx 6.4.3.0-8-3-g024df29 (vendor base 6.4.3.0, fork: ronnyf/AIC8800-Linux-Driver)`
+- The rule rewrites the header only when its content changes, so a deterministic
+  tree does not churn object files on every `make`.
+- Both module `clean` targets remove the generated header; `.gitignore` lists
+  it (defensive — it should never be committed again).
+- Dead `RWNX_VERS_NUM` in `aic8800_fdrv/Makefile` is deleted.
+
+### 2. Release pipeline
+
+`.github/workflows/release.yml`, tag-triggered, three sequential jobs:
+
+```
+release            (archlinux:base-devel container)          [existing, hardened]
+  checkout → check_release_version.sh
+  → stage curated tree via tools/stage-release.sh
+  → tarball .tar.gz (curated set + VERSION)
+  → makepkg as non-root builder (unchanged flow) → .pkg.tar.zst
+  → .SRCINFO
+  → softprops/action-gh-release: create release
+       (tarball, .pkg.tar.zst, PKGBUILD, .SRCINFO, .install)
+
+ubuntu-package     (ubuntu-latest, needs: release)           [NEW]
+  checkout → check_release_version.sh
+  → stage curated tree (same script) → repack as orig source
+  → dpkg-source -b  → .dsc + <pkg>_<base>.orig.tar.xz + <pkg>_<ver>.debian.tar.xz
+  → dpkg-buildpackage -b -us -uc → <pkg>_<ver>_all.deb
+  → lintian (report-only annotation, matches build.yml's warning style)
+  → softprops: append the 4 Debian assets to the same release
+
+publish-repo       (needs: release, ubuntu-package)          [existing]
+  pacman repository on GitHub Pages, rebuilt from releases
+  (job body unchanged; `needs:` gains ubuntu-package)
+```
+
+Design points:
+
+- **Sequential `needs:`** prevents two `softprops` invocations from racing on
+  the same tag and ensures the Pages job sees the fully-populated release.
+  `publish-repo`'s `needs:` gains `ubuntu-package`.
+- The old **"Patch PKGBUILD with tag version"** `sed` step is **removed**: the
+  version gate now proves `PKGBUILD` == tag before anything builds, so no
+  runtime patching is needed. (The `PKGBUILD` `source=` URL still points at the
+  release for *user-side* `makepkg`; in CI, `makepkg` uses the locally staged
+  tarball by name match and never touches the URL — that behavior is kept.)
+- `tools/stage-release.sh` becomes the single definition of the curated file
+  set (today the `cp` list is hardcoded inline in the workflow):
+  `drivers/aic8800/{aic_load_fw,aic8800_fdrv,Makefile,Kconfig}`,
+  `fw/aic8800D80/*`, `tools/aic.rules`, `dkms.conf`, `VERSION`, `LICENSE`,
+  `README.md` → `AIC8800-Linux-Driver-<ver>/`. Adding a file to a release is a
+  one-line change in one place and covered by both jobs automatically.
+- The curated set is otherwise **unchanged** from today (no zip — the
+  `.tar.gz` is the cross-platform source archive).
+- Release notes gain an Ubuntu manual-install section; the existing Arch
+  sections stay.
+
+### 3. Debian packaging
+
+Committed `debian/` tree (needed for the `.dsc` and to make the repo
+self-describing):
+
+- `debian/control` — `Package: aic8800-fdrv-dkms`, `Architecture: all`,
+  `Depends: dkms`, `Section: net`, `Priority: optional`, maintainer
+  `Ronny F. <ronnyf@icloud.com>`, description stating that matching
+  `linux-headers-$(uname -r)` must be installed (same posture as the arch
+  `depends=('dkms')` + optdepends).
+- `debian/source/format` — `3.0 (quilt)`. Non-native is mandatory: a native
+  source package cannot carry the `-N` revision. Orig tarball = the curated
+  tree at version `6.4.3.0` (no revision); `debian/` carries the forks.
+- `debian/rules` — **hand-written, no debhelper**: install the curated tree
+  into `debian/<pkg>/{usr/src/<pkg>-<base>/...}`, firmware to
+  `debian/<pkg>/usr/lib/firmware/aic8800D80/`, the udev rule to
+  `debian/<pkg>/etc/udev/rules.d/aic.rules`, docs to
+  `debian/<pkg>/usr/share/doc/<pkg>/`, then `dpkg-deb --build`. This matches
+  the repo's proven "assemble the package by hand" precedent (see the pacman
+  package's git history) and removes debhelper-compat variables across
+  Ubuntu generations.
+- `debian/postinst` — `dkms install -m aic8800-fdrv-dkms -v <base>`
+  (equivalent to the arch flow's `dkms install`), with a friendly message when
+  build fails for lack of headers: install
+  `linux-headers-$(uname -r)` and run `dkms autoinstall` (Ubuntu's
+  `linux-headers-*` postinst triggers `dkms autoinstall`, so installing
+  headers after the package also converges).
+- `debian/postrm` — `dkms remove -m aic8800-fdrv-dkms -v <base> --all`.
+- `debian/changelog` — seeded with the next release's entry (`6.4.3.0-8`,
+  `unstable`); subsequent releases add entries via
+  `dch -v 6.4.3.0-(N+1) -D unstable --noedit "Fork release"` in the release PR.
+- `debian/copyright` — GPL-2.0 summary (repo ships `LICENSE`).
+
+Debian package payload mirrors the arch package one-for-one (same staged
+tree, same firmware, same udev rule, plus `VERSION` in the DKMS dir).
+
+Asset names per release (example for `-8`):
+
+```
+aic8800-fdrv-dkms_6.4.3.0-8_all.deb
+aic8800-fdrv-dkms_6.4.3.0-8.dsc
+aic8800-fdrv-dkms_6.4.3.0.orig.tar.xz
+aic8800-fdrv-dkms_6.4.3.0-8.debian.tar.xz
+```
+
+### 4. Verification and recovery
+
+- `tools/check_release_version.sh` is the release gate and runs in **both**
+  build jobs before any packaging.
+- Pre-flight where possible: the `debian/` tree can be smoke-built locally in
+  `docker run ubuntu:24.04` before tagging. If unavailable, CI-on-tag-push is
+  the test.
+- First production run is the real next release (`v6.4.3.0-8`; main carries
+  ~6 unreleased commits after `-7`), which also exercises the never-run Pages
+  publish job for the first time.
+- Failure recovery (proven path in this repo's history): fix the workflow,
+  delete tag + release (`gh release delete <tag> --cleanup-tag`, remove tag),
+  re-push the tag — assets are replaced on the same tag and the Pages repo
+  rebuilds from whatever releases exist.
+
+### 5. Out of scope
+
+- Source *zip* (explicitly dropped — the tarball is sufficient).
+- Package signing (tracked separately on `ronnyf/distribution-signing`).
+- Fedora/RPM, OpenSUSE, or any distro beyond Arch/CachyOS + Debian/Ubuntu.
+- Changing the curated tarball's file set (other than adding `VERSION`).
+
+## File Inventory
+
+**New**
+
+- `VERSION`
+- `debian/{control, rules, postinst, postrm, changelog, copyright, source/format}`
+- `tools/stage-release.sh`, `tools/check_release_version.sh`, `tools/gen_version.sh`
+- `docs/versioning.md`
+
+**Changed**
+
+- `.github/workflows/release.yml` — version gate, staging script, new
+  `ubuntu-package` job, expanded release notes
+- `drivers/aic8800/aic8800_fdrv/Makefile`, `drivers/aic8800/aic_load_fw/Makefile`
+  — generated-header rule, `RWNX_VERS_NUM` removal, clean target
+- `PKGBUILD` — release PR bumps `pkgrel`; `package()` installs `VERSION` into the
+  DKMS tree
+- `README.md` — Ubuntu install section
+- `AGENTS.md` — versioning section (scheme, bump procedure, where-what)
+- `.gitignore` — generated header
+
+**Deleted**
+
+- `drivers/aic8800/aic8800_fdrv/rwnx_version_gen.h`
+- `drivers/aic8800/aic_load_fw/rwnx_version_gen.h`
