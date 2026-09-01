@@ -12,7 +12,8 @@
 
 **Environment notes for the executor:**
 - **GPG signing:** this machine's *global* git config has `commit.gpgsign=true` (x509 via `ac-sign`), which **hangs non-interactive commits indefinitely**. This repo therefore carries `commit.gpgsign=false` in its *local* config (already set; re-apply idempotently on a fresh checkout: `git config --local commit.gpgsign false`). Repo-local config does NOT propagate to the throwaway git repos the tests create in `$TMPDIR` — every `git commit` in test fixtures below therefore carries `-c commit.gpgsign=false`. Never "fix" this by editing the global config.
-- Work on `main` (repo convention: recent history is direct pushes). All commits are **local only**; pushing to the remote requires explicit user confirmation (Tasks 8 and 9 are push gates); before the first commit, run `git config --local commit.gpgsign false` (idempotent).
+- **Execution deviation (2026-09-01, user instruction):** work happens on branch `release-pipeline-and-versioning` with **PR #30** as the push gate instead of direct `main` commits — every task commit lands on the branch and is pushed to the PR; local `main` stays at `origin/main`. This replaces the "work on `main`" convention below and re-scopes Task 9 (PR #30 going green replaces the direct `main` push; see Task 9). Task 10's tag push is unchanged and still needs its own explicit confirmation.
+- Remote pushes require explicit user confirmation (Task 8 is local-only; the gates are the PR push flow and Task 10). Before the first commit, run `git config --local commit.gpgsign false` (idempotent).
 - Test scripts are POSIX sh (macOS `/bin/sh`-safe, no bashisms). Runner: `sh tools/tests/run.sh`, invoked from anywhere (it cds to the repo root).
 - `docker` binary exists on this Mac but the daemon may be down. Only Task 5 uses it, conditionally; the CI `ubuntu-package` job is the authoritative Debian test.
 - Existing releases `v6.4.3.0-3` … `v6.4.3.0-7` must keep working; the Pages repo rebuilds from whatever releases exist.
@@ -26,7 +27,7 @@
 - Create: `tools/tests/test_gen_version.sh`
 - Create: `tools/gen_version.sh`
 
-- [ ] **Step 1: Write the test runner + failing tests**
+- [x] **Step 1: Write the test runner + failing tests**
 
 `tools/tests/run.sh`:
 ```sh
@@ -134,12 +135,12 @@ if [ "$fails" -eq 0 ]; then echo "gen_version: all tests passed"; else
     echo "gen_version: $fails test(s) FAILED"; exit 1; fi
 ```
 
-- [ ] **Step 2: Run tests, verify they fail**
+- [x] **Step 2: Run tests, verify they fail**
 
 Run: `sh tools/tests/run.sh`
 Expected: every gen_version case `FAIL`s (no script yet), nonzero exit.
 
-- [ ] **Step 3: Implement `tools/gen_version.sh`**
+- [x] **Step 3: Implement `tools/gen_version.sh`**
 
 ```sh
 #!/bin/sh
@@ -217,12 +218,12 @@ EOF
 esac
 ```
 
-- [ ] **Step 4: Run tests, verify they pass**
+- [x] **Step 4: Run tests, verify they pass**
 
 Run: `sh tools/tests/run.sh`
 Expected: all `ok:` lines, `gen_version: all tests passed`, `ALL TESTS PASSED`, exit 0.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tools/gen_version.sh tools/tests/run.sh tools/tests/test_gen_version.sh
@@ -1305,27 +1306,29 @@ git commit -m "release: prepare 6.4.3.0-8 (PKGBUILD pkgrel bump)"
 
 ---
 
-### Task 9: CI verification — push `main`, watch `build.yml`
+### Task 9: CI verification — watch `build.yml` on PR #30 (replaces direct `main` push)
 
-Pushing to `main` triggers `build.yml` (the only job that compiles the driver,
-including the WERROR upstream job). This proves the kbuild version-header
-wiring end-to-end — the local `version-header` smoke (Task 2) cannot cover
-kbuild's object-dependency and WERROR behavior.
+The PR's `pull_request` trigger runs `build.yml` (the only job that compiles
+the driver, including the WERROR upstream job). This proves the kbuild
+version-header wiring end-to-end — the local `version-header` smoke (Task 2)
+cannot cover kbuild's object-dependency and WERROR behavior.
 
-- [ ] **Step 1: Confirm with the user, then push**
+- [ ] **Step 1: Confirm the full task history is on the PR**
 
-This pushes to the public remote (user-visible, reversible via revert). Ask the
-user to confirm before:
+Each task commit was pushed to the PR branch as it landed (deviation note at
+the top). Confirm the PR head matches local before watching:
 ```bash
-git push origin main
+git push origin release-pipeline-and-versioning
+gh pr view 30 --json headRefOid --jq .headRefOid
 ```
+Expected: printed SHA == `git rev-parse HEAD`.
 
 - [ ] **Step 2: Watch the build workflow**
 
-Run: `gh run list --workflow=build.yml --limit 3 --json databaseId,headBranch,status,conclusion,createdAt`
-Expected (after a few minutes): the new run on `main` reaches `conclusion: success` across all matrix legs (linux-headers, linux-lts-headers, linux-headers testing, upstream v7.2 gcc, upstream v7.2 clang).
+Run: `gh pr checks 30`
+Expected (after a few minutes): all matrix legs pass on the PR head (linux-headers, linux-lts-headers, linux-headers testing, upstream v7.2 gcc, upstream v7.2 clang).
 
-If any leg fails: fetch `gh run view <id> --log-failed`, confirm the VERSION-MISMATCH / missing-header / WERROR error, fix in a NEW commit (never amend the pushed one), push again, re-watch. **Do not push the release tag (Task 10) until build.yml is green on the tip.**
+If any leg fails: fetch `gh run view <id> --log-failed`, confirm the VERSION-MISMATCH / missing-header / WERROR error, fix in a NEW commit on the branch (never amend the pushed one), push, re-watch. **Do not push the release tag (Task 10) until build.yml is green on the tip.** PR #30 is merged by the user's decision after this is green; that merge is what lands the commits on `main`.
 
 - [ ] **Step 3: Confirm the generated header landed in a build**
 
