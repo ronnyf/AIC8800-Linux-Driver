@@ -446,7 +446,8 @@ Expected: new file's cases all `FAIL` (no script yet), exit 1.
 #   VERSION file                      == $1
 #   PKGBUILD pkgver / pkgrel          == $1   (dash splits ver/rel; no dash => rel 1)
 #   debian/changelog top entry        == $1
-#   dkms.conf PACKAGE_VERSION         == baseline($1)   (strip trailing -<digits>)
+#   dkms.conf PACKAGE_VERSION         == baseline($1)   (strip from first hyphen;
+#                                                        same rule as gen_version.sh)
 # Failing here is the point: it makes tag/manifest drift unshippable.
 set -eu
 
@@ -485,7 +486,7 @@ CVER=$(sed -n 's/^[^(]*(\([^)]*\)).*/\1/p' debian/changelog | head -n1)
 [ "$CVER" = "$EXPECTED" ] || fail "debian/changelog top entry is '$CVER', expected '$EXPECTED'"
 
 DBASE=$(sed -n 's/^PACKAGE_VERSION=.//p' dkms.conf | head -n1 | tr -d '"[:space:]')
-BASELINE=$(printf '%s' "$EXPECTED" | sed 's/-[0-9][0-9]*$//')
+BASELINE="${EXPECTED%%-*}"  # vendor baseline: strip from first hyphen (lockstep with gen_version.sh)
 [ -n "$DBASE" ] || fail "dkms.conf has no parseable PACKAGE_VERSION"
 [ "$DBASE" = "$BASELINE" ] || fail "dkms.conf PACKAGE_VERSION is '$DBASE', expected baseline '$BASELINE'"
 
@@ -698,7 +699,7 @@ case "$1" in
         ;;
     binary)
         VER=$(dpkg-parsechangelog -SVersion)
-        BASE=$(echo "$VER" | sed 's/-[0-9][0-9]*$//')
+        BASE="${VER%%-*}"  # strip from first hyphen (same rule as gen_version.sh)
         P="debian/$PKG"
         rm -rf "$P"
         # DKMS source tree (same layout as the Arch package)
