@@ -3038,6 +3038,19 @@ int aicwf_misc_ram_valid_check_8800dc(struct rwnx_hw *rwnx_hw, int *valid_out)
     if (valid_out) {
         *valid_out = 0;
     }
+    /* vendor pre-check: boot_argc bit 0x10 set => calib data valid, skip DPD */
+    {
+        uint32_t boot_argc_read_addr = 0x1220f0;
+        struct dbg_mem_read_cfm boot_cfm;
+        int boot_ret = rwnx_send_dbg_mem_read_req(rwnx_hw, boot_argc_read_addr, &boot_cfm);
+        if (boot_ret == 0) {
+            if (boot_cfm.memdata & 0x10) {
+                if (valid_out) *valid_out = 1;
+                return 0;
+            }
+        }
+    }
+
     if (testmode == FW_RFTEST_MODE) {
 	    uint32_t vect1 = 0;
 	    uint32_t vect2 = 0;
