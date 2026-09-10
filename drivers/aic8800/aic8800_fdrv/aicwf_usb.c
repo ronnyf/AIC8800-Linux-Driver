@@ -2323,6 +2323,10 @@ static int aicwf_usb_chipmatch(struct aic_usb_dev *usb_dev, u16_l vid, u16_l pid
         usb_dev->chipid = PRODUCT_ID_AIC8800DW;
 		AICWFDBG(LOGINFO, "%s USE AIC8800DW\r\n", __func__);
         return 0;
+    }else if(vid == USB_VENDOR_ID_TENDA && pid == 0x0013){
+		usb_dev->chipid = PRODUCT_ID_AIC8800DC;
+		AICWFDBG(LOGINFO, "%s USE AIC8800DC (Tenda AX300)\r\n", __func__);
+		return 0;
     }else if(pid == USB_PRODUCT_ID_AIC8800D81 || pid == USB_PRODUCT_ID_AIC8800D41 || vid == USB_VENDOR_ID_TP || pid == USB_PRODUCT_ID_AIC8800D83
          || vid == USB_VENDOR_ID_TENDA || pid == USB_PRODUCT_ID_AIC8800D84 || pid == USB_PRODUCT_ID_AIC8800D85
          || pid == USB_PRODUCT_ID_AIC8800D88 || pid == USB_PRODUCT_ID_AIC8800D80 || pid == USB_PRODUCT_ID_AIC8800D8A){
@@ -2625,6 +2629,7 @@ static struct usb_device_id aicwf_usb_id_table[] = {
     {USB_DEVICE(USB_VENDOR_ID_TP, USB_PRODUCT_ID_MERCURY)},
     {USB_DEVICE(USB_VENDOR_ID_TP, USB_PRODUCT_ID_FAST)},
     {USB_DEVICE(USB_VENDOR_ID_TENDA, USB_PRODUCT_ID_TENDA)},
+    {USB_DEVICE(USB_VENDOR_ID_TENDA, 0x0013)},
     {USB_DEVICE(USB_VENDOR_ID_AIC_V2, USB_PRODUCT_ID_AIC8800D83)},
     {USB_DEVICE(USB_VENDOR_ID_AIC_V2, USB_PRODUCT_ID_AIC8800D84)},
     {USB_DEVICE(USB_VENDOR_ID_AIC_V2, USB_PRODUCT_ID_AIC8800D85)},
