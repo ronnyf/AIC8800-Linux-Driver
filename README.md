@@ -70,6 +70,24 @@ DKMS rebuilds the modules automatically on each kernel update.
 > pipeline. If that is not acceptable, build from the `PKGBUILD` attached to a
 > [release](https://github.com/ronnyf/AIC8800-Linux-Driver/releases) instead.
 
+## Installation on Debian / Ubuntu
+
+Download the `.deb` from a
+[release](https://github.com/ronnyf/AIC8800-Linux-Driver/releases) and install it:
+
+```bash
+curl -LO https://github.com/ronnyf/AIC8800-Linux-Driver/releases/latest/download/aic8800-fdrv-dkms_<version>_all.deb
+sudo apt install dkms "linux-headers-$(uname -r)"
+sudo dpkg -i aic8800-fdrv-dkms_<version>_all.deb
+```
+
+DKMS rebuilds the modules automatically on each kernel update. If the headers
+are installed after the package, run `sudo dkms autoinstall`.
+
+> There is no apt repository — the `.deb` is a release asset, so updates are
+> manual. `eject` is recommended; the udev rule uses it to switch the dongle out
+> of its USB storage mode.
+
 ## Compilation and Installation
 
 ```bash
