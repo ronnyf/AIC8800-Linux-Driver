@@ -87,7 +87,11 @@ jobs:
           cp    LICENSE                      "_stage/${PKGDIR}/"
           cp    README.md                    "_stage/${PKGDIR}/"
 
-          tar -czf "${TARBALL}" -C _stage "${PKGDIR}"
+          # --exclude guards against build residue if staged from a dirty tree;
+          # CI's checkout is clean, a local run may not be.
+          tar --exclude='*.o' --exclude='*.ko' --exclude='*.mod' \
+              --exclude='*.cmd' --exclude='*.symvers' --exclude='modules.order' \
+              -czf "${TARBALL}" -C _stage "${PKGDIR}"
           rm -rf _stage
 
           echo "tarball=${TARBALL}" >> "$GITHUB_OUTPUT"
