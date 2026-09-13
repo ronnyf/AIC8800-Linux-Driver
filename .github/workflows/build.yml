@@ -101,6 +101,111 @@ jobs:
             echo "::notice title=Kernel coverage::${{ matrix.label }} = ${KVER}: below 7.2, so the >= 7.2 path is covered by the upstream job instead"
           fi
 
+  # Arch's "LTS" is newer than Debian's current stable, so the jobs above leave
+  # 6.0-6.16 unexercised - exactly where the cfg80211 compat guards bite, and
+  # the kernels users actually install the .deb on. Between them these three
+  # cover every combination of the two guarded signatures.
+  build-distro:
+    name: Build against ${{ matrix.label }}
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # set_monitor_channel without dev, set_tx_power without radio_idx.
+          - label: Ubuntu 24.04 LTS
+            image: ubuntu:24.04
+            headers: linux-headers-generic
+          # 6.12 with the 6.13 set_monitor_channel backported: the case
+          # LINUX_VERSION_CODE cannot get right, so this is what proves the
+          # RWNX_MON_CHAN_HAS_DEV probe in aic8800_fdrv/Makefile works.
+          - label: Debian 13 (backported set_monitor_channel)
+            image: debian:13
+            headers: linux-headers-amd64
+          # Both new signatures present.
+          - label: Ubuntu 26.04 LTS
+            image: ubuntu:26.04
+            headers: linux-headers-generic
+    steps:
+      - name: Install toolchain and kernel headers
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -qq
+          apt-get install -y --no-install-recommends \
+            build-essential bc kmod git ca-certificates ${{ matrix.headers }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve kernel build directory
+        id: kernel
+        run: |
+          # As in the Arch job: uname -r reports the runner's host kernel, not
+          # the headers just installed.
+          KDIR=$(ls -d /lib/modules/*/build 2>/dev/null | head -1)
+          if [ -z "$KDIR" ]; then
+            echo "ERROR: no kernel build directory found for ${{ matrix.headers }}"
+            exit 1
+          fi
+          KVER=$(basename "$(dirname "$KDIR")")
+          echo "kdir=${KDIR}" >> "$GITHUB_OUTPUT"
+          echo "kver=${KVER}" >> "$GITHUB_OUTPUT"
+          echo "Building against kernel ${KVER} (${KDIR})"
+
+      - name: Report which compat paths this kernel exercises
+        run: |
+          # Read the same declaration the Makefile probe reads, so the annotation
+          # states what is actually being covered rather than assuming.
+          H=$(find /usr/src -path '*/include/net/cfg80211.h' 2>/dev/null | head -1)
+          MON=no; TXP=no
+          if [ -n "$H" ]; then
+            awk '/\(\*set_monitor_channel\)/,/;/' "$H" | grep -q net_device && MON=yes
+            awk '/\(\*set_tx_power\)/,/;/' "$H" | grep -q radio_idx && TXP=yes
+          fi
+          echo "::notice title=Compat coverage::${{ matrix.label }} = ${{ steps.kernel.outputs.kver }}: set_monitor_channel takes dev=${MON}, set_tx_power takes radio_idx=${TXP}"
+
+      - name: Build modules
+        run: |
+          # Redirect instead of piping to tee: under the runner's bash -eo
+          # pipefail the piped form exited 2 on ubuntu:24.04 while make itself
+          # succeeded (both .ko linked). Exact mechanism unconfirmed - the raw
+          # job log is not retrievable - so avoid the pipe and print the tail
+          # explicitly.
+          set +e
+          make -j"$(nproc)" -Otarget -C drivers/aic8800 \
+            KDIR='${{ steps.kernel.outputs.kdir }}' modules >/tmp/build.log 2>&1
+          rc=$?
+          tail -n 40 /tmp/build.log
+          if [ "$rc" -ne 0 ]; then
+            grep -E 'error:|Error [0-9]+' /tmp/build.log | head -n 25 \
+              | sed 's|^|::error title=Build error::|'
+            echo "::error title=Build failed::${{ matrix.label }}: make exited ${rc}"
+            exit "$rc"
+          fi
+
+      - name: Verify modules were produced
+        run: |
+          FOUND=$(find drivers/aic8800 -name '*.ko' | sort)
+          if [ -z "$FOUND" ]; then
+            echo "ERROR: build reported success but produced no .ko files"
+            exit 1
+          fi
+          echo "Built against kernel ${{ steps.kernel.outputs.kver }}:"
+          echo "$FOUND"
+
+      - name: Check for unused-label warnings
+        run: |
+          # Annotation rather than a build failure - see the build job for why.
+          N=$(grep -c 'unused-label' /tmp/build.log || true)
+          if [ "$N" -gt 0 ]; then
+            echo "::warning title=Unused label::${{ matrix.label }}: ${N} -Wunused-label warning(s)"
+            grep 'unused-label' /tmp/build.log | head -n 5
+          else
+            echo "::notice title=Unused label::${{ matrix.label }}: no -Wunused-label warnings"
+          fi
+
   # Arch does not package kernel 7.2 yet, not even in the testing repositories,
   # so the jobs above cannot compile the >= 7.2 code paths at all. Prepare an
   # upstream tree instead - that is the only way to prove the 7.2 claim.

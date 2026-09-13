@@ -161,7 +161,7 @@ dmesg | tail -20
 makepkg -f
 
 # Install (users)
-sudo pacman -U aic8800-fdrv-dkms-6.4.3.0-3-x86_64.pkg.tar.zst
+sudo pacman -U aic8800-fdrv-dkms-<pkgver>-<pkgrel>-any.pkg.tar.zst
 
 # Manual DKMS
 sudo dkms add ./
@@ -170,6 +170,21 @@ sudo dkms install aic8800-fdrv-dkms/6.4.3.0
 ```
 
 **User dependencies**: `dkms`, `linux-headers`, `clang` (for clang-built kernels)
+
+## Versioning
+
+Scheme `<baseline>-<N>`: `6.4.3.0` is the frozen vendor/FW baseline, `N` the fork
+release number. **The git tag is the only source of truth.** To cut a release,
+push `v<baseline>-<N>` — nothing in the tree needs bumping first.
+
+`.github/workflows/release.yml` derives everything from the tag:
+- `pkgver`/`pkgrel` → `sed`-patched into `PKGBUILD` before `makepkg`
+- `PACKAGE_VERSION` → `sed`-patched into the `.deb`'s `dkms.conf` (baseline only)
+- `rwnx_version_gen.h` (both modules) → regenerated; `RWNX_VERS_MOD` is the
+  baseline, `RWNX_VERS_BANNER`/`RELEASE_DATE` carry the full version
+
+The committed `PKGBUILD` `pkgver`/`pkgrel` and `rwnx_version_gen.h` values are
+cosmetic defaults — overwritten every release, so drift in them is harmless.
 
 ## Warning-Free Build
 

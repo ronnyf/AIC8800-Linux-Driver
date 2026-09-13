@@ -1,6 +1,16 @@
 EXTRA_CFLAGS += $(USER_EXTRA_CFLAGS)
 EXTRA_CFLAGS += -Wno-implicit-fallthrough
 ccflags-y += -DCONFIG_PLATFORM_UBUNTU
+
+# set_monitor_channel gained net_device* upstream in 6.13, but Debian backports
+# it into 6.12.x - probe the header, don't trust LINUX_VERSION_CODE alone.
+RWNX_CFG80211_H := $(firstword $(wildcard $(srctree)/include/net/cfg80211.h \
+                                          $(objtree)/include/net/cfg80211.h))
+ifneq ($(RWNX_CFG80211_H),)
+ifneq ($(shell awk '/\(\*set_monitor_channel\)/,/;/' $(RWNX_CFG80211_H) | grep -c net_device),0)
+ccflags-y += -DRWNX_MON_CHAN_HAS_DEV
+endif
+endif
 #EXTRA_CFLAGS += -Wno-unused-variable
 
 RWNX_VERS_NUM := 6.4.3.0

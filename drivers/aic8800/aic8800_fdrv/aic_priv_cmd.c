@@ -1710,7 +1710,7 @@ void set_vendor_extension_ie(char *command){
 
 }
 #endif//CONFIG_SET_VENDOR_EXTENSION_IE
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0))
+#if defined(RWNX_MON_CHAN_HAS_DEV) || (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0))
 int rwnx_cfg80211_set_monitor_channel_(struct wiphy *wiphy, struct net_device *dev,
                                              struct cfg80211_chan_def *chandef);
 #else
@@ -1970,7 +1970,7 @@ int android_priv_cmd(struct net_device *net, struct ifreq *ifr, int cmd)
 	    char *set_parameter;
         skip = strlen(CMD_SET_MON_FREQ) + 1;
 		set_parameter = command + skip;
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0))
+#if defined(RWNX_MON_CHAN_HAS_DEV) || (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0))
 	    set_mon_chan(vif, net, set_parameter);
 #else
 	    set_mon_chan(vif, set_parameter);
