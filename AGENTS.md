@@ -186,6 +186,12 @@ push `v<baseline>-<N>` — nothing in the tree needs bumping first.
 The committed `PKGBUILD` `pkgver`/`pkgrel` and `rwnx_version_gen.h` values are
 cosmetic defaults — overwritten every release, so drift in them is harmless.
 
+**Repo setting, not in the tree**: the `github-pages` environment must allow the
+`v*` tag, else `publish-repo` is rejected ("not allowed to deploy to github-pages
+due to environment protection rules") while `release`/`deb` still succeed —
+release published, pacman repo stale. Settings → Environments → github-pages →
+deployment branches and tags needs `branch: main` **and** `tag: v*`.
+
 ## Warning-Free Build
 
 The codebase builds with **0 warnings** under clang `-Wmissing-prototypes`. Rules:
