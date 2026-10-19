@@ -26,6 +26,13 @@
 
 #define USB_PRODUCT_ID_TENDA            0x001f
 
+/* AIC8800DC under non-AIC vendor IDs; without these 0147/0013 hit the D81
+ * catch-all in chipmatch and 88e5 matches no branch */
+#define USB_PRODUCT_ID_TP_8800DC        0x0147
+#define USB_PRODUCT_ID_TENDA_8800DC     0x0013
+/* UGREEN AX300: MSC installer is a69c:572a, wifi mode re-enumerates as 368b:88e5 */
+#define USB_PRODUCT_ID_AIC8800DC_V2     0x88e5
+
 #ifndef CONFIG_USB_BT
 #define USB_PRODUCT_ID_AIC8800          0x8800
 #define USB_PRODUCT_ID_AIC8801          0x8801
