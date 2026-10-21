@@ -1,6 +1,18 @@
 EXTRA_CFLAGS += $(USER_EXTRA_CFLAGS)
 EXTRA_CFLAGS += -Wno-implicit-fallthrough
 ccflags-y += -DCONFIG_PLATFORM_UBUNTU
+
+# .set_monitor_channel gained a struct net_device * argument in 6.13, but
+# distros backport it into older series (Ubuntu did so in 6.8.0-147, which
+# still reports LINUX_VERSION_CODE 6.8.12). The kernel's own header is the
+# only reliable source of truth, so probe it here. When it cannot be read --
+# a standalone `make clean`, an unusual build system -- no macro is defined
+# and rwnx_compat.h falls back to its version check.
+AIC_CFG80211_H := $(srctree)/include/net/cfg80211.h
+ifneq ($(wildcard $(AIC_CFG80211_H)),)
+AIC_SET_MON_CHAN_NETDEV := $(shell sed -n '/(\*set_monitor_channel)/,/;/p' $(AIC_CFG80211_H) | grep -c 'struct net_device')
+ccflags-y += -DAIC_SET_MONITOR_CHANNEL_HAS_NETDEV=$(AIC_SET_MON_CHAN_NETDEV)
+endif
 #EXTRA_CFLAGS += -Wno-unused-variable
 
 RWNX_VERS_NUM := 6.4.3.0

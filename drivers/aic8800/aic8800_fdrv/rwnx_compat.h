@@ -23,10 +23,11 @@
 #define _RWNX_COMPAT_H_
 #include <linux/version.h>
 
-/* .set_monitor_channel grew a struct net_device * argument in 6.13. Ubuntu
- * backported it into its 6.8 kernels from ABI 6.8.0-147 onwards, so
- * LINUX_VERSION_CODE alone (6.8.12 there) still selects the old prototype and
- * the build fails with -Werror=incompatible-pointer-types. */
+/* Fallback for AIC_SET_MONITOR_CHANNEL_HAS_NETDEV when the Makefile could not
+ * probe the kernel's cfg80211.h. Keyed on UTS_UBUNTU_RELEASE_ABI as well as
+ * LINUX_VERSION_CODE, because Ubuntu backported the 6.13 prototype into its
+ * 6.8 kernels from ABI 6.8.0-147 onwards while still reporting 6.8.12. */
+#ifndef AIC_SET_MONITOR_CHANNEL_HAS_NETDEV
 #include <generated/utsrelease.h>
 #ifndef UTS_UBUNTU_RELEASE_ABI
 #define UTS_UBUNTU_RELEASE_ABI 0
@@ -38,6 +39,7 @@
 #else
 #define AIC_SET_MONITOR_CHANNEL_HAS_NETDEV 0
 #endif
+#endif /* !AIC_SET_MONITOR_CHANNEL_HAS_NETDEV */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0)
 #error "Minimum kernel version supported is 3.10"
