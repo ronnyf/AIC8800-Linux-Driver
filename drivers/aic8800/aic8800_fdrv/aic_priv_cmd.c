@@ -1710,7 +1710,7 @@ void set_vendor_extension_ie(char *command){
 
 }
 #endif//CONFIG_SET_VENDOR_EXTENSION_IE
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0))
+#if AIC_SET_MONITOR_CHANNEL_HAS_NETDEV
 int rwnx_cfg80211_set_monitor_channel_(struct wiphy *wiphy, struct net_device *dev,
                                              struct cfg80211_chan_def *chandef);
 #else
