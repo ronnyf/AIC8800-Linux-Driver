@@ -658,6 +658,7 @@ struct rwnx_roc_elem {
     bool mgmt_roc;
     /* Indicate if we have switch on the RoC channel */
     bool on_chan;
+    u64 cookie;
 };
 
 /* Structure containing channel survey information received from MAC */

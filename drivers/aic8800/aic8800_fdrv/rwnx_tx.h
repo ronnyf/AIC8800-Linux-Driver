@@ -136,6 +136,7 @@ struct rwnx_sw_txhdr {
     u8 raw_frame;
     u8 fixed_rate;
     u16 rate_config;
+    u64 cookie;
 };
 
 /**
