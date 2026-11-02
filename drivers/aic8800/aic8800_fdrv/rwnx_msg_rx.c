@@ -29,6 +29,11 @@
 #ifdef CONFIG_USE_WIRELESS_EXT
 #include "aicwf_wext_linux.h"
 #endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0)
+#define RWNX_ROC_COOKIE(hw, elem) ((elem)->cookie)
+#else
+#define RWNX_ROC_COOKIE(hw, elem) ((u64)(hw)->roc_cookie_cnt)
+#endif
 void rwnx_cfg80211_unlink_bss(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwnx_vif);
 
 static int rwnx_freq_to_idx(struct rwnx_hw *rwnx_hw, int freq)
@@ -122,13 +127,13 @@ static inline int rwnx_rx_chan_switch_ind(struct rwnx_hw *rwnx_hw,
             if (!roc_elem->mgmt_roc) {
                 /* Inform the host that we have switch on the indicated off-channel */
                 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
-                cfg80211_ready_on_channel(roc_elem->wdev->netdev, (u64)(rwnx_hw->roc_cookie_cnt),
+                cfg80211_ready_on_channel(roc_elem->wdev->netdev, RWNX_ROC_COOKIE(rwnx_hw, roc_elem),
                                         roc_elem->chan, NL80211_CHAN_HT20, roc_elem->duration, GFP_ATOMIC);
                 #elif LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
-                cfg80211_ready_on_channel(roc_elem->wdev, (u64)(rwnx_hw->roc_cookie_cnt),
+                cfg80211_ready_on_channel(roc_elem->wdev, RWNX_ROC_COOKIE(rwnx_hw, roc_elem),
                                         roc_elem->chan, NL80211_CHAN_HT20, roc_elem->duration, GFP_ATOMIC);
                 #else
-                cfg80211_ready_on_channel(roc_elem->wdev, (u64)(rwnx_hw->roc_cookie_cnt),
+                cfg80211_ready_on_channel(roc_elem->wdev, RWNX_ROC_COOKIE(rwnx_hw, roc_elem),
                                         roc_elem->chan, roc_elem->duration, GFP_ATOMIC);
                 #endif
             }
@@ -244,13 +249,13 @@ static inline int rwnx_rx_remain_on_channel_exp_ind(struct rwnx_hw *rwnx_hw,
         /* Inform the host that off-channel period has expired */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
-	cfg80211_remain_on_channel_expired(roc_elem->wdev->netdev, (u64)(rwnx_hw->roc_cookie_cnt),
+	cfg80211_remain_on_channel_expired(roc_elem->wdev->netdev, RWNX_ROC_COOKIE(rwnx_hw, roc_elem),
                                            roc_elem->chan, NL80211_CHAN_HT20, GFP_ATOMIC);
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
-	cfg80211_remain_on_channel_expired(roc_elem->wdev, (u64)(rwnx_hw->roc_cookie_cnt),
+	cfg80211_remain_on_channel_expired(roc_elem->wdev, RWNX_ROC_COOKIE(rwnx_hw, roc_elem),
                                            roc_elem->chan, NL80211_CHAN_HT20, GFP_ATOMIC);
 #else
-        cfg80211_remain_on_channel_expired(roc_elem->wdev, (u64)(rwnx_hw->roc_cookie_cnt),
+        cfg80211_remain_on_channel_expired(roc_elem->wdev, RWNX_ROC_COOKIE(rwnx_hw, roc_elem),
                                            roc_elem->chan, GFP_ATOMIC);
 #endif
     }

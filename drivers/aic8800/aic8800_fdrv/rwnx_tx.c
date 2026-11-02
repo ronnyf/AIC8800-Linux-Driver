@@ -1704,7 +1704,13 @@ int rwnx_start_mgmt_xmit(struct rwnx_vif *vif, struct rwnx_sta *sta,
         return -ENOMEM;
     }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0)
+    /* *cookie is an input here: cookie assigned by cfg80211 (0 = none) */
+    if (!*cookie)
+        *cookie = (unsigned long)skb;
+#else
     *cookie = (unsigned long)skb;
+#endif
 
     /*
      * Move skb->data pointer in order to reserve room for rwnx_txhdr
@@ -1774,6 +1780,7 @@ int rwnx_start_mgmt_xmit(struct rwnx_vif *vif, struct rwnx_sta *sta,
     sw_txhdr->rwnx_sta = sta;
     sw_txhdr->rwnx_vif = vif;
     sw_txhdr->skb = skb;
+    sw_txhdr->cookie = *cookie;
     sw_txhdr->headroom = headroom;
     sw_txhdr->map_len = skb->len - offsetof(struct rwnx_txhdr, hw_hdr);
 #ifdef CONFIG_RWNX_AMSDUS_TX
@@ -2387,7 +2394,7 @@ int rwnx_txdatacfm(void *pthis, void *host_id)
 #endif
         /* Confirm transmission to CFG80211 */
         cfg80211_mgmt_tx_status(&sw_txhdr->rwnx_vif->wdev,
-                                (unsigned long)skb,
+                                sw_txhdr->cookie,
                                 (skb->data + sw_txhdr->headroom),
                                 sw_txhdr->frame_len,
                                 rwnx_txst.acknowledged,
