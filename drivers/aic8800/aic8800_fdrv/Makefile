@@ -13,7 +13,7 @@ endif
 endif
 #EXTRA_CFLAGS += -Wno-unused-variable
 
-RWNX_VERS_NUM := 6.4.3.0
+RWNX_VERS_NUM := 6.4.3.1
 
 CONFIG_AIC8800_WLAN_SUPPORT = m
 MODULE_NAME = aic8800_fdrv
