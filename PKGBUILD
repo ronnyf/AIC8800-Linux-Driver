@@ -1,7 +1,7 @@
 # Maintainer: Ronny F. <ronnyf@icloud.com>
 
 pkgname=aic8800-fdrv-dkms
-pkgver=6.4.3.0
+pkgver=6.4.3.1
 pkgrel=5
 pkgdesc="AIC8800 (D80/DC/DW) USB WiFi driver - DKMS source package"
 arch=('any')

@@ -85,6 +85,7 @@ Key files: `rwnx_main.c`, `rwnx_tx.c/rwnx_rx.c`, `rwnx_msg_tx.c/rwnx_msg_rx.c`, 
 ## Kernel Compatibility
 
 - Tested: CachyOS kernel 6.19.12-1-cachyos (clang 22.1.x), Arch Linux kernel 6.17.1-arch1-1  
+- Build-verified: CachyOS kernel 7.3.3-1-cachyos, Arch kernel 7.2.14-arch1-1 (cfg80211 7.3 API changes; runtime-verified by contributors on Nobara/Fedora 44)  
 - Compatibility macros in `rwnx_compat.h`/`rwnx_defs.h`  
   `HIGH_KERNEL_VERSION=KERNEL_VERSION(6,0,0)`  
   `HIGH_KERNEL_VERSION2=KERNEL_VERSION(6,1,0)`  
