@@ -136,6 +136,8 @@ struct rwnx_sw_txhdr {
     u8 raw_frame;
     u8 fixed_rate;
     u16 rate_config;
+    /* Cookie reported with cfg80211_mgmt_tx_status(): the value cfg80211
+     * pre-assigned in .mgmt_tx on 7.3+, the skb pointer before. */
     u64 cookie;
 };
 

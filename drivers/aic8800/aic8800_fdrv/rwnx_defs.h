@@ -658,6 +658,8 @@ struct rwnx_roc_elem {
     bool mgmt_roc;
     /* Indicate if we have switch on the RoC channel */
     bool on_chan;
+    /* Cookie reported to cfg80211 on ready/expiry: the pre-assigned value on
+     * 7.3+, 0 otherwise (the reported value is RWNX_ROC_COOKIE()). */
     u64 cookie;
 };
 

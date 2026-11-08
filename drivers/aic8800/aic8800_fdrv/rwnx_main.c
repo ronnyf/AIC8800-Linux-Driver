@@ -3630,8 +3630,10 @@ static void apm_probe_sta_work_process(struct work_struct *work)
 
        AICWFDBG(LOGINFO, "sta %pM found = %d\n", mac, found);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0)
+	/* 7.3 added link_id to the signature: -1 for non-MLO. The cookie is
+	 * the one cfg80211 pre-assigned in rwnx_cfg80211_probe_peer. */
        cfg80211_probe_status(rwnx_vif->ndev, mac, rwnx_vif->sta_probe.probe_id,
-	                     -1, found, 0, false, GFP_ATOMIC);
+                             -1, found, 0, false, GFP_ATOMIC);
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 17, 0)
        if(found)
                cfg80211_probe_status(rwnx_vif->ndev, mac, (u64)rwnx_vif->sta_probe.probe_id, 1, 0, false, GFP_ATOMIC);
@@ -4171,6 +4173,11 @@ int rwnx_cfg80211_set_monitor_channel_(struct wiphy *wiphy,
 /**
  * @probe_client: probe an associated client, must return a cookie that it
  *	later passes to cfg80211_probe_status().
+ *
+ * Renamed to @probe_peer in kernel 7.3, which also turns @cookie into an
+ * input pre-assigned by cfg80211. It is stored in sta_probe.probe_id and
+ * reported back with cfg80211_probe_status(); on older kernels the driver
+ * allocates the cookie itself and writes it through *cookie.
  */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0)
 static int rwnx_cfg80211_probe_peer(struct wiphy *wiphy, struct net_device *dev,
@@ -4359,7 +4366,7 @@ static int
 rwnx_cfg80211_remain_on_channel_(struct wiphy *wiphy, struct wireless_dev *wdev,
                                 struct ieee80211_channel *chan,
                                 unsigned int duration, u64 *cookie, bool mgmt_roc_flag,
-				u64 kcookie)
+                                u64 kcookie)
 {
     struct rwnx_hw *rwnx_hw = wiphy_priv(wiphy);
     struct rwnx_vif *rwnx_vif = container_of(wdev, struct rwnx_vif, wdev);
@@ -4455,6 +4462,8 @@ rwnx_cfg80211_remain_on_channel_(struct wiphy *wiphy, struct wireless_dev *wdev,
     roc_elem->duration = duration;
     roc_elem->mgmt_roc = mgmt_roc_flag;
     roc_elem->on_chan = false;
+    /* Cookie to report to cfg80211 on ready/expiry: the pre-assigned value
+     * on 7.3+, 0 otherwise (see the note above the wrappers). */
     roc_elem->cookie = kcookie;
 
     /* Initialize the OFFCHAN TX queue to allow off-channel transmissions */
@@ -4495,7 +4504,13 @@ rwnx_cfg80211_remain_on_channel_(struct wiphy *wiphy, struct wireless_dev *wdev,
  * ever changes, RoC address filtering must be implemented here or it becomes a
  * silent no-op.
  *
- * 7.3 needs more than another parameter here - see README.
+ * Kernel 7.3 went further: @cookie is no longer an output the driver fills in,
+ * it is a pre-assigned input. cfg80211 matches the later
+ * cfg80211_ready_on_channel()/cfg80211_remain_on_channel_expired() calls against
+ * that pre-assigned value, so the 7.3 branch hands it to the _() helper as
+ * kcookie, which stores it in roc_elem->cookie; RWNX_ROC_COOKIE() in
+ * rwnx_msg_rx.c is what gets reported. On older kernels kcookie stays 0 and
+ * the reported cookie remains the driver's own roc_cookie_cnt, as before.
  */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0)
 static int

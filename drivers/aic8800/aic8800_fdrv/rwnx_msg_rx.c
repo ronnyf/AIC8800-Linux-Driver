@@ -29,6 +29,13 @@
 #ifdef CONFIG_USE_WIRELESS_EXT
 #include "aicwf_wext_linux.h"
 #endif
+/*
+ * Cookie to report to cfg80211 on RoC ready/expiry. On 7.3+ cfg80211
+ * pre-assigned it (stored in elem->cookie) and its pending-request matching
+ * requires exactly that value back. On older kernels the driver allocates the
+ * cookie itself, so it reports its own counter (elem->cookie is 0 there - see
+ * the kcookie note in rwnx_main.c).
+ */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0)
 #define RWNX_ROC_COOKIE(hw, elem) ((elem)->cookie)
 #else

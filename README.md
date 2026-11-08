@@ -8,14 +8,16 @@ AIC8800 WiFi driver for AIC8800D80/AIC8800DC/AIC8800DW chips, tested on CachyOS 
 
 ## Overview
 
-This driver provides fullmac WiFi support for AIC8800 series chips on Linux kernels 6.0 through 7.2.
+This driver provides fullmac WiFi support for AIC8800 series chips on Linux kernels 6.0 through 7.3.
 Tested and verified on kernel 6.19.10 with LLVM/Clang compilation.
 
-Kernel 7.3 is **not** supported yet. Upstream converted the cfg80211 `cookie`
-from an output to a pre-assigned input parameter, which changes the behaviour of
-`.remain_on_channel` and `.mgmt_tx` rather than just their signatures, and
-removed `.probe_client` from `struct cfg80211_ops` altogether. This driver
-implements all three.
+Kernel 7.3 turned the cfg80211 `cookie` from an output parameter into a
+pre-assigned input, which changes the behaviour of `.remain_on_channel` and
+`.mgmt_tx` rather than just their signatures, renamed `.probe_client` to
+`.probe_peer`, and added a `link_id` argument to `cfg80211_probe_status()`.
+The driver stores the pre-assigned cookie and reports it back on RoC
+ready/expiry and on management-frame confirmation, so cfg80211's
+pending-request matching works on 7.3 as well.
 
 ## Test Environment
 
@@ -26,21 +28,23 @@ implements all three.
 - **USB Interface**: AIC8800D80 USB WiFi adapter
 
 Every pull request is additionally compiled in CI against the current Arch
-`linux-headers` and `linux-lts-headers`, the Arch testing headers, and an
-upstream v7.2 tree built twice — once with gcc, once with clang. The upstream
-jobs are the ones that actually exercise the 7.2-specific code paths, since Arch
-does not package 7.2 yet, and they are also the only ones that compile the
-wireless-extensions path against 7.2.
+`linux-headers` and `linux-lts-headers`, the Arch testing headers, and
+upstream v7.2 and v7.3 trees built twice — once with gcc, once with clang.
+The upstream jobs are the ones that actually exercise the newest
+version-guarded code paths (>= 7.2 and >= 7.3), since the packaged kernels in
+the other jobs lag upstream, and they are also the only ones that compile the
+wireless-extensions path against those kernels.
 
 ## Acknowledgments
 
 This project references the following resources:
 
 - [Official Ugreen AX300 Driver](https://www.ugreen.com/)
-- Code modifications assisted by OpenCode AI assistant and mlx-community/Qwen3-Coder-Next-8bit
+- Code modifications assisted by OpenCode AI assistant with mlx-community/Qwen3-Coder-Next-8bit and Qwen3.8 27B Splash (via LM Studio)
 
 ## Recent Updates
 
+- **2026.11.07**: Kernel 7.3 build support (pre-assigned cfg80211 cookies for `.remain_on_channel`/`.mgmt_tx`, `.probe_peer`, `cfg80211_probe_status` `link_id`), CI now compiles upstream v7.3 as well; version rolled to 6.4.3.1
 - **2026.08.26**: Kernel 7.2 build support (`strncpy` removal, `.remain_on_channel` gained `rx_addr`), CI now compiles every PR
 - **2026.04.03**: Updated for kernel 6.19.10, verified LLVM compilation, added production configuration
 - **2025.11.11**: Linux Kernel 6.17.7-arch1-1 compilation verified
