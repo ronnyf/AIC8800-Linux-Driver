@@ -206,9 +206,11 @@ jobs:
             echo "::notice title=Unused label::${{ matrix.label }}: no -Wunused-label warnings"
           fi
 
-  # Arch does not package kernel 7.2 yet, not even in the testing repositories,
-  # so the jobs above cannot compile the >= 7.2 code paths at all. Prepare an
-  # upstream tree instead - that is the only way to prove the 7.2 claim.
+  # The packaged kernels in the jobs above lag upstream, so they cannot
+  # reliably compile the newest version-guarded code paths (>= 7.2 / >= 7.3).
+  # Prepare upstream trees instead - that is the only way to prove the
+  # 7.2/7.3 claims, and the only way to compile the wireless-extensions path
+  # against those kernels.
   build-upstream:
     name: Build against upstream ${{ matrix.tag }} (${{ matrix.compiler }})
     runs-on: ubuntu-latest
@@ -225,6 +227,13 @@ jobs:
           # def_bool $(success,...) in init/Kconfig - not settable via
           # scripts/config, so the tree must be built with LLVM=1.
           - tag: v7.2
+            compiler: clang
+            llvm: 'LLVM=1'
+          # 7.3: pre-assigned cfg80211 cookies, .probe_peer, probe_status link_id.
+          - tag: v7.3
+            compiler: gcc
+            llvm: ''
+          - tag: v7.3
             compiler: clang
             llvm: 'LLVM=1'
     steps:
@@ -330,4 +339,11 @@ jobs:
 
       - name: Report kernel coverage
         run: |
-          echo "::notice title=Kernel coverage::upstream ${{ matrix.tag }} = ${{ steps.kernel.outputs.kver }}, ${{ matrix.compiler }}, WIRELESS_EXT=y: exercises the >= 7.2 code path"
+          KVER='${{ steps.kernel.outputs.kver }}'
+          IFS='.-' read -r MAJ MIN _ <<<"$KVER"
+          if [ "$MAJ" -gt 7 ] || { [ "$MAJ" -eq 7 ] && [ "$MIN" -ge 3 ]; }; then
+            PATHS="the >= 7.3 code path"
+          else
+            PATHS="the >= 7.2 code path"
+          fi
+          echo "::notice title=Kernel coverage::upstream ${{ matrix.tag }} = ${KVER}, ${{ matrix.compiler }}, WIRELESS_EXT=y: exercises ${PATHS}"
